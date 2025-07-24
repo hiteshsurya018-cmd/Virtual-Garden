@@ -449,6 +449,8 @@ export class AdvancedPlantAI {
       pattern: string;
       stemType: string;
     };
+    confidence: number;
+    analysisQuality: number;
   } {
     const data = imageData.data;
     const pixels = data.length / 4;
@@ -563,6 +565,21 @@ export class AdvancedPlantAI {
     const growthPattern = this.determineGrowthPattern(dominantColors, edgePixels / pixels);
     const stemType = this.determineStemType(dominantColors, avgTextureVariance);
     
+    // Calculate analysis quality and confidence
+    const totalPlantPixels = Object.values(colorCounts).reduce((sum, count) =>
+      sum + (typeof count === 'number' ? count : 0), 0
+    );
+    const plantCoverage = totalPlantPixels / pixels;
+    const analysisQuality = Math.min(1, plantCoverage * 2); // How much of image is plant
+
+    // Overall confidence in the analysis
+    const featureConfidence = (
+      (dominantColors.length > 0 ? 0.3 : 0) +
+      (avgTextureVariance > 20 ? 0.2 : 0) +
+      (plantCoverage > 0.2 ? 0.3 : 0) +
+      (hasFlowers ? 0.2 : 0.1)
+    );
+
     return {
       dominantColors,
       hasFlowers,
@@ -577,7 +594,9 @@ export class AdvancedPlantAI {
         height: plantHeight,
         pattern: growthPattern,
         stemType: stemType
-      }
+      },
+      confidence: featureConfidence,
+      analysisQuality: analysisQuality
     };
   }
   
@@ -755,19 +774,22 @@ export class AdvancedPlantAI {
   }
   
   private static determineLeafShape(edgeRatio: number, variance: number): string {
-    if (edgeRatio > 0.4) return 'compound';
-    if (variance < 20) return 'linear';
-    if (edgeRatio > 0.25) return 'lance';
-    if (variance > 40) return 'heart';
-    return 'oval';
+    // More precise shape determination
+    if (edgeRatio > 0.45) return 'compound'; // Very complex edges
+    if (variance < 15 && edgeRatio < 0.1) return 'linear'; // Smooth, low variance
+    if (edgeRatio > 0.3 && variance > 25) return 'lance'; // Medium edges, some variance
+    if (variance > 50 && edgeRatio > 0.2) return 'heart'; // High variance, medium edges
+    if (edgeRatio < 0.15 && variance < 30) return 'round'; // Very smooth
+    return 'oval'; // Default
   }
   
   private static determineTexture(variance: number, brightness: number): string {
-    if (brightness > 180 && variance < 25) return 'waxy';
-    if (variance > 50) return 'rough';
-    if (variance < 15) return 'glossy';
-    if (variance < 30) return 'matte';
-    return 'fuzzy';
+    // Enhanced texture analysis
+    if (brightness > 190 && variance < 20) return 'waxy'; // Very bright and smooth
+    if (brightness > 160 && variance < 25) return 'glossy'; // Bright and fairly smooth
+    if (variance > 60) return 'rough'; // High texture variance
+    if (variance < 20) return 'matte'; // Low variance, not bright
+    return 'fuzzy'; // Medium variance
   }
   
   private static determineSize(width: number, height: number): string {
@@ -778,10 +800,11 @@ export class AdvancedPlantAI {
   }
   
   private static determineMargin(edgeRatio: number): string {
-    if (edgeRatio > 0.35) return 'serrated';
-    if (edgeRatio > 0.25) return 'toothed';
-    if (edgeRatio > 0.15) return 'lobed';
-    return 'smooth';
+    // More precise edge detection
+    if (edgeRatio > 0.4) return 'serrated'; // Very jagged edges
+    if (edgeRatio > 0.28) return 'toothed'; // Medium jagged
+    if (edgeRatio > 0.18) return 'lobed'; // Some irregularity
+    return 'smooth'; // Very few edges
   }
   
   private static determinePlantHeight(imageHeight: number, brightness: number): string {
@@ -791,15 +814,25 @@ export class AdvancedPlantAI {
   }
   
   private static determineGrowthPattern(colors: string[], edgeRatio: number): string {
-    if (edgeRatio < 0.1) return 'rosette';
-    if (colors.includes('brown')) return 'upright';
-    if (edgeRatio > 0.4) return 'spreading';
-    return 'bushy';
+    // Enhanced growth pattern detection
+    const hasBrown = colors.includes('brown') || colors.includes('gray');
+    const hasMultipleGreens = colors.filter(c => c.includes('green')).length > 2;
+
+    if (edgeRatio < 0.12 && !hasBrown) return 'rosette'; // Low-growing, circular pattern
+    if (hasBrown && edgeRatio < 0.3) return 'upright'; // Woody, structured growth
+    if (edgeRatio > 0.35 && hasMultipleGreens) return 'spreading'; // Complex, spreading growth
+    return 'bushy'; // Dense, multi-branched
   }
   
   private static determineStemType(colors: string[], variance: number): string {
-    if (colors.includes('brown') || colors.includes('gray')) return 'woody';
-    if (colors.includes('blue-green') || variance < 20) return 'succulent';
-    return 'herbaceous';
+    // More accurate stem type detection
+    const hasBrown = colors.includes('brown');
+    const hasGray = colors.includes('gray');
+    const hasBlueGreen = colors.includes('blue-green');
+    const hasLightGreen = colors.includes('light-green');
+
+    if ((hasBrown || hasGray) && variance > 30) return 'woody'; // Brown/gray with texture
+    if ((hasBlueGreen || hasLightGreen) && variance < 25) return 'succulent'; // Waxy, smooth appearance
+    return 'herbaceous'; // Green, soft stems
   }
 }
