@@ -1716,30 +1716,60 @@ export default function Index() {
                               </div>
                             )}
 
-                            {/* Image Quality Indicators */}
+                            {/* Enhanced Image Analysis Indicators */}
                             {img.imageMetadata && (
-                              <div className="grid grid-cols-3 gap-2 text-xs">
-                                <div className="text-center">
-                                  <div className={`w-2 h-2 rounded-full mx-auto mb-1 ${
-                                    img.imageMetadata.quality > 70 ? 'bg-green-500' :
-                                    img.imageMetadata.quality > 40 ? 'bg-yellow-500' : 'bg-red-500'
-                                  }`}></div>
-                                  <span className="text-gray-600">Quality</span>
+                              <div className="space-y-2">
+                                <div className="grid grid-cols-3 gap-2 text-xs">
+                                  <div className="text-center">
+                                    <div className={`w-2 h-2 rounded-full mx-auto mb-1 ${
+                                      img.imageMetadata.quality > 70 ? 'bg-green-500' :
+                                      img.imageMetadata.quality > 40 ? 'bg-yellow-500' : 'bg-red-500'
+                                    }`}></div>
+                                    <span className="text-gray-600">Quality</span>
+                                  </div>
+                                  <div className="text-center">
+                                    <div className={`w-2 h-2 rounded-full mx-auto mb-1 ${
+                                      img.imageMetadata.lightingScore > 60 ? 'bg-green-500' :
+                                      img.imageMetadata.lightingScore > 30 ? 'bg-yellow-500' : 'bg-red-500'
+                                    }`}></div>
+                                    <span className="text-gray-600">Lighting</span>
+                                  </div>
+                                  <div className="text-center">
+                                    <div className={`w-2 h-2 rounded-full mx-auto mb-1 ${
+                                      img.imageMetadata.clarityScore > 50 ? 'bg-green-500' :
+                                      img.imageMetadata.clarityScore > 25 ? 'bg-yellow-500' : 'bg-red-500'
+                                    }`}></div>
+                                    <span className="text-gray-600">Clarity</span>
+                                  </div>
                                 </div>
-                                <div className="text-center">
-                                  <div className={`w-2 h-2 rounded-full mx-auto mb-1 ${
-                                    img.imageMetadata.lightingScore > 60 ? 'bg-green-500' :
-                                    img.imageMetadata.lightingScore > 30 ? 'bg-yellow-500' : 'bg-red-500'
-                                  }`}></div>
-                                  <span className="text-gray-600">Lighting</span>
-                                </div>
-                                <div className="text-center">
-                                  <div className={`w-2 h-2 rounded-full mx-auto mb-1 ${
-                                    img.imageMetadata.clarityScore > 50 ? 'bg-green-500' :
-                                    img.imageMetadata.clarityScore > 25 ? 'bg-yellow-500' : 'bg-red-500'
-                                  }`}></div>
-                                  <span className="text-gray-600">Clarity</span>
-                                </div>
+
+                                {/* Plant Characteristics Analysis */}
+                                {img.imageMetadata.plantCharacteristics && (
+                                  <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-xs">
+                                    <div className="font-medium text-blue-800 dark:text-blue-200 mb-1">Detected Features:</div>
+                                    <div className="space-y-1">
+                                      {img.imageMetadata.plantCharacteristics.dominantColors.length > 0 && (
+                                        <div className="flex items-center gap-1">
+                                          <span className="text-blue-700 dark:text-blue-300">Colors:</span>
+                                          <div className="flex gap-1">
+                                            {img.imageMetadata.plantCharacteristics.dominantColors.slice(0, 3).map((color, i) => (
+                                              <span key={i} className="px-1 py-0.5 bg-blue-100 dark:bg-blue-800 rounded text-xs capitalize">
+                                                {color.replace('-', ' ')}
+                                              </span>
+                                            ))}
+                                          </div>
+                                        </div>
+                                      )}
+
+                                      <div className="flex items-center gap-2 text-blue-700 dark:text-blue-300">
+                                        <span>Type: {img.imageMetadata.plantCharacteristics.plantStructure}</span>
+                                        {img.imageMetadata.plantCharacteristics.hasFlowers && (
+                                          <span className="px-1 py-0.5 bg-pink-100 text-pink-700 rounded">Flowers</span>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
                               </div>
                             )}
 
