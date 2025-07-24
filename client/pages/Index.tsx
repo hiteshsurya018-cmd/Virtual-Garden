@@ -386,52 +386,129 @@ class PlantRecognitionAI {
       };
     }
 
-    // More realistic plant count detection based on image analysis
+    // Intelligent plant matching based on actual image characteristics
     const overallQuality = (qualityMultiplier + lightingMultiplier + clarityMultiplier) / 3;
+    const chars = imageMetadata.plantCharacteristics;
 
-    // Determine realistic plant count (usually 1-2 plants per image)
-    let detectedPlantCount = 1; // Default to 1 plant
+    // Plant matching algorithm based on visual characteristics
+    const matchedPlants = mockPlantDatabase.filter(plant => {
+      let matchScore = 0;
 
-    // Only detect multiple plants if image quality is very high
-    if (overallQuality > 0.8 && Math.random() > 0.7) {
-      detectedPlantCount = 2; // Rarely detect 2 plants
+      // Color-based matching
+      if (chars.dominantColors.includes('light-green') || chars.dominantColors.includes('dark-green')) {
+        // Green plants
+        if (['Aloe Vera', 'Basil', 'Rosemary', 'Sage', 'Thyme', 'Oregano', 'Peppermint', 'Lemon Balm'].includes(plant.name)) {
+          matchScore += 3;
+        }
+      }
+
+      // Flower-based matching
+      if (chars.hasFlowers) {
+        if (chars.flowerColor === 'purple' && ['Lavender', 'Violet', 'Echinacea'].includes(plant.name)) {
+          matchScore += 4;
+        }
+        if (chars.flowerColor === 'yellow' && ['Calendula', 'Dandelion', 'Sunflower', 'Turmeric'].includes(plant.name)) {
+          matchScore += 4;
+        }
+        if (chars.flowerColor === 'red' && ['Rose', 'Hibiscus', 'Nasturtium'].includes(plant.name)) {
+          matchScore += 4;
+        }
+        if (chars.flowerColor === 'white' && ['Chamomile', 'Plantain'].includes(plant.name)) {
+          matchScore += 4;
+        }
+      }
+
+      // Leaf structure matching
+      if (chars.leafType === 'succulent' && plant.name === 'Aloe Vera') {
+        matchScore += 5;
+      }
+      if (chars.leafType === 'needle' && ['Rosemary', 'Thyme'].includes(plant.name)) {
+        matchScore += 3;
+      }
+      if (chars.leafType === 'broad' && ['Plantain', 'Comfrey', 'Dandelion'].includes(plant.name)) {
+        matchScore += 2;
+      }
+
+      // Plant structure matching
+      if (chars.plantStructure === 'herb' && plant.difficulty === 'easy') {
+        matchScore += 2;
+      }
+      if (chars.plantStructure === 'shrub' && ['Lavender', 'Rosemary', 'Sage'].includes(plant.name)) {
+        matchScore += 3;
+      }
+
+      // Texture matching
+      if (chars.textureType === 'fuzzy' && ['Sage', 'Comfrey'].includes(plant.name)) {
+        matchScore += 2;
+      }
+      if (chars.textureType === 'smooth' && ['Aloe Vera', 'Basil'].includes(plant.name)) {
+        matchScore += 2;
+      }
+
+      // Add some randomness but bias toward matches
+      matchScore += Math.random() * 2;
+
+      return matchScore > 2; // Only include plants with decent match scores
+    });
+
+    // Sort by relevance (add random element to prevent always same results)
+    const sortedMatches = matchedPlants.sort(() => Math.random() - 0.5);
+
+    // Realistic plant count - usually 1, sometimes 2
+    let detectedPlantCount = 1;
+    if (overallQuality > 0.7 && sortedMatches.length > 3 && Math.random() > 0.8) {
+      detectedPlantCount = 2;
     }
 
-    // Very rarely detect 3+ plants, only in exceptional cases
-    if (overallQuality > 0.9 && Math.random() > 0.95) {
-      detectedPlantCount = 3;
-    }
-
-    // Intelligent plant selection based on image characteristics
-    const shuffledPlants = [...mockPlantDatabase].sort(() => Math.random() - 0.5);
-
-    // Select different plants based on image quality and characteristics
-    const plantPool = overallQuality > 0.7 ?
-      shuffledPlants.slice(0, 15) : // High quality: from larger pool
-      shuffledPlants.slice(0, 8);   // Lower quality: from smaller pool
+    // Use matched plants or fallback to common ones
+    const plantPool = sortedMatches.length > 0 ? sortedMatches :
+      mockPlantDatabase.filter(p => ['Aloe Vera', 'Lavender', 'Peppermint', 'Chamomile', 'Basil'].includes(p.name));
 
     for (let i = 0; i < detectedPlantCount; i++) {
       if (i >= plantPool.length) break;
 
       const plant = plantPool[i];
 
-      // Calculate much more realistic confidence
-      let baseConfidence = 0.75 + Math.random() * 0.15; // Start with higher base confidence
+      // Calculate confidence based on image analysis match
+      let baseConfidence = 0.70 + Math.random() * 0.20;
 
-      // Apply quality factors more conservatively
-      baseConfidence *= (0.7 + qualityMultiplier * 0.3);
-      baseConfidence *= (0.7 + lightingMultiplier * 0.3);
-      baseConfidence *= (0.7 + clarityMultiplier * 0.3);
+      // Boost confidence for well-matched characteristics
+      const chars = imageMetadata.plantCharacteristics;
 
-      // Primary plant (first detected) gets higher confidence
-      if (i === 0) {
-        baseConfidence *= 1.1;
-      } else {
-        baseConfidence *= 0.85; // Secondary plants get lower confidence
+      // Color matching bonus
+      if (chars.hasFlowers) {
+        if ((chars.flowerColor === 'purple' && plant.name === 'Lavender') ||
+            (chars.flowerColor === 'yellow' && plant.name === 'Calendula') ||
+            (chars.flowerColor === 'white' && plant.name === 'Chamomile')) {
+          baseConfidence += 0.15;
+        }
       }
 
-      // Ensure realistic confidence range
-      const confidence = Math.min(0.95, Math.max(0.60, baseConfidence));
+      // Leaf structure bonus
+      if (chars.leafType === 'succulent' && plant.name === 'Aloe Vera') {
+        baseConfidence += 0.20;
+      }
+
+      // Green foliage bonus
+      if ((chars.dominantColors.includes('dark-green') || chars.dominantColors.includes('light-green')) &&
+          ['Basil', 'Peppermint', 'Rosemary', 'Sage', 'Thyme'].includes(plant.name)) {
+        baseConfidence += 0.10;
+      }
+
+      // Apply quality factors
+      baseConfidence *= (0.8 + qualityMultiplier * 0.2);
+      baseConfidence *= (0.8 + lightingMultiplier * 0.2);
+      baseConfidence *= (0.8 + clarityMultiplier * 0.2);
+
+      // Primary plant gets slight boost
+      if (i === 0) {
+        baseConfidence *= 1.05;
+      } else {
+        baseConfidence *= 0.90;
+      }
+
+      // Ensure realistic range
+      const confidence = Math.min(0.94, Math.max(0.65, baseConfidence));
 
       // More realistic bounding box for detected plants
       const detectionMetadata = {
