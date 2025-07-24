@@ -1227,13 +1227,72 @@ export default function Index() {
               </CardContent>
             </Card>
 
+            {/* AI Recognition Status */}
+            {isAnalyzing && (
+              <Card className="shadow-2xl border-blue-200/50 bg-blue-50/80 dark:bg-blue-900/20 backdrop-blur-sm">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="animate-spin w-6 h-6 border-2 border-blue-300 border-t-blue-600 rounded-full"></div>
+                    <div>
+                      <div className="font-medium text-blue-900 dark:text-blue-100">AI Analysis in Progress</div>
+                      <div className="text-sm text-blue-700 dark:text-blue-300">
+                        Analyzing plant features and characteristics...
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Recognition Results Summary */}
+            {lastAnalysisResult && !isAnalyzing && (
+              <Card className="shadow-2xl border-green-200/50 bg-green-50/80 dark:bg-green-900/20 backdrop-blur-sm">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <CheckCircle className="w-6 h-6 text-green-600" />
+                      <div>
+                        <div className="font-medium text-green-900 dark:text-green-100">
+                          Analysis Complete
+                        </div>
+                        <div className="text-sm text-green-700 dark:text-green-300">
+                          {lastAnalysisResult.detectedPlants.length} plants detected in {(lastAnalysisResult.processingTime / 1000).toFixed(1)}s
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-lg font-bold text-green-600">
+                        {Math.round(lastAnalysisResult.totalConfidence * 100)}%
+                      </div>
+                      <div className="text-xs text-green-700 dark:text-green-300">Avg Confidence</div>
+                    </div>
+                  </div>
+
+                  {lastAnalysisResult.errors.length > 0 && (
+                    <div className="mt-3 p-2 bg-yellow-100 dark:bg-yellow-900/30 rounded border-l-4 border-yellow-500">
+                      <div className="text-sm text-yellow-800 dark:text-yellow-200">
+                        <strong>Note:</strong> {lastAnalysisResult.errors[0]}
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
             {/* Enhanced Plant Cards */}
             {filteredPlants.length > 0 && (
               <Card className="shadow-2xl border-garden-200/50 dark:border-gray-700/50 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-garden-900 dark:text-white">
-                    <Leaf className="w-5 h-5" />
-                    Available Plants ({filteredPlants.length})
+                  <CardTitle className="flex items-center justify-between text-garden-900 dark:text-white">
+                    <div className="flex items-center gap-2">
+                      <Leaf className="w-5 h-5" />
+                      Detected Plants ({filteredPlants.length})
+                    </div>
+                    {lastAnalysisResult && (
+                      <Badge variant="secondary" className="text-xs">
+                        Threshold: {Math.round(confidenceThreshold * 100)}%+
+                      </Badge>
+                    )}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -1798,23 +1857,51 @@ export default function Index() {
               </CardContent>
             </Card>
 
-            {/* Instructions Panel */}
+            {/* Enhanced Instructions Panel */}
             <Card className="mt-4 bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm border-garden-200/50 dark:border-gray-700/50">
               <CardContent className="p-4">
-                <div className="flex items-center justify-center gap-8 text-sm text-garden-600 dark:text-gray-400">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-garden-500 rounded-full"></div>
-                    Click plants in sidebar to add to garden
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                    Click placed plants to select/remove
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                    Use mouse to orbit, zoom, and pan
-                  </div>
-                </div>
+                <Tabs defaultValue="instructions" className="w-full">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="instructions">Instructions</TabsTrigger>
+                    <TabsTrigger value="tips">AI Tips</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="instructions" className="mt-3">
+                    <div className="grid md:grid-cols-3 gap-4 text-sm text-garden-600 dark:text-gray-400">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-garden-500 rounded-full"></div>
+                        Click plants to add to garden
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                        Click placed plants to select/remove
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                        Use mouse to orbit and zoom
+                      </div>
+                    </div>
+                  </TabsContent>
+                  <TabsContent value="tips" className="mt-3">
+                    <div className="space-y-2 text-sm text-garden-600 dark:text-gray-400">
+                      <div className="flex items-start gap-2">
+                        <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                        <span>Upload high-resolution images (800x600+) for better accuracy</span>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                        <span>Ensure good lighting and clear focus on plant features</span>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                        <span>Include leaves, flowers, and stems when possible</span>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                        <span>Adjust confidence threshold to filter results</span>
+                      </div>
+                    </div>
+                  </TabsContent>
+                </Tabs>
               </CardContent>
             </Card>
           </div>
