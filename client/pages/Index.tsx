@@ -146,8 +146,184 @@ interface UploadedImage {
   errorMessage?: string;
 }
 
+// Advanced AI Plant Recognition System
+class PlantRecognitionAI {
+  static async analyzeImageQuality(file: File): Promise<{
+    quality: number;
+    width: number;
+    height: number;
+    format: string;
+    lightingScore: number;
+    clarityScore: number;
+    hasPlants: boolean;
+  }> {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        // Simulate advanced image quality analysis
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d')!;
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.drawImage(img, 0, 0);
+
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imageData.data;
+
+        // Calculate lighting score based on brightness distribution
+        let totalBrightness = 0;
+        let variance = 0;
+        const pixels = data.length / 4;
+
+        for (let i = 0; i < data.length; i += 4) {
+          const brightness = (data[i] + data[i + 1] + data[i + 2]) / 3;
+          totalBrightness += brightness;
+        }
+
+        const avgBrightness = totalBrightness / pixels;
+
+        for (let i = 0; i < data.length; i += 4) {
+          const brightness = (data[i] + data[i + 1] + data[i + 2]) / 3;
+          variance += Math.pow(brightness - avgBrightness, 2);
+        }
+
+        const stdDev = Math.sqrt(variance / pixels);
+
+        // Calculate scores
+        const lightingScore = Math.min(100, Math.max(0, 100 - Math.abs(avgBrightness - 128) / 1.28));
+        const clarityScore = Math.min(100, stdDev / 2); // Higher variance = more clarity
+        const hasPlants = avgBrightness > 50 && stdDev > 30; // Basic plant detection
+
+        resolve({
+          quality: Math.min(100, (lightingScore + clarityScore) / 2),
+          width: img.width,
+          height: img.height,
+          format: file.type,
+          lightingScore,
+          clarityScore,
+          hasPlants
+        });
+      };
+      img.src = URL.createObjectURL(file);
+    });
+  }
+
+  static async detectPlants(file: File, imageMetadata: any): Promise<AIAnalysisResult> {
+    const startTime = Date.now();
+
+    // Simulate advanced AI processing
+    await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 2000));
+
+    const detectedPlants: DetectedPlant[] = [];
+    const errors: string[] = [];
+    const suggestions: string[] = [];
+
+    // Quality-based detection accuracy
+    const qualityMultiplier = imageMetadata.quality / 100;
+    const lightingMultiplier = imageMetadata.lightingScore / 100;
+    const clarityMultiplier = imageMetadata.clarityScore / 100;
+
+    if (imageMetadata.quality < 30) {
+      errors.push('Image quality too low for accurate detection');
+      suggestions.push('Try uploading a higher resolution image');
+    }
+
+    if (imageMetadata.lightingScore < 40) {
+      errors.push('Poor lighting conditions detected');
+      suggestions.push('Ensure good lighting when taking plant photos');
+    }
+
+    if (!imageMetadata.hasPlants) {
+      errors.push('No plant material detected in image');
+      suggestions.push('Ensure plants are clearly visible in the image');
+      return {
+        detectedPlants: [],
+        imageQuality: imageMetadata.quality,
+        processingTime: Date.now() - startTime,
+        totalConfidence: 0,
+        errors,
+        suggestions
+      };
+    }
+
+    // Enhanced plant detection with realistic accuracy
+    const possiblePlants = mockPlantDatabase.filter(() => Math.random() < 0.7);
+
+    for (const plant of possiblePlants.slice(0, Math.floor(3 + Math.random() * 4))) {
+      // Calculate realistic confidence based on image quality factors
+      let baseConfidence = 0.6 + Math.random() * 0.3;
+      baseConfidence *= qualityMultiplier;
+      baseConfidence *= lightingMultiplier;
+      baseConfidence *= clarityMultiplier;
+
+      // Add some randomness for plant-specific factors
+      const plantSpecificFactor = 0.8 + Math.random() * 0.4;
+      baseConfidence *= plantSpecificFactor;
+
+      // Ensure minimum threshold
+      if (baseConfidence < 0.65) {
+        baseConfidence = 0.5 + Math.random() * 0.15; // Lower confidence range
+      }
+
+      const confidence = Math.min(0.98, Math.max(0.45, baseConfidence));
+
+      const detectionMetadata = {
+        boundingBox: {
+          x: Math.random() * (imageMetadata.width * 0.3),
+          y: Math.random() * (imageMetadata.height * 0.3),
+          width: imageMetadata.width * (0.4 + Math.random() * 0.4),
+          height: imageMetadata.height * (0.4 + Math.random() * 0.4)
+        },
+        imageQuality: imageMetadata.quality,
+        lightingCondition: imageMetadata.lightingScore > 70 ? 'excellent' :
+                          imageMetadata.lightingScore > 50 ? 'good' : 'poor' as const,
+        plantHealth: Math.random() > 0.8 ? 'stressed' :
+                    Math.random() > 0.95 ? 'diseased' : 'healthy' as const,
+        growthStage: ['seedling', 'juvenile', 'mature', 'flowering'][Math.floor(Math.random() * 4)] as const,
+        certaintyFactors: {
+          leafShape: 0.7 + Math.random() * 0.3,
+          flowerStructure: 0.6 + Math.random() * 0.4,
+          stemCharacteristics: 0.65 + Math.random() * 0.35,
+          overallMorphology: 0.75 + Math.random() * 0.25
+        }
+      };
+
+      detectedPlants.push({
+        ...plant,
+        confidence,
+        detectionMetadata
+      });
+    }
+
+    // Sort by confidence
+    detectedPlants.sort((a, b) => b.confidence - a.confidence);
+
+    const totalConfidence = detectedPlants.reduce((sum, plant) => sum + plant.confidence, 0) / detectedPlants.length || 0;
+
+    // Add quality-based suggestions
+    if (totalConfidence < 0.7) {
+      suggestions.push('Consider retaking the photo with better lighting and focus');
+    }
+    if (detectedPlants.length < 2) {
+      suggestions.push('Move closer to capture more plant details');
+    }
+    if (imageMetadata.width < 800 || imageMetadata.height < 600) {
+      suggestions.push('Use higher resolution images for better accuracy');
+    }
+
+    return {
+      detectedPlants,
+      imageQuality: imageMetadata.quality,
+      processingTime: Date.now() - startTime,
+      totalConfidence,
+      errors,
+      suggestions
+    };
+  }
+}
+
 // Extended mock data with more detailed plant information
-const mockDetectedPlants: DetectedPlant[] = [
+const mockPlantDatabase: DetectedPlant[] = [
   {
     id: '1',
     name: 'Aloe Vera',
@@ -453,6 +629,9 @@ export default function Index() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [detectedPlants, setDetectedPlants] = useState<DetectedPlant[]>([]);
+  const [lastAnalysisResult, setLastAnalysisResult] = useState<AIAnalysisResult | null>(null);
+  const [confidenceThreshold, setConfidenceThreshold] = useState(0.65);
+  const [showAnalysisDetails, setShowAnalysisDetails] = useState(false);
   const [placedPlants, setPlacedPlants] = useState<PlantPosition[]>([]);
   const [selectedPlantPosition, setSelectedPlantPosition] = useState<string | null>(null);
   const [showGrid, setShowGrid] = useState(true);
@@ -487,9 +666,9 @@ export default function Index() {
     lastUpdated: new Date().toLocaleDateString()
   };
 
-  // Enhanced file upload with progress tracking
-  const handleFileUpload = useCallback((files: FileList) => {
-    Array.from(files).forEach(file => {
+  // Enhanced file upload with advanced AI processing
+  const handleFileUpload = useCallback(async (files: FileList) => {
+    Array.from(files).forEach(async (file) => {
       if (file.type.startsWith('image/')) {
         const imageId = Math.random().toString(36).substr(2, 9);
         const newImage: UploadedImage = {
@@ -499,45 +678,95 @@ export default function Index() {
           name: file.name,
           size: file.size,
           uploadProgress: 0,
-          analysisStatus: 'pending'
+          analysisStatus: 'pending',
+          analysisProgress: 0
         };
 
         setUploadedImages(prev => [...prev, newImage]);
 
-        // Simulate upload progress
-        const progressInterval = setInterval(() => {
-          setUploadedImages(prev => prev.map(img => 
-            img.id === imageId && img.uploadProgress < 100
-              ? { ...img, uploadProgress: img.uploadProgress + 10 }
-              : img
-          ));
-        }, 200);
-
-        // Simulate analysis after upload
-        setTimeout(() => {
-          clearInterval(progressInterval);
-          setUploadedImages(prev => prev.map(img => 
-            img.id === imageId 
-              ? { ...img, uploadProgress: 100, analysisStatus: 'analyzing' }
-              : img
-          ));
-
-          setIsAnalyzing(true);
-
-          // Simulate AI analysis
-          setTimeout(() => {
-            setDetectedPlants(mockDetectedPlants);
-            setIsAnalyzing(false);
-            setUploadedImages(prev => prev.map(img => 
-              img.id === imageId 
-                ? { ...img, analysisStatus: 'completed' }
+        try {
+          // Step 1: Upload progress simulation
+          const uploadInterval = setInterval(() => {
+            setUploadedImages(prev => prev.map(img =>
+              img.id === imageId && img.uploadProgress < 100
+                ? { ...img, uploadProgress: img.uploadProgress + 20 }
                 : img
             ));
-          }, 3000);
-        }, 2000);
+          }, 100);
+
+          setTimeout(() => {
+            clearInterval(uploadInterval);
+            setUploadedImages(prev => prev.map(img =>
+              img.id === imageId
+                ? { ...img, uploadProgress: 100, analysisStatus: 'preprocessing' }
+                : img
+            ));
+          }, 500);
+
+          // Step 2: Image quality analysis
+          setTimeout(async () => {
+            const imageMetadata = await PlantRecognitionAI.analyzeImageQuality(file);
+
+            setUploadedImages(prev => prev.map(img =>
+              img.id === imageId
+                ? {
+                    ...img,
+                    analysisStatus: 'analyzing',
+                    analysisProgress: 25,
+                    imageMetadata
+                  }
+                : img
+            ));
+
+            // Step 3: AI Analysis with progress updates
+            setIsAnalyzing(true);
+
+            const progressUpdates = [30, 50, 70, 85, 95];
+            progressUpdates.forEach((progress, index) => {
+              setTimeout(() => {
+                setUploadedImages(prev => prev.map(img =>
+                  img.id === imageId
+                    ? { ...img, analysisProgress: progress }
+                    : img
+                ));
+              }, (index + 1) * 600);
+            });
+
+            // Step 4: Complete AI analysis
+            const analysisResult = await PlantRecognitionAI.detectPlants(file, imageMetadata);
+
+            setLastAnalysisResult(analysisResult);
+            setDetectedPlants(analysisResult.detectedPlants.filter(plant =>
+              plant.confidence >= confidenceThreshold
+            ));
+            setIsAnalyzing(false);
+
+            setUploadedImages(prev => prev.map(img =>
+              img.id === imageId
+                ? {
+                    ...img,
+                    analysisStatus: analysisResult.errors.length > 0 ? 'error' : 'completed',
+                    analysisProgress: 100,
+                    errorMessage: analysisResult.errors.join(', ') || undefined
+                  }
+                : img
+            ));
+          }, 1000);
+        } catch (error) {
+          setUploadedImages(prev => prev.map(img =>
+            img.id === imageId
+              ? {
+                  ...img,
+                  analysisStatus: 'error',
+                  errorMessage: 'Failed to process image'
+                }
+              : img
+          ));
+          setIsAnalyzing(false);
+        }
       }
     });
-  }, []);
+  }, [confidenceThreshold]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
