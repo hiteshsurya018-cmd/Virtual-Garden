@@ -156,11 +156,20 @@ class PlantRecognitionAI {
     lightingScore: number;
     clarityScore: number;
     hasPlants: boolean;
+    plantCharacteristics: {
+      dominantColors: string[];
+      leafType: 'broad' | 'narrow' | 'needle' | 'succulent' | 'compound';
+      plantStructure: 'herb' | 'shrub' | 'tree' | 'vine' | 'ground-cover';
+      hasFlowers: boolean;
+      flowerColor?: string;
+      textureType: 'smooth' | 'rough' | 'fuzzy' | 'waxy' | 'serrated';
+      plantSize: 'small' | 'medium' | 'large';
+    };
   }> {
     return new Promise((resolve) => {
       const img = new Image();
       img.onload = () => {
-        // Enhanced image quality analysis
+        // Advanced image analysis for plant identification
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d')!;
         canvas.width = img.width;
@@ -170,13 +179,26 @@ class PlantRecognitionAI {
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         const data = imageData.data;
 
-        // Advanced analysis for plant detection
+        // Comprehensive plant analysis
         let totalBrightness = 0;
         let variance = 0;
         let greenPixels = 0;
         let brownPixels = 0;
+        let redPixels = 0;
+        let yellowPixels = 0;
+        let purplePixels = 0;
         let edgePixels = 0;
         const pixels = data.length / 4;
+
+        const colorCounts = {
+          lightGreen: 0,
+          darkGreen: 0,
+          brown: 0,
+          red: 0,
+          yellow: 0,
+          purple: 0,
+          white: 0
+        };
 
         for (let i = 0; i < data.length; i += 4) {
           const r = data[i];
@@ -185,18 +207,47 @@ class PlantRecognitionAI {
           const brightness = (r + g + b) / 3;
           totalBrightness += brightness;
 
-          // Detect green vegetation (plants)
-          if (g > r && g > b && g > 80) {
+          // Detailed color analysis for plant identification
+          if (g > r && g > b && g > 60) {
+            if (g > 120) {
+              colorCounts.lightGreen++;
+            } else {
+              colorCounts.darkGreen++;
+            }
             greenPixels++;
           }
 
-          // Detect brown/woody plant parts
-          if (r > 100 && g > 70 && b < 80 && Math.abs(r - g) < 50) {
+          // Brown/woody detection
+          if (r > 80 && g > 60 && b < 80 && r > g && Math.abs(r - g) < 60) {
+            colorCounts.brown++;
             brownPixels++;
           }
 
-          // Simple edge detection for texture analysis
-          if (i > 0 && Math.abs(brightness - ((data[i-4] + data[i-3] + data[i-2]) / 3)) > 30) {
+          // Red flowers/fruits
+          if (r > 120 && r > g * 1.5 && r > b * 1.5) {
+            colorCounts.red++;
+            redPixels++;
+          }
+
+          // Yellow flowers
+          if (r > 150 && g > 150 && b < 100 && Math.abs(r - g) < 30) {
+            colorCounts.yellow++;
+            yellowPixels++;
+          }
+
+          // Purple flowers
+          if (r > 80 && b > 80 && b > g && r > g) {
+            colorCounts.purple++;
+            purplePixels++;
+          }
+
+          // White flowers
+          if (r > 200 && g > 200 && b > 200) {
+            colorCounts.white++;
+          }
+
+          // Edge detection for texture
+          if (i > 0 && Math.abs(brightness - ((data[i-4] + data[i-3] + data[i-2]) / 3)) > 25) {
             edgePixels++;
           }
         }
@@ -211,17 +262,61 @@ class PlantRecognitionAI {
 
         const stdDev = Math.sqrt(variance / pixels);
 
-        // Much more lenient scoring system
+        // Determine plant characteristics
+        const dominantColors: string[] = [];
+        const totalColorPixels = greenPixels + brownPixels + redPixels + yellowPixels + purplePixels;
+
+        if (colorCounts.lightGreen / pixels > 0.15) dominantColors.push('light-green');
+        if (colorCounts.darkGreen / pixels > 0.10) dominantColors.push('dark-green');
+        if (colorCounts.brown / pixels > 0.05) dominantColors.push('brown');
+        if (colorCounts.red / pixels > 0.02) dominantColors.push('red');
+        if (colorCounts.yellow / pixels > 0.02) dominantColors.push('yellow');
+        if (colorCounts.purple / pixels > 0.02) dominantColors.push('purple');
+        if (colorCounts.white / pixels > 0.03) dominantColors.push('white');
+
+        // Determine leaf type based on color patterns and edges
+        let leafType: 'broad' | 'narrow' | 'needle' | 'succulent' | 'compound' = 'broad';
+        if (edgePixels / pixels > 0.3) leafType = 'serrated';
+        if (colorCounts.lightGreen > colorCounts.darkGreen * 2) leafType = 'succulent';
+        if (edgePixels / pixels < 0.1 && colorCounts.darkGreen > colorCounts.lightGreen) leafType = 'needle';
+        if (dominantColors.includes('brown') && edgePixels / pixels > 0.2) leafType = 'compound';
+
+        // Determine plant structure
+        let plantStructure: 'herb' | 'shrub' | 'tree' | 'vine' | 'ground-cover' = 'herb';
+        if (brownPixels / pixels > 0.15) plantStructure = 'shrub';
+        if (brownPixels / pixels > 0.25) plantStructure = 'tree';
+        if (edgePixels / pixels > 0.4) plantStructure = 'vine';
+
+        // Flower detection
+        const hasFlowers = redPixels + yellowPixels + purplePixels + colorCounts.white > pixels * 0.02;
+        let flowerColor: string | undefined;
+        if (hasFlowers) {
+          if (redPixels > yellowPixels && redPixels > purplePixels) flowerColor = 'red';
+          else if (yellowPixels > purplePixels) flowerColor = 'yellow';
+          else if (purplePixels > 0) flowerColor = 'purple';
+          else if (colorCounts.white > pixels * 0.03) flowerColor = 'white';
+        }
+
+        // Texture analysis
+        let textureType: 'smooth' | 'rough' | 'fuzzy' | 'waxy' | 'serrated' = 'smooth';
+        if (edgePixels / pixels > 0.3) textureType = 'serrated';
+        else if (stdDev > 60) textureType = 'rough';
+        else if (avgBrightness > 160 && stdDev < 30) textureType = 'waxy';
+        else if (stdDev > 40) textureType = 'fuzzy';
+
+        // Plant size estimation
+        let plantSize: 'small' | 'medium' | 'large' = 'medium';
+        if (img.width * img.height < 500000) plantSize = 'small';
+        else if (img.width * img.height > 2000000) plantSize = 'large';
+
+        // Scoring
         const lightingScore = Math.min(100, Math.max(30, 100 - Math.abs(avgBrightness - 120) / 2.5));
         const clarityScore = Math.min(100, Math.max(40, (stdDev / 2) + (edgePixels / pixels * 80)));
 
-        // More lenient plant detection
-        const plantPixelRatio = (greenPixels + brownPixels) / pixels;
-        const hasPlants = plantPixelRatio > 0.05 || avgBrightness > 30 || stdDev > 15;
+        const plantPixelRatio = totalColorPixels / pixels;
+        const hasPlants = plantPixelRatio > 0.08 || dominantColors.length > 0;
 
-        // More generous resolution scoring
         const resolutionScore = Math.min(100, Math.max(50, ((img.width * img.height) / (400 * 300)) * 60));
-
         const finalQuality = Math.min(100, Math.max(50, (lightingScore * 0.3 + clarityScore * 0.3 + resolutionScore * 0.4)));
 
         resolve({
@@ -231,7 +326,16 @@ class PlantRecognitionAI {
           format: file.type,
           lightingScore,
           clarityScore,
-          hasPlants
+          hasPlants,
+          plantCharacteristics: {
+            dominantColors,
+            leafType: leafType as any,
+            plantStructure,
+            hasFlowers,
+            flowerColor,
+            textureType,
+            plantSize
+          }
         });
       };
       img.src = URL.createObjectURL(file);
