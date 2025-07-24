@@ -83,6 +83,28 @@ interface DetectedPlant {
   warnings: string[];
   rating: number;
   reviews: number;
+  detectionMetadata?: {
+    boundingBox: { x: number; y: number; width: number; height: number };
+    imageQuality: number;
+    lightingCondition: 'excellent' | 'good' | 'poor';
+    plantHealth: 'healthy' | 'stressed' | 'diseased';
+    growthStage: 'seedling' | 'juvenile' | 'mature' | 'flowering';
+    certaintyFactors: {
+      leafShape: number;
+      flowerStructure: number;
+      stemCharacteristics: number;
+      overallMorphology: number;
+    };
+  };
+}
+
+interface AIAnalysisResult {
+  detectedPlants: DetectedPlant[];
+  imageQuality: number;
+  processingTime: number;
+  totalConfidence: number;
+  errors: string[];
+  suggestions: string[];
 }
 
 interface PlantPosition {
@@ -110,7 +132,18 @@ interface UploadedImage {
   name: string;
   size: number;
   uploadProgress: number;
-  analysisStatus: 'pending' | 'analyzing' | 'completed' | 'error';
+  analysisStatus: 'pending' | 'preprocessing' | 'analyzing' | 'postprocessing' | 'completed' | 'error';
+  analysisProgress: number;
+  imageMetadata?: {
+    width: number;
+    height: number;
+    format: string;
+    quality: number;
+    hasPlants: boolean;
+    lightingScore: number;
+    clarityScore: number;
+  };
+  errorMessage?: string;
 }
 
 // Extended mock data with more detailed plant information
