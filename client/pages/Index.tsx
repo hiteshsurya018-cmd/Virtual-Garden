@@ -160,7 +160,7 @@ class PlantRecognitionAI {
     return new Promise((resolve) => {
       const img = new Image();
       img.onload = () => {
-        // Simulate advanced image quality analysis
+        // Enhanced image quality analysis
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d')!;
         canvas.width = img.width;
@@ -170,18 +170,40 @@ class PlantRecognitionAI {
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         const data = imageData.data;
 
-        // Calculate lighting score based on brightness distribution
+        // Advanced analysis for plant detection
         let totalBrightness = 0;
         let variance = 0;
+        let greenPixels = 0;
+        let brownPixels = 0;
+        let edgePixels = 0;
         const pixels = data.length / 4;
 
         for (let i = 0; i < data.length; i += 4) {
-          const brightness = (data[i] + data[i + 1] + data[i + 2]) / 3;
+          const r = data[i];
+          const g = data[i + 1];
+          const b = data[i + 2];
+          const brightness = (r + g + b) / 3;
           totalBrightness += brightness;
+
+          // Detect green vegetation (plants)
+          if (g > r && g > b && g > 80) {
+            greenPixels++;
+          }
+
+          // Detect brown/woody plant parts
+          if (r > 100 && g > 70 && b < 80 && Math.abs(r - g) < 50) {
+            brownPixels++;
+          }
+
+          // Simple edge detection for texture analysis
+          if (i > 0 && Math.abs(brightness - ((data[i-4] + data[i-3] + data[i-2]) / 3)) > 30) {
+            edgePixels++;
+          }
         }
 
         const avgBrightness = totalBrightness / pixels;
 
+        // Calculate variance for clarity
         for (let i = 0; i < data.length; i += 4) {
           const brightness = (data[i] + data[i + 1] + data[i + 2]) / 3;
           variance += Math.pow(brightness - avgBrightness, 2);
@@ -189,13 +211,21 @@ class PlantRecognitionAI {
 
         const stdDev = Math.sqrt(variance / pixels);
 
-        // Calculate scores
-        const lightingScore = Math.min(100, Math.max(0, 100 - Math.abs(avgBrightness - 128) / 1.28));
-        const clarityScore = Math.min(100, stdDev / 2); // Higher variance = more clarity
-        const hasPlants = avgBrightness > 50 && stdDev > 30; // Basic plant detection
+        // Enhanced scoring system
+        const lightingScore = Math.min(100, Math.max(0, 100 - Math.abs(avgBrightness - 140) / 1.4));
+        const clarityScore = Math.min(100, (stdDev / 3) + (edgePixels / pixels * 100));
+
+        // Better plant detection based on color analysis
+        const plantPixelRatio = (greenPixels + brownPixels) / pixels;
+        const hasPlants = plantPixelRatio > 0.15 && avgBrightness > 40 && stdDev > 25;
+
+        // Resolution-based quality adjustment
+        const resolutionScore = Math.min(100, ((img.width * img.height) / (800 * 600)) * 80);
+
+        const finalQuality = Math.min(100, (lightingScore * 0.4 + clarityScore * 0.4 + resolutionScore * 0.2));
 
         resolve({
-          quality: Math.min(100, (lightingScore + clarityScore) / 2),
+          quality: finalQuality,
           width: img.width,
           height: img.height,
           format: file.type,
@@ -211,31 +241,37 @@ class PlantRecognitionAI {
   static async detectPlants(file: File, imageMetadata: any): Promise<AIAnalysisResult> {
     const startTime = Date.now();
 
-    // Simulate advanced AI processing
-    await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 2000));
+    // Simulate realistic AI processing time
+    await new Promise(resolve => setTimeout(resolve, 1500 + Math.random() * 1500));
 
     const detectedPlants: DetectedPlant[] = [];
     const errors: string[] = [];
     const suggestions: string[] = [];
 
-    // Quality-based detection accuracy
+    // Enhanced quality checks
     const qualityMultiplier = imageMetadata.quality / 100;
     const lightingMultiplier = imageMetadata.lightingScore / 100;
     const clarityMultiplier = imageMetadata.clarityScore / 100;
 
-    if (imageMetadata.quality < 30) {
-      errors.push('Image quality too low for accurate detection');
-      suggestions.push('Try uploading a higher resolution image');
+    // Strict quality requirements
+    if (imageMetadata.quality < 40) {
+      errors.push('Image quality insufficient for accurate plant detection');
+      suggestions.push('Upload a higher resolution image (minimum 800x600)');
     }
 
-    if (imageMetadata.lightingScore < 40) {
-      errors.push('Poor lighting conditions detected');
-      suggestions.push('Ensure good lighting when taking plant photos');
+    if (imageMetadata.lightingScore < 35) {
+      errors.push('Poor lighting detected - plant features not clearly visible');
+      suggestions.push('Retake photo with better natural or artificial lighting');
+    }
+
+    if (imageMetadata.clarityScore < 25) {
+      errors.push('Image appears blurry or out of focus');
+      suggestions.push('Ensure camera is focused and image is sharp');
     }
 
     if (!imageMetadata.hasPlants) {
       errors.push('No plant material detected in image');
-      suggestions.push('Ensure plants are clearly visible in the image');
+      suggestions.push('Ensure plants fill a significant portion of the image frame');
       return {
         detectedPlants: [],
         imageQuality: imageMetadata.quality,
@@ -246,45 +282,76 @@ class PlantRecognitionAI {
       };
     }
 
-    // Enhanced plant detection with realistic accuracy
-    const possiblePlants = mockPlantDatabase.filter(() => Math.random() < 0.7);
+    // More realistic plant count detection based on image analysis
+    const overallQuality = (qualityMultiplier + lightingMultiplier + clarityMultiplier) / 3;
 
-    for (const plant of possiblePlants.slice(0, Math.floor(3 + Math.random() * 4))) {
-      // Calculate realistic confidence based on image quality factors
-      let baseConfidence = 0.6 + Math.random() * 0.3;
-      baseConfidence *= qualityMultiplier;
-      baseConfidence *= lightingMultiplier;
-      baseConfidence *= clarityMultiplier;
+    // Determine realistic plant count (usually 1-2 plants per image)
+    let detectedPlantCount = 1; // Default to 1 plant
 
-      // Add some randomness for plant-specific factors
-      const plantSpecificFactor = 0.8 + Math.random() * 0.4;
-      baseConfidence *= plantSpecificFactor;
+    // Only detect multiple plants if image quality is very high
+    if (overallQuality > 0.8 && Math.random() > 0.7) {
+      detectedPlantCount = 2; // Rarely detect 2 plants
+    }
 
-      // Ensure minimum threshold
-      if (baseConfidence < 0.65) {
-        baseConfidence = 0.5 + Math.random() * 0.15; // Lower confidence range
+    // Very rarely detect 3+ plants, only in exceptional cases
+    if (overallQuality > 0.9 && Math.random() > 0.95) {
+      detectedPlantCount = 3;
+    }
+
+    // Select most likely plants based on common medicinal plants
+    const commonMedicinalPlants = mockPlantDatabase.filter(plant =>
+      ['Aloe Vera', 'Lavender', 'Peppermint', 'Chamomile'].includes(plant.name)
+    );
+
+    const otherPlants = mockPlantDatabase.filter(plant =>
+      !commonMedicinalPlants.includes(plant)
+    );
+
+    // Prioritize common plants
+    const plantPool = [...commonMedicinalPlants, ...otherPlants];
+
+    for (let i = 0; i < detectedPlantCount; i++) {
+      if (i >= plantPool.length) break;
+
+      const plant = plantPool[i];
+
+      // Calculate much more realistic confidence
+      let baseConfidence = 0.75 + Math.random() * 0.15; // Start with higher base confidence
+
+      // Apply quality factors more conservatively
+      baseConfidence *= (0.7 + qualityMultiplier * 0.3);
+      baseConfidence *= (0.7 + lightingMultiplier * 0.3);
+      baseConfidence *= (0.7 + clarityMultiplier * 0.3);
+
+      // Primary plant (first detected) gets higher confidence
+      if (i === 0) {
+        baseConfidence *= 1.1;
+      } else {
+        baseConfidence *= 0.85; // Secondary plants get lower confidence
       }
 
-      const confidence = Math.min(0.98, Math.max(0.45, baseConfidence));
+      // Ensure realistic confidence range
+      const confidence = Math.min(0.95, Math.max(0.60, baseConfidence));
 
+      // More realistic bounding box for detected plants
       const detectionMetadata = {
         boundingBox: {
-          x: Math.random() * (imageMetadata.width * 0.3),
+          x: i * (imageMetadata.width * 0.3) + Math.random() * (imageMetadata.width * 0.2),
           y: Math.random() * (imageMetadata.height * 0.3),
-          width: imageMetadata.width * (0.4 + Math.random() * 0.4),
-          height: imageMetadata.height * (0.4 + Math.random() * 0.4)
+          width: imageMetadata.width * (0.5 + Math.random() * 0.3),
+          height: imageMetadata.height * (0.6 + Math.random() * 0.3)
         },
         imageQuality: imageMetadata.quality,
         lightingCondition: imageMetadata.lightingScore > 70 ? 'excellent' :
                           imageMetadata.lightingScore > 50 ? 'good' : 'poor' as const,
-        plantHealth: Math.random() > 0.8 ? 'stressed' :
-                    Math.random() > 0.95 ? 'diseased' : 'healthy' as const,
-        growthStage: ['seedling', 'juvenile', 'mature', 'flowering'][Math.floor(Math.random() * 4)] as const,
+        plantHealth: overallQuality > 0.7 ? 'healthy' :
+                    overallQuality > 0.5 ? 'stressed' : 'diseased' as const,
+        growthStage: i === 0 ? 'mature' : ['juvenile', 'mature'][Math.floor(Math.random() * 2)] as const,
         certaintyFactors: {
-          leafShape: 0.7 + Math.random() * 0.3,
-          flowerStructure: 0.6 + Math.random() * 0.4,
-          stemCharacteristics: 0.65 + Math.random() * 0.35,
-          overallMorphology: 0.75 + Math.random() * 0.25
+          leafShape: 0.8 + Math.random() * 0.15,
+          flowerStructure: 0.7 + Math.random() * 0.2,
+          stemCharacteristics: 0.75 + Math.random() * 0.2,
+          overallMorphology: 0.85 + Math.random() * 0.1
         }
       };
 
@@ -295,20 +362,27 @@ class PlantRecognitionAI {
       });
     }
 
-    // Sort by confidence
+    // Sort by confidence (highest first)
     detectedPlants.sort((a, b) => b.confidence - a.confidence);
 
     const totalConfidence = detectedPlants.reduce((sum, plant) => sum + plant.confidence, 0) / detectedPlants.length || 0;
 
-    // Add quality-based suggestions
-    if (totalConfidence < 0.7) {
-      suggestions.push('Consider retaking the photo with better lighting and focus');
+    // Quality-based feedback
+    if (totalConfidence < 0.75) {
+      suggestions.push('Image quality affects detection accuracy - consider retaking with better conditions');
     }
-    if (detectedPlants.length < 2) {
-      suggestions.push('Move closer to capture more plant details');
+
+    if (detectedPlants.length === 1) {
+      suggestions.push('Single plant detected - ensure the plant fills most of the frame for best results');
     }
-    if (imageMetadata.width < 800 || imageMetadata.height < 600) {
-      suggestions.push('Use higher resolution images for better accuracy');
+
+    if (overallQuality < 0.6) {
+      suggestions.push('Improve image quality by ensuring good lighting, focus, and resolution');
+    }
+
+    // Prevent over-detection warnings
+    if (detectedPlants.length > 2) {
+      suggestions.push('Multiple plants detected - verify each identification carefully');
     }
 
     return {
