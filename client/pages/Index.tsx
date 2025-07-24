@@ -1199,9 +1199,17 @@ export default function Index() {
             const analysisResult = await PlantRecognitionAI.detectPlants(file, imageMetadata);
 
             setLastAnalysisResult(analysisResult);
-            setDetectedPlants(analysisResult.detectedPlants.filter(plant =>
+
+            let finalPlants = analysisResult.detectedPlants.filter(plant =>
               plant.confidence >= confidenceThreshold
-            ));
+            );
+
+            // Apply strict mode filtering
+            if (enableStrictMode) {
+              finalPlants = finalPlants.slice(0, maxDetections);
+            }
+
+            setDetectedPlants(finalPlants);
             setIsAnalyzing(false);
 
             setUploadedImages(prev => prev.map(img =>
