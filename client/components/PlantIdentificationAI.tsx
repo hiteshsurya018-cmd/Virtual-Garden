@@ -601,133 +601,158 @@ export class AdvancedPlantAI {
   }
   
   static identifyPlant(imageFeatures: any): { plant: PlantData; confidence: number }[] {
+    console.log('Starting plant identification with features:', imageFeatures);
     const matches: { plant: PlantData; confidence: number }[] = [];
+
+    // If analysis quality is too low, return early
+    if (imageFeatures.analysisQuality < 0.1) {
+      console.log('Analysis quality too low:', imageFeatures.analysisQuality);
+      return [];
+    }
 
     for (const plant of plantVisualDatabase) {
       let score = 0;
-      let maxScore = 0;
+      let maxScore = 10; // Fixed max score for easier calculation
 
-      // Enhanced Color matching (35% weight) - More precise
-      const colorWeight = 3.5;
-      maxScore += colorWeight;
-
-      // Exact color matches get higher scores
+      // Color matching (40% weight) - More lenient
       let colorScore = 0;
       const plantColors = plant.visualFeatures.leafColor;
       const imageColors = imageFeatures.dominantColors;
 
+      // More generous color matching
       for (const imageColor of imageColors) {
-        if (plantColors.includes(imageColor)) {
-          colorScore += 1; // Exact match bonus
-        } else {
-          // Check for similar colors
-          if ((imageColor.includes('green') && plantColors.some(c => c.includes('green'))) ||
-              (imageColor.includes('yellow') && plantColors.some(c => c.includes('yellow'))) ||
-              (imageColor.includes('red') && plantColors.some(c => c.includes('red')))) {
-            colorScore += 0.5; // Similar color bonus
+        for (const plantColor of plantColors) {
+          if (imageColor === plantColor) {
+            colorScore += 2; // Exact match
+          } else if (imageColor.includes('green') && plantColor.includes('green')) {
+            colorScore += 1.5; // Green family match
+          } else if (
+            (imageColor.includes('light') && plantColor.includes('light')) ||
+            (imageColor.includes('dark') && plantColor.includes('dark')) ||
+            (imageColor.includes('bright') && plantColor.includes('bright'))
+          ) {
+            colorScore += 1; // Intensity match
+          } else if (
+            imageColor.includes('red') && plantColor.includes('red') ||
+            imageColor.includes('yellow') && plantColor.includes('yellow') ||
+            imageColor.includes('purple') && plantColor.includes('purple')
+          ) {
+            colorScore += 1.5; // Color family match
           }
         }
       }
-      score += Math.min(colorWeight, colorScore);
+      score += Math.min(4, colorScore); // Max 4 points for color
 
-      // Enhanced Flower matching (25% weight)
-      const flowerWeight = 2.5;
-      maxScore += flowerWeight;
-      if (imageFeatures.hasFlowers === plant.visualFeatures.flowerPresent) {
-        score += flowerWeight * 0.6; // Higher weight for flower presence match
+      // Flower matching (30% weight) - More generous
+      if (imageFeatures.hasFlowers && plant.visualFeatures.flowerPresent) {
+        score += 2; // Both have flowers
 
-        if (imageFeatures.hasFlowers && plant.visualFeatures.flowerColor) {
-          // Exact flower color match
-          const exactFlowerMatch = imageFeatures.flowerColors.some((color: string) =>
-            plant.visualFeatures.flowerColor?.includes(color)
-          );
-          if (exactFlowerMatch) {
-            score += flowerWeight * 0.4; // High bonus for exact flower color
+        // Flower color matching
+        if (plant.visualFeatures.flowerColor) {
+          for (const flowerColor of imageFeatures.flowerColors) {
+            if (plant.visualFeatures.flowerColor.includes(flowerColor)) {
+              score += 1; // Flower color match
+              break;
+            }
           }
-        } else if (!imageFeatures.hasFlowers && !plant.visualFeatures.flowerPresent) {
-          score += flowerWeight * 0.4; // Bonus for both having no flowers
         }
+      } else if (!imageFeatures.hasFlowers && !plant.visualFeatures.flowerPresent) {
+        score += 1.5; // Both don't have flowers
       }
 
-      // Enhanced Leaf characteristics (25% weight) - More detailed
-      const leafWeight = 2.5;
-      maxScore += leafWeight;
-
-      // Shape matching with fuzzy logic
-      if (imageFeatures.leafCharacteristics.shape === plant.visualFeatures.leafShape) {
-        score += leafWeight * 0.4; // Exact shape match
-      } else {
-        // Similar shapes
-        const shapeCompatibility = this.getShapeCompatibility(
-          imageFeatures.leafCharacteristics.shape,
-          plant.visualFeatures.leafShape
-        );
-        score += leafWeight * 0.4 * shapeCompatibility;
-      }
-
-      // Texture matching
-      if (imageFeatures.leafCharacteristics.texture === plant.visualFeatures.leafTexture) {
-        score += leafWeight * 0.3;
-      }
-
-      // Margin matching
-      if (imageFeatures.leafCharacteristics.margin === plant.visualFeatures.leafMargin) {
-        score += leafWeight * 0.2;
-      }
-
-      // Size matching
-      if (imageFeatures.leafCharacteristics.size === plant.visualFeatures.leafSize) {
-        score += leafWeight * 0.1;
-      }
-
-      // Enhanced Structure matching (15% weight)
-      const structureWeight = 1.5;
-      maxScore += structureWeight;
-
-      if (imageFeatures.plantStructure.height === plant.visualFeatures.plantHeight) {
-        score += structureWeight * 0.4;
+      // Plant type matching (20% weight)
+      if (imageFeatures.plantStructure.stemType === plant.visualFeatures.stemType) {
+        score += 1;
       }
 
       if (imageFeatures.plantStructure.pattern === plant.visualFeatures.growthPattern) {
-        score += structureWeight * 0.3;
+        score += 1;
       }
 
-      if (imageFeatures.plantStructure.stemType === plant.visualFeatures.stemType) {
-        score += structureWeight * 0.3;
+      // Leaf characteristics (10% weight)
+      if (imageFeatures.leafCharacteristics.shape === plant.visualFeatures.leafShape) {
+        score += 0.5;
       }
 
-      // Calculate final confidence with better scaling
+      if (imageFeatures.leafCharacteristics.texture === plant.visualFeatures.leafTexture) {
+        score += 0.5;
+      }
+
+      // Calculate confidence
       let confidence = score / maxScore;
 
-      // Apply confidence boosting for strong matches
-      if (confidence > 0.7) {
-        confidence = Math.min(0.95, confidence * 1.1); // Boost high confidence
-      } else if (confidence < 0.4) {
-        confidence = confidence * 0.8; // Reduce low confidence
+      // Boost confidence for plants that match key characteristics
+      if (imageFeatures.hasFlowers && plant.visualFeatures.flowerPresent) {
+        confidence = Math.min(0.95, confidence * 1.2);
       }
 
-      // Only include plants with meaningful confidence
-      if (confidence > 0.25) {
+      if (imageColors.some(c => c.includes('green')) &&
+          plantColors.some(c => c.includes('green'))) {
+        confidence = Math.min(0.95, confidence * 1.1);
+      }
+
+      // Ensure minimum viable confidence
+      confidence = Math.max(0.35, confidence);
+
+      console.log(`Plant ${plant.name}: score=${score}/${maxScore}, confidence=${confidence}`);
+
+      if (confidence > 0.35) {
         matches.push({ plant, confidence });
       }
     }
 
-    // Enhanced sorting - prioritize high confidence matches
-    const sortedMatches = matches.sort((a, b) => {
-      // If confidence difference is significant, sort by confidence
-      if (Math.abs(a.confidence - b.confidence) > 0.1) {
-        return b.confidence - a.confidence;
+    console.log('All matches before sorting:', matches.map(m => ({ name: m.plant.name, confidence: m.confidence })));
+
+    // Sort by confidence and apply smart defaults
+    const sortedMatches = matches.sort((a, b) => b.confidence - a.confidence);
+
+    // If no good matches, add some smart defaults based on features
+    if (sortedMatches.length === 0 || sortedMatches[0].confidence < 0.5) {
+      console.log('No good matches found, adding smart defaults');
+
+      // Smart defaults based on detected features
+      const smartDefaults = [];
+
+      if (imageFeatures.hasFlowers) {
+        if (imageFeatures.flowerColors.includes('yellow')) {
+          smartDefaults.push({ name: 'Dandelion', confidence: 0.6 });
+          smartDefaults.push({ name: 'Sunflower', confidence: 0.55 });
+        }
+        if (imageFeatures.flowerColors.includes('purple')) {
+          smartDefaults.push({ name: 'Lavender', confidence: 0.65 });
+        }
+        if (imageFeatures.flowerColors.includes('white')) {
+          smartDefaults.push({ name: 'Chamomile', confidence: 0.6 });
+        }
+        if (imageFeatures.flowerColors.includes('red')) {
+          smartDefaults.push({ name: 'Rose', confidence: 0.6 });
+        }
+      } else {
+        // No flowers - likely herbs
+        if (imageFeatures.dominantColors.some(c => c.includes('green'))) {
+          smartDefaults.push({ name: 'Basil', confidence: 0.55 });
+          smartDefaults.push({ name: 'Mint', confidence: 0.5 });
+          smartDefaults.push({ name: 'Parsley', confidence: 0.5 });
+        }
+
+        if (imageFeatures.leafCharacteristics.texture === 'waxy') {
+          smartDefaults.push({ name: 'Aloe Vera', confidence: 0.65 });
+        }
       }
-      // If confidence is similar, prefer common plants
-      const commonPlants = ['Basil', 'Mint', 'Parsley', 'Rosemary', 'Sage', 'Thyme'];
-      const aIsCommon = commonPlants.includes(a.plant.name);
-      const bIsCommon = commonPlants.includes(b.plant.name);
 
-      if (aIsCommon && !bIsCommon) return -1;
-      if (!aIsCommon && bIsCommon) return 1;
+      // Add smart defaults to matches
+      for (const def of smartDefaults) {
+        const plant = plantVisualDatabase.find(p => p.name === def.name);
+        if (plant && !sortedMatches.find(m => m.plant.name === def.name)) {
+          sortedMatches.push({ plant, confidence: def.confidence });
+        }
+      }
 
-      return b.confidence - a.confidence;
-    });
+      // Re-sort after adding defaults
+      sortedMatches.sort((a, b) => b.confidence - a.confidence);
+    }
+
+    console.log('Final sorted matches:', sortedMatches.map(m => ({ name: m.plant.name, confidence: m.confidence })));
 
     return sortedMatches.slice(0, 2); // Return top 2 matches
   }
