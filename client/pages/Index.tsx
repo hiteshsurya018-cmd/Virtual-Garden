@@ -211,18 +211,18 @@ class PlantRecognitionAI {
 
         const stdDev = Math.sqrt(variance / pixels);
 
-        // Enhanced scoring system
-        const lightingScore = Math.min(100, Math.max(0, 100 - Math.abs(avgBrightness - 140) / 1.4));
-        const clarityScore = Math.min(100, (stdDev / 3) + (edgePixels / pixels * 100));
+        // Much more lenient scoring system
+        const lightingScore = Math.min(100, Math.max(30, 100 - Math.abs(avgBrightness - 120) / 2.5));
+        const clarityScore = Math.min(100, Math.max(40, (stdDev / 2) + (edgePixels / pixels * 80)));
 
-        // Better plant detection based on color analysis
+        // More lenient plant detection
         const plantPixelRatio = (greenPixels + brownPixels) / pixels;
-        const hasPlants = plantPixelRatio > 0.15 && avgBrightness > 40 && stdDev > 25;
+        const hasPlants = plantPixelRatio > 0.05 || avgBrightness > 30 || stdDev > 15;
 
-        // Resolution-based quality adjustment
-        const resolutionScore = Math.min(100, ((img.width * img.height) / (800 * 600)) * 80);
+        // More generous resolution scoring
+        const resolutionScore = Math.min(100, Math.max(50, ((img.width * img.height) / (400 * 300)) * 60));
 
-        const finalQuality = Math.min(100, (lightingScore * 0.4 + clarityScore * 0.4 + resolutionScore * 0.2));
+        const finalQuality = Math.min(100, Math.max(50, (lightingScore * 0.3 + clarityScore * 0.3 + resolutionScore * 0.4)));
 
         resolve({
           quality: finalQuality,
