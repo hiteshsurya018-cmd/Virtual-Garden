@@ -253,20 +253,20 @@ class PlantRecognitionAI {
     const lightingMultiplier = imageMetadata.lightingScore / 100;
     const clarityMultiplier = imageMetadata.clarityScore / 100;
 
-    // Strict quality requirements
-    if (imageMetadata.quality < 40) {
-      errors.push('Image quality insufficient for accurate plant detection');
-      suggestions.push('Upload a higher resolution image (minimum 800x600)');
+    // More realistic quality requirements
+    if (imageMetadata.quality < 25) {
+      errors.push('Image quality is very low for accurate plant detection');
+      suggestions.push('Try uploading a clearer image for better results');
     }
 
-    if (imageMetadata.lightingScore < 35) {
-      errors.push('Poor lighting detected - plant features not clearly visible');
-      suggestions.push('Retake photo with better natural or artificial lighting');
+    if (imageMetadata.lightingScore < 20) {
+      errors.push('Very poor lighting detected');
+      suggestions.push('Consider retaking with better lighting conditions');
     }
 
-    if (imageMetadata.clarityScore < 25) {
-      errors.push('Image appears blurry or out of focus');
-      suggestions.push('Ensure camera is focused and image is sharp');
+    if (imageMetadata.clarityScore < 15) {
+      errors.push('Image appears very blurry');
+      suggestions.push('Try taking a more focused image');
     }
 
     if (!imageMetadata.hasPlants) {
