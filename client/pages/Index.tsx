@@ -60,7 +60,7 @@ import {
   Copy
 } from 'lucide-react';
 import * as THREE from 'three';
-import { AdvancedPlantAI, plantVisualDatabase } from '@/components/PlantIdentificationAI';
+import RealPlantRecognition from '@/components/RealPlantAI';
 
 interface DetectedPlant {
   id: string;
@@ -399,49 +399,75 @@ class PlantRecognitionAI {
 
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
-      // Use Advanced AI for actual plant identification
-      const imageFeatures = AdvancedPlantAI.analyzeImageFeatures(imageData);
-      const plantMatches = AdvancedPlantAI.identifyPlant(imageFeatures);
+      // Use Real Computer Vision for plant identification
+      console.log('Starting real computer vision analysis...');
+      const realFeatures = RealPlantRecognition.extractRealFeatures(imageData);
+      const plantMatches = RealPlantRecognition.identifyPlant(realFeatures);
 
-      console.log('Image Features Detected:', {
-        colors: imageFeatures.dominantColors,
-        hasFlowers: imageFeatures.hasFlowers,
-        flowerColors: imageFeatures.flowerColors,
-        leafShape: imageFeatures.leafCharacteristics.shape,
-        texture: imageFeatures.leafCharacteristics.texture,
-        analysisQuality: imageFeatures.analysisQuality
+      console.log('Real CV Features Extracted:', {
+        leafStructure: realFeatures.leafStructure,
+        colorProfile: realFeatures.colorProfile,
+        plantGeometry: realFeatures.plantGeometry,
+        textureAnalysis: realFeatures.textureAnalysis,
+        edgeComplexity: realFeatures.edgeComplexity,
+        confidence: realFeatures.confidence
       });
-      console.log('Plant Matches Found:', plantMatches.map(m => ({ name: m.plant.name, confidence: m.confidence })));
+      console.log('Plant Matches Found:', plantMatches.map(m => ({
+        name: m.plant.name,
+        confidence: m.confidence,
+        reasoning: m.reasoning
+      })));
 
-      // Enhanced matching with fallback system
+      // Process Real Computer Vision results
       if (plantMatches.length > 0) {
-        // Use AI matches
+        // Use real CV matches
         for (let i = 0; i < Math.min(plantMatches.length, 2); i++) {
           const match = plantMatches[i];
 
-          // Find corresponding plant in our database
-          const plantData = mockPlantDatabase.find(p => p.name === match.plant.name);
-          if (!plantData) continue;
+          // Find corresponding plant in our database or create from CV result
+          let plantData = mockPlantDatabase.find(p => p.name === match.plant.name);
 
-          // Enhanced confidence calculation
-          let finalConfidence = match.confidence;
-
-          // Boost confidence for high-quality analysis
-          if (imageFeatures.analysisQuality > 0.7) {
-            finalConfidence = Math.min(0.95, finalConfidence * 1.1);
+          if (!plantData) {
+            // Create plant data from CV result
+            plantData = {
+              id: match.plant.id,
+              name: match.plant.name,
+              scientificName: match.plant.scientificName,
+              confidence: match.confidence,
+              category: match.plant.category as any,
+              description: `Identified using computer vision analysis: ${match.reasoning.join(', ')}`,
+              image: '/placeholder.svg',
+              benefits: ['Computer vision identified plant'],
+              difficulty: 'medium' as const,
+              harvestTime: 'Variable',
+              growingConditions: {
+                sunlight: 'full' as const,
+                water: 'medium' as const,
+                soil: 'Well-draining',
+                temperature: 'Moderate'
+              },
+              medicinalUses: ['Requires further research'],
+              preparations: ['Consult expert'],
+              warnings: ['Verify identification before use'],
+              rating: 4.0,
+              reviews: 0
+            };
           }
 
-          // Boost confidence for feature-rich detection
-          if (imageFeatures.confidence > 0.8) {
-            finalConfidence = Math.min(0.95, finalConfidence * 1.05);
+          // Enhanced confidence based on real CV analysis
+          let finalConfidence = match.confidence;
+
+          // Boost confidence for high-quality feature extraction
+          if (realFeatures.confidence > 0.7) {
+            finalConfidence = Math.min(0.95, finalConfidence * 1.15);
           }
 
           const detectionMetadata = {
             boundingBox: {
-              x: Math.random() * (imageMetadata.width * 0.1),
-              y: Math.random() * (imageMetadata.height * 0.1),
-              width: imageMetadata.width * (0.7 + Math.random() * 0.2),
-              height: imageMetadata.height * (0.7 + Math.random() * 0.2)
+              x: imageMetadata.width * 0.05,
+              y: imageMetadata.height * 0.05,
+              width: imageMetadata.width * 0.9,
+              height: imageMetadata.height * 0.9
             },
             imageQuality: imageMetadata.quality,
             lightingCondition: imageMetadata.lightingScore > 70 ? 'excellent' :
@@ -450,9 +476,9 @@ class PlantRecognitionAI {
                         finalConfidence > 0.6 ? 'stressed' : 'diseased' as const,
             growthStage: 'mature' as const,
             certaintyFactors: {
-              leafShape: Math.min(0.95, finalConfidence + 0.05),
-              flowerStructure: imageFeatures.hasFlowers ? Math.min(0.95, finalConfidence) : 0.5,
-              stemCharacteristics: Math.min(0.9, finalConfidence - 0.05),
+              leafShape: Math.min(0.95, finalConfidence),
+              flowerStructure: Math.min(0.95, finalConfidence - 0.05),
+              stemCharacteristics: Math.min(0.9, finalConfidence - 0.1),
               overallMorphology: finalConfidence
             }
           };
@@ -462,10 +488,14 @@ class PlantRecognitionAI {
             confidence: finalConfidence,
             detectionMetadata
           });
+
+          // Add detailed reasoning to suggestions
+          suggestions.push(`${match.plant.name} identified with ${Math.round(finalConfidence * 100)}% confidence`);
+          match.reasoning.forEach(reason => suggestions.push(`• ${reason}`));
         }
       } else {
-        // Enhanced fallback system for when AI fails
-        console.log('AI matching returned no results, using enhanced fallback system');
+        // Fallback when computer vision fails
+        console.log('Computer vision returned no confident matches, using basic fallback');
 
         // Always provide at least one result based on detected features
         const fallbackOptions = [];
