@@ -1286,38 +1286,91 @@ export default function Index() {
                                       {plant.description}
                                     </p>
                                     
-                                    <div className="flex items-center justify-between">
-                                      <div className="flex items-center gap-2">
-                                        <div className="h-1.5 bg-garden-200 dark:bg-gray-600 rounded-full flex-1 min-w-[40px]">
-                                          <div 
-                                            className="h-1.5 bg-gradient-to-r from-garden-500 to-garden-600 rounded-full transition-all"
-                                            style={{ width: `${plant.confidence * 100}%` }}
-                                          />
+                                    {/* Enhanced Confidence Display */}
+                                    <div className="space-y-2">
+                                      <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                          <div className="h-2 bg-garden-200 dark:bg-gray-600 rounded-full flex-1 min-w-[50px]">
+                                            <div
+                                              className={`h-2 rounded-full transition-all ${
+                                                plant.confidence > 0.8 ? 'bg-gradient-to-r from-green-500 to-green-600' :
+                                                plant.confidence > 0.65 ? 'bg-gradient-to-r from-yellow-500 to-yellow-600' :
+                                                'bg-gradient-to-r from-red-500 to-red-600'
+                                              }`}
+                                              style={{ width: `${plant.confidence * 100}%` }}
+                                            />
+                                          </div>
+                                          <span className={`text-xs font-bold ${
+                                            plant.confidence > 0.8 ? 'text-green-700 dark:text-green-400' :
+                                            plant.confidence > 0.65 ? 'text-yellow-700 dark:text-yellow-400' :
+                                            'text-red-700 dark:text-red-400'
+                                          }`}>
+                                            {Math.round(plant.confidence * 100)}%
+                                          </span>
                                         </div>
-                                        <span className="text-xs font-medium text-garden-700 dark:text-gray-300">
-                                          {Math.round(plant.confidence * 100)}%
-                                        </span>
                                       </div>
-                                      
-                                      <div className="flex gap-1">
-                                        <Button
-                                          size="sm"
-                                          variant="ghost"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            setSelectedPlantInfo(plant);
-                                          }}
-                                          className="h-6 w-6 p-0 hover:bg-garden-100 dark:hover:bg-gray-600"
-                                        >
-                                          <Info className="w-3 h-3" />
-                                        </Button>
+
+                                      {/* Detection Metadata Indicators */}
+                                      {plant.detectionMetadata && (
+                                        <div className="flex items-center gap-2 text-xs">
+                                          <div className={`px-1.5 py-0.5 rounded text-xs ${
+                                            plant.detectionMetadata.lightingCondition === 'excellent' ? 'bg-green-100 text-green-700' :
+                                            plant.detectionMetadata.lightingCondition === 'good' ? 'bg-yellow-100 text-yellow-700' :
+                                            'bg-red-100 text-red-700'
+                                          }`}>
+                                            {plant.detectionMetadata.lightingCondition}
+                                          </div>
+                                          <div className={`px-1.5 py-0.5 rounded text-xs ${
+                                            plant.detectionMetadata.plantHealth === 'healthy' ? 'bg-green-100 text-green-700' :
+                                            plant.detectionMetadata.plantHealth === 'stressed' ? 'bg-yellow-100 text-yellow-700' :
+                                            'bg-red-100 text-red-700'
+                                          }`}>
+                                            {plant.detectionMetadata.plantHealth}
+                                          </div>
+                                          <div className="px-1.5 py-0.5 rounded text-xs bg-blue-100 text-blue-700 capitalize">
+                                            {plant.detectionMetadata.growthStage}
+                                          </div>
+                                        </div>
+                                      )}
+
+                                      <div className="flex items-center justify-between">
+                                        <div className="flex gap-1">
+                                          <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setSelectedPlantInfo(plant);
+                                            }}
+                                            className="h-6 w-6 p-0 hover:bg-garden-100 dark:hover:bg-gray-600"
+                                          >
+                                            <Info className="w-3 h-3" />
+                                          </Button>
+                                          {plant.detectionMetadata && (
+                                            <Button
+                                              size="sm"
+                                              variant="ghost"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                alert(`Detection Details:\n\nConfidence Factors:\n• Leaf Shape: ${Math.round(plant.detectionMetadata.certaintyFactors.leafShape * 100)}%\n• Flower Structure: ${Math.round(plant.detectionMetadata.certaintyFactors.flowerStructure * 100)}%\n• Stem Characteristics: ${Math.round(plant.detectionMetadata.certaintyFactors.stemCharacteristics * 100)}%\n• Overall Morphology: ${Math.round(plant.detectionMetadata.certaintyFactors.overallMorphology * 100)}%`);
+                                              }}
+                                              className="h-6 w-6 p-0 hover:bg-blue-100 dark:hover:bg-blue-900"
+                                            >
+                                              <Eye className="w-3 h-3" />
+                                            </Button>
+                                          )}
+                                        </div>
                                         <Button
                                           size="sm"
                                           onClick={(e) => {
                                             e.stopPropagation();
                                             addPlantToGarden(plant);
                                           }}
-                                          className="h-6 px-2 text-xs bg-garden-600 hover:bg-garden-700 text-white"
+                                          className={`h-6 px-2 text-xs text-white ${
+                                            plant.confidence > 0.8 ? 'bg-green-600 hover:bg-green-700' :
+                                            plant.confidence > 0.65 ? 'bg-yellow-600 hover:bg-yellow-700' :
+                                            'bg-red-600 hover:bg-red-700'
+                                          }`}
                                         >
                                           <Plus className="w-3 h-3 mr-1" />
                                           Add
@@ -1767,6 +1820,164 @@ export default function Index() {
           </div>
         </div>
       </div>
+
+      {/* Analysis Details Modal */}
+      <Dialog open={showAnalysisDetails} onOpenChange={setShowAnalysisDetails}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Brain className="w-6 h-6 text-blue-600" />
+              AI Analysis Report
+            </DialogTitle>
+          </DialogHeader>
+
+          {lastAnalysisResult && (
+            <div className="space-y-6">
+              {/* Analysis Summary */}
+              <div className="grid md:grid-cols-3 gap-4">
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-green-600">
+                        {lastAnalysisResult.detectedPlants.length}
+                      </div>
+                      <div className="text-sm text-gray-600">Plants Detected</div>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-blue-600">
+                        {Math.round(lastAnalysisResult.totalConfidence * 100)}%
+                      </div>
+                      <div className="text-sm text-gray-600">Avg Confidence</div>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-purple-600">
+                        {(lastAnalysisResult.processingTime / 1000).toFixed(1)}s
+                      </div>
+                      <div className="text-sm text-gray-600">Processing Time</div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Image Quality Analysis */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Image Quality Analysis</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span>Overall Quality:</span>
+                      <div className="flex items-center gap-2">
+                        <Progress value={lastAnalysisResult.imageQuality} className="w-24" />
+                        <span className="font-medium">{Math.round(lastAnalysisResult.imageQuality)}%</span>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Errors and Suggestions */}
+              {(lastAnalysisResult.errors.length > 0 || lastAnalysisResult.suggestions.length > 0) && (
+                <div className="grid md:grid-cols-2 gap-4">
+                  {lastAnalysisResult.errors.length > 0 && (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-lg text-red-600 flex items-center gap-2">
+                          <AlertTriangle className="w-5 h-5" />
+                          Issues Detected
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <ul className="space-y-2">
+                          {lastAnalysisResult.errors.map((error, index) => (
+                            <li key={index} className="flex items-start gap-2 text-sm">
+                              <div className="w-2 h-2 bg-red-500 rounded-full mt-2 flex-shrink-0"></div>
+                              {error}
+                            </li>
+                          ))}
+                        </ul>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {lastAnalysisResult.suggestions.length > 0 && (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-lg text-blue-600 flex items-center gap-2">
+                          <Info className="w-5 h-5" />
+                          Suggestions
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <ul className="space-y-2">
+                          {lastAnalysisResult.suggestions.map((suggestion, index) => (
+                            <li key={index} className="flex items-start gap-2 text-sm">
+                              <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                              {suggestion}
+                            </li>
+                          ))}
+                        </ul>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+              )}
+
+              {/* Detailed Plant Detection Results */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Detection Results</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {lastAnalysisResult.detectedPlants.map((plant, index) => (
+                      <div key={plant.id} className="border rounded-lg p-4">
+                        <div className="flex items-start gap-4">
+                          <img
+                            src={plant.image}
+                            alt={plant.name}
+                            className="w-16 h-16 rounded-lg object-cover"
+                          />
+                          <div className="flex-1">
+                            <h4 className="font-semibold">{plant.name}</h4>
+                            <p className="text-sm text-gray-600 italic">{plant.scientificName}</p>
+
+                            {plant.detectionMetadata && (
+                              <div className="mt-2 space-y-2">
+                                <div className="flex items-center gap-4 text-sm">
+                                  <span>Confidence: <strong>{Math.round(plant.confidence * 100)}%</strong></span>
+                                  <span>Health: <strong>{plant.detectionMetadata.plantHealth}</strong></span>
+                                  <span>Stage: <strong>{plant.detectionMetadata.growthStage}</strong></span>
+                                </div>
+
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+                                  <div>Leaf Shape: {Math.round(plant.detectionMetadata.certaintyFactors.leafShape * 100)}%</div>
+                                  <div>Flowers: {Math.round(plant.detectionMetadata.certaintyFactors.flowerStructure * 100)}%</div>
+                                  <div>Stem: {Math.round(plant.detectionMetadata.certaintyFactors.stemCharacteristics * 100)}%</div>
+                                  <div>Overall: {Math.round(plant.detectionMetadata.certaintyFactors.overallMorphology * 100)}%</div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Enhanced Plant Information Modal */}
       <Dialog open={!!selectedPlantInfo} onOpenChange={() => setSelectedPlantInfo(null)}>
