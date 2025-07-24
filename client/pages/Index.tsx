@@ -1021,18 +1021,74 @@ export default function Index() {
                       )}
                     </div>
 
-                    {/* Upload Progress */}
-                    {uploadedImages.some(img => img.uploadProgress < 100 || img.analysisStatus === 'analyzing') && (
-                      <div className="space-y-2">
+                    {/* Enhanced Upload Progress */}
+                    {uploadedImages.some(img => img.uploadProgress < 100 || ['preprocessing', 'analyzing', 'postprocessing'].includes(img.analysisStatus)) && (
+                      <div className="space-y-3">
                         {uploadedImages.map(img => (
-                          <div key={img.id} className="space-y-1">
+                          <div key={img.id} className="space-y-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                             <div className="flex justify-between text-xs">
-                              <span className="truncate">{img.name}</span>
-                              <span>
-                                {img.analysisStatus === 'analyzing' ? 'Analyzing...' : `${img.uploadProgress}%`}
+                              <span className="truncate font-medium">{img.name}</span>
+                              <span className={`capitalize ${
+                                img.analysisStatus === 'error' ? 'text-red-600' :
+                                img.analysisStatus === 'completed' ? 'text-green-600' : 'text-blue-600'
+                              }`}>
+                                {img.analysisStatus === 'preprocessing' ? 'Preprocessing...' :
+                                 img.analysisStatus === 'analyzing' ? `Analyzing... ${img.analysisProgress}%` :
+                                 img.analysisStatus === 'postprocessing' ? 'Finalizing...' :
+                                 img.analysisStatus === 'completed' ? 'Completed' :
+                                 img.analysisStatus === 'error' ? 'Error' :
+                                 `Uploading... ${img.uploadProgress}%`}
                               </span>
                             </div>
-                            <Progress value={img.uploadProgress} className="h-1" />
+
+                            {/* Upload Progress Bar */}
+                            <Progress value={img.uploadProgress} className="h-2" />
+
+                            {/* Analysis Progress Bar */}
+                            {['preprocessing', 'analyzing', 'postprocessing'].includes(img.analysisStatus) && (
+                              <div className="space-y-1">
+                                <div className="flex justify-between text-xs text-blue-600">
+                                  <span>AI Analysis</span>
+                                  <span>{img.analysisProgress}%</span>
+                                </div>
+                                <Progress value={img.analysisProgress} className="h-1 bg-blue-100" />
+                              </div>
+                            )}
+
+                            {/* Image Quality Indicators */}
+                            {img.imageMetadata && (
+                              <div className="grid grid-cols-3 gap-2 text-xs">
+                                <div className="text-center">
+                                  <div className={`w-2 h-2 rounded-full mx-auto mb-1 ${
+                                    img.imageMetadata.quality > 70 ? 'bg-green-500' :
+                                    img.imageMetadata.quality > 40 ? 'bg-yellow-500' : 'bg-red-500'
+                                  }`}></div>
+                                  <span className="text-gray-600">Quality</span>
+                                </div>
+                                <div className="text-center">
+                                  <div className={`w-2 h-2 rounded-full mx-auto mb-1 ${
+                                    img.imageMetadata.lightingScore > 60 ? 'bg-green-500' :
+                                    img.imageMetadata.lightingScore > 30 ? 'bg-yellow-500' : 'bg-red-500'
+                                  }`}></div>
+                                  <span className="text-gray-600">Lighting</span>
+                                </div>
+                                <div className="text-center">
+                                  <div className={`w-2 h-2 rounded-full mx-auto mb-1 ${
+                                    img.imageMetadata.clarityScore > 50 ? 'bg-green-500' :
+                                    img.imageMetadata.clarityScore > 25 ? 'bg-yellow-500' : 'bg-red-500'
+                                  }`}></div>
+                                  <span className="text-gray-600">Clarity</span>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Error Message */}
+                            {img.errorMessage && (
+                              <div className="flex items-start gap-2 p-2 bg-red-50 dark:bg-red-900/20 rounded border border-red-200 dark:border-red-800">
+                                <AlertTriangle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
+                                <span className="text-xs text-red-700 dark:text-red-300">{img.errorMessage}</span>
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>
@@ -1121,14 +1177,52 @@ export default function Index() {
                   </Select>
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium text-garden-700 dark:text-gray-300">
-                    Detected Only
-                  </label>
-                  <Switch
-                    checked={showOnlyDetected}
-                    onCheckedChange={setShowOnlyDetected}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium text-garden-700 dark:text-gray-300">
+                      Confidence Threshold
+                    </label>
+                    <span className="text-sm text-garden-600 dark:text-gray-400">
+                      {Math.round(confidenceThreshold * 100)}%
+                    </span>
+                  </div>
+                  <Slider
+                    value={[confidenceThreshold]}
+                    onValueChange={(value) => {
+                      setConfidenceThreshold(value[0]);
+                      if (lastAnalysisResult) {
+                        setDetectedPlants(lastAnalysisResult.detectedPlants.filter(plant =>
+                          plant.confidence >= value[0]
+                        ));
+                      }
+                    }}
+                    max={0.95}
+                    min={0.45}
+                    step={0.05}
+                    className="w-full"
                   />
+
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium text-garden-700 dark:text-gray-300">
+                      Detected Only
+                    </label>
+                    <Switch
+                      checked={showOnlyDetected}
+                      onCheckedChange={setShowOnlyDetected}
+                    />
+                  </div>
+
+                  {lastAnalysisResult && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowAnalysisDetails(true)}
+                      className="w-full text-xs"
+                    >
+                      <Info className="w-3 h-3 mr-1" />
+                      View Analysis Details
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>
