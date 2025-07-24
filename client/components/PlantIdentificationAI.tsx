@@ -31,7 +31,7 @@ interface PlantData {
   visualFeatures: PlantVisualFeatures;
 }
 
-// Comprehensive Plant Database with Real Visual Characteristics
+// Enhanced Plant Database with Detailed Visual Signatures
 export const plantVisualDatabase: PlantData[] = [
   {
     id: '1',
@@ -299,6 +299,136 @@ export const plantVisualDatabase: PlantData[] = [
         hasSeeds: true
       }
     }
+  },
+  // Additional Common Plants for Better Recognition
+  {
+    id: '11',
+    name: 'Rosemary',
+    scientificName: 'Rosmarinus officinalis',
+    category: 'culinary',
+    description: 'Woody herb with needle-like leaves and small blue flowers',
+    visualFeatures: {
+      leafShape: 'linear',
+      leafMargin: 'smooth',
+      leafTexture: 'rough',
+      leafSize: 'tiny',
+      leafColor: ['dark-green', 'gray-green'],
+      stemType: 'woody',
+      stemColor: ['brown', 'gray'],
+      flowerPresent: true,
+      flowerShape: 'tubular',
+      flowerColor: ['blue', 'purple'],
+      flowerSize: 'tiny',
+      plantHeight: 'medium',
+      growthPattern: 'upright',
+      seasonalFeatures: {
+        hasFlowers: true,
+        hasFruits: false,
+        hasSeeds: true
+      }
+    }
+  },
+  {
+    id: '12',
+    name: 'Oregano',
+    scientificName: 'Origanum vulgare',
+    category: 'culinary',
+    description: 'Small-leaved herb with tiny white or pink flowers',
+    visualFeatures: {
+      leafShape: 'oval',
+      leafMargin: 'smooth',
+      leafTexture: 'matte',
+      leafSize: 'small',
+      leafColor: ['medium-green', 'dark-green'],
+      stemType: 'herbaceous',
+      stemColor: ['green', 'red'],
+      flowerPresent: true,
+      flowerShape: 'tubular',
+      flowerColor: ['white', 'pink'],
+      flowerSize: 'tiny',
+      plantHeight: 'low',
+      growthPattern: 'spreading',
+      seasonalFeatures: {
+        hasFlowers: true,
+        hasFruits: false,
+        hasSeeds: true
+      }
+    }
+  },
+  {
+    id: '13',
+    name: 'Thyme',
+    scientificName: 'Thymus vulgaris',
+    category: 'culinary',
+    description: 'Small creeping herb with tiny oval leaves',
+    visualFeatures: {
+      leafShape: 'oval',
+      leafMargin: 'smooth',
+      leafTexture: 'matte',
+      leafSize: 'tiny',
+      leafColor: ['gray-green', 'medium-green'],
+      stemType: 'woody',
+      stemColor: ['brown'],
+      flowerPresent: true,
+      flowerShape: 'tubular',
+      flowerColor: ['purple', 'white'],
+      flowerSize: 'tiny',
+      plantHeight: 'low',
+      growthPattern: 'spreading',
+      seasonalFeatures: {
+        hasFlowers: true,
+        hasFruits: false,
+        hasSeeds: true
+      }
+    }
+  },
+  {
+    id: '14',
+    name: 'Parsley',
+    scientificName: 'Petroselinum crispum',
+    category: 'culinary',
+    description: 'Herb with flat or curly compound leaves',
+    visualFeatures: {
+      leafShape: 'compound',
+      leafMargin: 'serrated',
+      leafTexture: 'glossy',
+      leafSize: 'medium',
+      leafColor: ['bright-green', 'dark-green'],
+      stemType: 'herbaceous',
+      stemColor: ['green'],
+      flowerPresent: false,
+      plantHeight: 'medium',
+      growthPattern: 'rosette',
+      seasonalFeatures: {
+        hasFlowers: false,
+        hasFruits: false,
+        hasSeeds: false
+      }
+    }
+  },
+  {
+    id: '15',
+    name: 'Spinach',
+    scientificName: 'Spinacia oleracea',
+    category: 'leafy',
+    description: 'Leafy green with oval to arrow-shaped leaves',
+    visualFeatures: {
+      leafShape: 'oval',
+      leafMargin: 'smooth',
+      leafTexture: 'matte',
+      leafSize: 'medium',
+      leafColor: ['dark-green', 'medium-green'],
+      stemType: 'herbaceous',
+      stemColor: ['green', 'red'],
+      flowerPresent: false,
+      plantHeight: 'low',
+      growthPattern: 'rosette',
+      seasonalFeatures: {
+        hasFlowers: false,
+        hasFruits: false,
+        hasSeeds: false
+      }
+    }
   }
 ];
 
@@ -453,55 +583,151 @@ export class AdvancedPlantAI {
   
   static identifyPlant(imageFeatures: any): { plant: PlantData; confidence: number }[] {
     const matches: { plant: PlantData; confidence: number }[] = [];
-    
+
     for (const plant of plantVisualDatabase) {
       let score = 0;
       let maxScore = 0;
-      
-      // Color matching (40% weight)
-      const colorWeight = 4;
+
+      // Enhanced Color matching (35% weight) - More precise
+      const colorWeight = 3.5;
       maxScore += colorWeight;
-      const commonColors = imageFeatures.dominantColors.filter((color: string) => 
-        plant.visualFeatures.leafColor.includes(color)
-      ).length;
-      score += (commonColors / Math.max(plant.visualFeatures.leafColor.length, 1)) * colorWeight;
-      
-      // Flower matching (30% weight)
-      const flowerWeight = 3;
-      maxScore += flowerWeight;
-      if (imageFeatures.hasFlowers === plant.visualFeatures.flowerPresent) {
-        score += flowerWeight * 0.5;
-        if (imageFeatures.hasFlowers && plant.visualFeatures.flowerColor) {
-          const flowerMatch = imageFeatures.flowerColors.some((color: string) => 
-            plant.visualFeatures.flowerColor?.includes(color)
-          );
-          if (flowerMatch) score += flowerWeight * 0.5;
+
+      // Exact color matches get higher scores
+      let colorScore = 0;
+      const plantColors = plant.visualFeatures.leafColor;
+      const imageColors = imageFeatures.dominantColors;
+
+      for (const imageColor of imageColors) {
+        if (plantColors.includes(imageColor)) {
+          colorScore += 1; // Exact match bonus
+        } else {
+          // Check for similar colors
+          if ((imageColor.includes('green') && plantColors.some(c => c.includes('green'))) ||
+              (imageColor.includes('yellow') && plantColors.some(c => c.includes('yellow'))) ||
+              (imageColor.includes('red') && plantColors.some(c => c.includes('red')))) {
+            colorScore += 0.5; // Similar color bonus
+          }
         }
       }
-      
-      // Leaf characteristics (20% weight)
-      const leafWeight = 2;
+      score += Math.min(colorWeight, colorScore);
+
+      // Enhanced Flower matching (25% weight)
+      const flowerWeight = 2.5;
+      maxScore += flowerWeight;
+      if (imageFeatures.hasFlowers === plant.visualFeatures.flowerPresent) {
+        score += flowerWeight * 0.6; // Higher weight for flower presence match
+
+        if (imageFeatures.hasFlowers && plant.visualFeatures.flowerColor) {
+          // Exact flower color match
+          const exactFlowerMatch = imageFeatures.flowerColors.some((color: string) =>
+            plant.visualFeatures.flowerColor?.includes(color)
+          );
+          if (exactFlowerMatch) {
+            score += flowerWeight * 0.4; // High bonus for exact flower color
+          }
+        } else if (!imageFeatures.hasFlowers && !plant.visualFeatures.flowerPresent) {
+          score += flowerWeight * 0.4; // Bonus for both having no flowers
+        }
+      }
+
+      // Enhanced Leaf characteristics (25% weight) - More detailed
+      const leafWeight = 2.5;
       maxScore += leafWeight;
-      if (imageFeatures.leafCharacteristics.shape === plant.visualFeatures.leafShape) score += leafWeight * 0.3;
-      if (imageFeatures.leafCharacteristics.texture === plant.visualFeatures.leafTexture) score += leafWeight * 0.3;
-      if (imageFeatures.leafCharacteristics.margin === plant.visualFeatures.leafMargin) score += leafWeight * 0.2;
-      if (imageFeatures.leafCharacteristics.size === plant.visualFeatures.leafSize) score += leafWeight * 0.2;
-      
-      // Structure matching (10% weight)
-      const structureWeight = 1;
+
+      // Shape matching with fuzzy logic
+      if (imageFeatures.leafCharacteristics.shape === plant.visualFeatures.leafShape) {
+        score += leafWeight * 0.4; // Exact shape match
+      } else {
+        // Similar shapes
+        const shapeCompatibility = this.getShapeCompatibility(
+          imageFeatures.leafCharacteristics.shape,
+          plant.visualFeatures.leafShape
+        );
+        score += leafWeight * 0.4 * shapeCompatibility;
+      }
+
+      // Texture matching
+      if (imageFeatures.leafCharacteristics.texture === plant.visualFeatures.leafTexture) {
+        score += leafWeight * 0.3;
+      }
+
+      // Margin matching
+      if (imageFeatures.leafCharacteristics.margin === plant.visualFeatures.leafMargin) {
+        score += leafWeight * 0.2;
+      }
+
+      // Size matching
+      if (imageFeatures.leafCharacteristics.size === plant.visualFeatures.leafSize) {
+        score += leafWeight * 0.1;
+      }
+
+      // Enhanced Structure matching (15% weight)
+      const structureWeight = 1.5;
       maxScore += structureWeight;
-      if (imageFeatures.plantStructure.height === plant.visualFeatures.plantHeight) score += structureWeight * 0.4;
-      if (imageFeatures.plantStructure.pattern === plant.visualFeatures.growthPattern) score += structureWeight * 0.3;
-      if (imageFeatures.plantStructure.stemType === plant.visualFeatures.stemType) score += structureWeight * 0.3;
-      
-      const confidence = Math.min(0.95, Math.max(0.1, score / maxScore));
-      
-      if (confidence > 0.3) { // Only include reasonable matches
+
+      if (imageFeatures.plantStructure.height === plant.visualFeatures.plantHeight) {
+        score += structureWeight * 0.4;
+      }
+
+      if (imageFeatures.plantStructure.pattern === plant.visualFeatures.growthPattern) {
+        score += structureWeight * 0.3;
+      }
+
+      if (imageFeatures.plantStructure.stemType === plant.visualFeatures.stemType) {
+        score += structureWeight * 0.3;
+      }
+
+      // Calculate final confidence with better scaling
+      let confidence = score / maxScore;
+
+      // Apply confidence boosting for strong matches
+      if (confidence > 0.7) {
+        confidence = Math.min(0.95, confidence * 1.1); // Boost high confidence
+      } else if (confidence < 0.4) {
+        confidence = confidence * 0.8; // Reduce low confidence
+      }
+
+      // Only include plants with meaningful confidence
+      if (confidence > 0.25) {
         matches.push({ plant, confidence });
       }
     }
-    
-    return matches.sort((a, b) => b.confidence - a.confidence).slice(0, 3);
+
+    // Enhanced sorting - prioritize high confidence matches
+    const sortedMatches = matches.sort((a, b) => {
+      // If confidence difference is significant, sort by confidence
+      if (Math.abs(a.confidence - b.confidence) > 0.1) {
+        return b.confidence - a.confidence;
+      }
+      // If confidence is similar, prefer common plants
+      const commonPlants = ['Basil', 'Mint', 'Parsley', 'Rosemary', 'Sage', 'Thyme'];
+      const aIsCommon = commonPlants.includes(a.plant.name);
+      const bIsCommon = commonPlants.includes(b.plant.name);
+
+      if (aIsCommon && !bIsCommon) return -1;
+      if (!aIsCommon && bIsCommon) return 1;
+
+      return b.confidence - a.confidence;
+    });
+
+    return sortedMatches.slice(0, 2); // Return top 2 matches
+  }
+
+  // Helper method for shape compatibility
+  private static getShapeCompatibility(shape1: string, shape2: string): number {
+    const shapeGroups = {
+      'round_family': ['oval', 'round', 'heart'],
+      'long_family': ['lance', 'linear', 'needle'],
+      'complex_family': ['compound', 'palmate']
+    };
+
+    for (const family of Object.values(shapeGroups)) {
+      if (family.includes(shape1) && family.includes(shape2)) {
+        return 0.7; // 70% compatibility for same family
+      }
+    }
+
+    return 0.2; // 20% compatibility for different families
   }
   
   // Helper methods
