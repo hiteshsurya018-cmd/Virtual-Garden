@@ -1611,7 +1611,7 @@ export default function Index() {
             
             {/* Quick Stats */}
             {showStats && (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-2xl mx-auto">
+              <div className="flex flex-row gap-4 max-w-2xl mx-auto">
                 <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-xl p-3 border border-garden-200/50">
                   <div className="text-2xl font-bold text-garden-600">{gardenStats.totalPlants}</div>
                   <div className="text-sm text-garden-500">Plants Placed</div>
@@ -1623,10 +1623,6 @@ export default function Index() {
                 <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-xl p-3 border border-garden-200/50">
                   <div className="text-2xl font-bold text-garden-600">{Object.keys(gardenStats.categories).length}</div>
                   <div className="text-sm text-garden-500">Categories</div>
-                </div>
-                <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-xl p-3 border border-garden-200/50">
-                  <div className="text-2xl font-bold text-garden-600">${gardenStats.gardenValue.toFixed(0)}</div>
-                  <div className="text-sm text-garden-500">Garden Value</div>
                 </div>
               </div>
             )}
