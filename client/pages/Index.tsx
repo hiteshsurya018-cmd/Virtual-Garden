@@ -142,6 +142,15 @@ interface UploadedImage {
     hasPlants: boolean;
     lightingScore: number;
     clarityScore: number;
+    plantCharacteristics: {
+      dominantColors: string[];
+      leafType: 'broad' | 'narrow' | 'needle' | 'succulent' | 'compound';
+      plantStructure: 'herb' | 'shrub' | 'tree' | 'vine' | 'ground-cover';
+      hasFlowers: boolean;
+      flowerColor?: string;
+      textureType: 'smooth' | 'rough' | 'fuzzy' | 'waxy' | 'serrated';
+      plantSize: 'small' | 'medium' | 'large';
+    };
   };
   errorMessage?: string;
 }
