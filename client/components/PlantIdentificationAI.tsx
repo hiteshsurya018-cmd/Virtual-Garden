@@ -539,20 +539,48 @@ export class AdvancedPlantAI {
     const avgBrightness = totalBrightness / pixels;
     const avgTextureVariance = textureVariance / pixels;
     
-    // Determine dominant colors
+    // Determine dominant colors with more lenient thresholds
     const dominantColors: string[] = [];
     Object.entries(colorCounts).forEach(([color, count]) => {
-      if (count / pixels > 0.05) { // 5% threshold
+      if (count / pixels > 0.02) { // Reduced to 2% threshold for better detection
         dominantColors.push(color);
       }
     });
-    
-    // Flower detection
-    const flowerColors = ['yellow', 'bright-yellow', 'orange', 'red', 'pink', 'purple', 'violet', 'white'];
-    const detectedFlowerColors = flowerColors.filter(color => 
-      colorCounts[color as keyof typeof colorCounts] / pixels > 0.02
+
+    // Always include at least one green if any green is detected
+    const hasAnyGreen = Object.entries(colorCounts).some(([color, count]) =>
+      color.includes('green') && count > 0
     );
-    const hasFlowers = detectedFlowerColors.length > 0;
+    if (hasAnyGreen && !dominantColors.some(c => c.includes('green'))) {
+      // Find the most prominent green
+      const greenColors = Object.entries(colorCounts)
+        .filter(([color]) => color.includes('green'))
+        .sort(([,a], [,b]) => b - a);
+      if (greenColors.length > 0) {
+        dominantColors.push(greenColors[0][0]);
+      }
+    }
+    
+    // Enhanced flower detection with lower thresholds
+    const flowerColors = ['yellow', 'bright-yellow', 'orange', 'red', 'pink', 'purple', 'violet', 'white'];
+    const detectedFlowerColors = flowerColors.filter(color =>
+      colorCounts[color as keyof typeof colorCounts] / pixels > 0.01 // Reduced threshold
+    );
+
+    // Also check for any bright or saturated colors that might be flowers
+    let hasFlowers = detectedFlowerColors.length > 0;
+
+    // Additional flower detection based on color intensity
+    if (!hasFlowers) {
+      const brightColors = Object.entries(colorCounts).filter(([color, count]) =>
+        (color.includes('bright') || color.includes('yellow') || color.includes('red') ||
+         color.includes('purple') || color.includes('pink')) && count > pixels * 0.005
+      );
+      if (brightColors.length > 0) {
+        hasFlowers = true;
+        detectedFlowerColors.push(...brightColors.map(([color]) => color));
+      }
+    }
     
     // Leaf characteristics
     const leafShape = this.determineLeafShape(edgePixels / pixels, avgTextureVariance);
@@ -565,20 +593,26 @@ export class AdvancedPlantAI {
     const growthPattern = this.determineGrowthPattern(dominantColors, edgePixels / pixels);
     const stemType = this.determineStemType(dominantColors, avgTextureVariance);
     
-    // Calculate analysis quality and confidence
-    const totalPlantPixels = Object.values(colorCounts).reduce((sum, count) =>
-      sum + (typeof count === 'number' ? count : 0), 0
-    );
-    const plantCoverage = totalPlantPixels / pixels;
-    const analysisQuality = Math.min(1, plantCoverage * 2); // How much of image is plant
+    // Enhanced analysis quality calculation
+    const greenPixelCount = colorCounts['bright-green'] + colorCounts['medium-green'] +
+                           colorCounts['dark-green'] + colorCounts['light-green'] +
+                           colorCounts['gray-green'] + colorCounts['silver-green'] +
+                           colorCounts['blue-green'];
 
-    // Overall confidence in the analysis
-    const featureConfidence = (
-      (dominantColors.length > 0 ? 0.3 : 0) +
-      (avgTextureVariance > 20 ? 0.2 : 0) +
-      (plantCoverage > 0.2 ? 0.3 : 0) +
-      (hasFlowers ? 0.2 : 0.1)
+    const plantCoverage = Math.max(
+      greenPixelCount / pixels, // Green vegetation coverage
+      (greenPixelCount + colorCounts.brown + colorCounts.yellow) / pixels // Include stems/flowers
     );
+
+    const analysisQuality = Math.min(1, Math.max(0.3, plantCoverage * 3)); // Ensure minimum quality
+
+    // More generous confidence calculation
+    const featureConfidence = Math.min(1, (
+      (dominantColors.length > 0 ? 0.4 : 0.2) +
+      (avgTextureVariance > 15 ? 0.3 : 0.2) +
+      (plantCoverage > 0.1 ? 0.4 : 0.2) +
+      (hasFlowers ? 0.3 : 0.2)
+    ));
 
     return {
       dominantColors,
