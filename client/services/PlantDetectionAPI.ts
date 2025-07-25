@@ -99,6 +99,7 @@ export class PlantDetectionAPI {
 
       const response = await fetch(`${this.baseURL}/api/analyze-image-quality`, {
         method: 'POST',
+        mode: 'cors',
         body: formData,
       });
 
