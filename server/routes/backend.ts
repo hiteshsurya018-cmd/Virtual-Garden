@@ -13,7 +13,7 @@ router.post('/start', async (req, res) => {
   try {
     console.log('🚀 Backend start requested via API...');
     const success = await startBackendIfNeeded();
-    
+
     if (success) {
       res.json({
         success: true,
@@ -26,18 +26,45 @@ router.post('/start', async (req, res) => {
         }
       });
     } else {
-      res.status(500).json({
-        success: false,
-        message: 'Failed to start backend',
-        status: 'failed'
-      });
+      // Check if we're in a container environment
+      const isContainer = process.env.NODE_ENV === 'production' ||
+                         process.env.RAILWAY_ENVIRONMENT ||
+                         process.env.FLY_APP_NAME;
+
+      if (isContainer) {
+        res.json({
+          success: false,
+          message: 'Python backend not available in container environment. Using enhanced fallback detection with realistic plant recognition.',
+          status: 'fallback_mode',
+          recommendation: 'For full YOLOv5 AI detection, download and run the project locally',
+          fallback_features: [
+            'Realistic plant identification',
+            'Scientific name mapping',
+            'Medicinal properties database',
+            'Confidence scoring simulation',
+            'Full 3D garden functionality'
+          ]
+        });
+      } else {
+        res.status(500).json({
+          success: false,
+          message: 'Failed to start backend - check Python installation and dependencies',
+          status: 'failed',
+          troubleshooting: [
+            'Ensure Python 3.8+ is installed',
+            'Install requirements: pip install -r ml-backend/requirements.txt',
+            'Check if port 8000 is available'
+          ]
+        });
+      }
     }
   } catch (error) {
     console.error('Backend start error:', error);
     res.status(500).json({
       success: false,
       message: 'Backend startup error',
-      error: error.message
+      error: error.message,
+      status: 'error'
     });
   }
 });
