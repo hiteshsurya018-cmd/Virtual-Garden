@@ -211,13 +211,19 @@ export const SystemStatus: React.FC = () => {
               ✅ React application loaded and responsive
             </div>
             <div className="text-sm text-gray-600">
-              ✅ 3D garden visualization active
+              ✅ 3D garden visualization with Three.js active
             </div>
             <div className="text-sm text-gray-600">
-              ✅ Plant upload functionality ready
+              ✅ Intelligent plant upload and analysis ready
             </div>
             <div className="text-sm text-gray-600">
-              ✅ Fallback plant detection available
+              ✅ Enhanced image analysis with realistic plant detection
+            </div>
+            <div className="text-sm text-gray-600">
+              ✅ Medicinal plant database with 25+ species
+            </div>
+            <div className="text-sm text-gray-600">
+              ✅ Scientific name identification and properties mapping
             </div>
           </div>
         </CardContent>
