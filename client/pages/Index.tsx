@@ -892,7 +892,8 @@ export default function Index() {
   const [currentImageRef, setCurrentImageRef] = useState<React.RefObject<HTMLImageElement>>(React.createRef());
   const [enableStrictMode, setEnableStrictMode] = useState(false);
   const [maxDetections, setMaxDetections] = useState(5);
-  
+  const [showSystemStatus, setShowSystemStatus] = useState(false);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Calculate garden statistics
