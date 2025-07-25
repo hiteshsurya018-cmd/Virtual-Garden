@@ -747,7 +747,8 @@ const categoryIcons = {
   digestive: Heart,
   mental: Brain,
   respiratory: Eye,
-  'anti-inflammatory': Award
+  'anti-inflammatory': Award,
+  unknown: Search
 };
 
 const categoryColors = {
