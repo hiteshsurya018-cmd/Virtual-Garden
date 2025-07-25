@@ -967,7 +967,7 @@ export default function Index() {
               const basePlant = mockPlantDatabase.find(p =>
                 p?.name?.toLowerCase().includes(apiPlant?.label?.toLowerCase() || '') ||
                 (apiPlant?.label?.toLowerCase() || '').includes(p?.name?.toLowerCase() || '')
-              ) || mockPlantDatabase[0]; // Fallback to first plant
+              ) || (mockPlantDatabase && mockPlantDatabase[0]) || null; // Fallback to first plant
 
               return {
                 ...basePlant,
