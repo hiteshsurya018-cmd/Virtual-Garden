@@ -994,21 +994,21 @@ export default function Index() {
                 bbox: apiPlant?.bbox,
                 detectionMetadata: {
                   boundingBox: {
-                    x: apiPlant.bbox.x1,
-                    y: apiPlant.bbox.y1,
-                    width: apiPlant.bbox.width,
-                    height: apiPlant.bbox.height
+                    x: apiPlant?.bbox?.x1 || 0,
+                    y: apiPlant?.bbox?.y1 || 0,
+                    width: apiPlant?.bbox?.width || 100,
+                    height: apiPlant?.bbox?.height || 100
                   },
-                  imageQuality: quality?.quality.score || 75,
-                  lightingCondition: quality?.quality.score > 80 ? 'excellent' :
-                                   quality?.quality.score > 60 ? 'good' : 'poor',
+                  imageQuality: quality?.quality?.score || 75,
+                  lightingCondition: (quality?.quality?.score || 75) > 80 ? 'excellent' :
+                                   (quality?.quality?.score || 75) > 60 ? 'good' : 'poor',
                   plantHealth: 'healthy',
                   growthStage: 'mature',
                   certaintyFactors: {
-                    leafShape: apiPlant.confidence * 0.9,
-                    flowerStructure: apiPlant.confidence * 0.85,
-                    stemCharacteristics: apiPlant.confidence * 0.8,
-                    overallMorphology: apiPlant.confidence * 0.95
+                    leafShape: (apiPlant?.confidence || 0) * 0.9,
+                    flowerStructure: (apiPlant?.confidence || 0) * 0.85,
+                    stemCharacteristics: (apiPlant?.confidence || 0) * 0.8,
+                    overallMorphology: (apiPlant?.confidence || 0) * 0.95
                   }
                 }
               };
