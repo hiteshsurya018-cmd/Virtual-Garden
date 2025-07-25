@@ -1597,7 +1597,7 @@ export default function Index() {
                           Analysis Complete
                         </div>
                         <div className="text-sm text-green-700 dark:text-green-300">
-                          {lastAnalysisResult.detectedPlants.length} plants detected in {(lastAnalysisResult.processingTime / 1000).toFixed(1)}s
+                          {(lastAnalysisResult?.detectedPlants || []).length} plants detected in {((lastAnalysisResult?.processingTime || 0) / 1000).toFixed(1)}s
                         </div>
                       </div>
                     </div>
