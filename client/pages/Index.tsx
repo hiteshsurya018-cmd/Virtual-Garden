@@ -1609,10 +1609,10 @@ export default function Index() {
                     </div>
                   </div>
 
-                  {lastAnalysisResult.errors.length > 0 && (
+                  {(lastAnalysisResult?.errors || []).length > 0 && (
                     <div className="mt-3 p-2 bg-yellow-100 dark:bg-yellow-900/30 rounded border-l-4 border-yellow-500">
                       <div className="text-sm text-yellow-800 dark:text-yellow-200">
-                        <strong>Note:</strong> {lastAnalysisResult.errors[0]}
+                        <strong>Note:</strong> {(lastAnalysisResult?.errors || [])[0]}
                       </div>
                     </div>
                   )}
