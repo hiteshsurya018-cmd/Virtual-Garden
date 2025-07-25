@@ -1363,6 +1363,8 @@ export default function Index() {
   const [gardenTemplateMode, setGardenTemplateMode] = useState(false);
   const [zoom, setZoom] = useState(1);
   const [currentImageRef, setCurrentImageRef] = useState<React.RefObject<HTMLImageElement>>(React.createRef());
+  const [enableStrictMode, setEnableStrictMode] = useState(false);
+  const [maxDetections, setMaxDetections] = useState(5);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
