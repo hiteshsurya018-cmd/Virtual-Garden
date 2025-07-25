@@ -1359,8 +1359,10 @@ export default function Index() {
   const [showStats, setShowStats] = useState(true);
   const [isGrowthAnimationPlaying, setIsGrowthAnimationPlaying] = useState(false);
   const [selectedPlantInfo, setSelectedPlantInfo] = useState<DetectedPlant | null>(null);
+  const [selectedDetectedPlant, setSelectedDetectedPlant] = useState<APIDetectedPlant | null>(null);
   const [gardenTemplateMode, setGardenTemplateMode] = useState(false);
   const [zoom, setZoom] = useState(1);
+  const [currentImageRef, setCurrentImageRef] = useState<React.RefObject<HTMLImageElement>>(React.createRef());
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
