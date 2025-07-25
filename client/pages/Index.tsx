@@ -768,19 +768,23 @@ const difficultyColors = {
 };
 
 // Enhanced 3D Plant Component with growth animation
-function Plant3D({ 
-  position, 
-  plant, 
+function Plant3D({
+  position,
+  plant,
   growthStage = 1,
   isSelected = false,
-  onClick 
-}: { 
+  onClick
+}: {
   position: [number, number, number];
   plant: DetectedPlant;
   growthStage?: number;
   isSelected?: boolean;
   onClick?: () => void;
 }) {
+  // Safety check for plant object
+  if (!plant) {
+    return null;
+  }
   const meshRef = useRef<any>();
   const groupRef = useRef<any>();
   
