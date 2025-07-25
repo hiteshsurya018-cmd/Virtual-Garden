@@ -2,6 +2,8 @@ import express from "express";
 import cors from "cors";
 import { handleDemo } from "./routes/demo";
 import backendRoutes from "./routes/backend";
+// Import backend proxy to auto-start backend
+import "./backend-proxy";
 
 export function createServer() {
   const app = express();
