@@ -404,43 +404,7 @@ class PlantRecognitionAI {
       // This old computer vision code is now replaced by the backend API
       // The backend handles the actual plant detection using YOLOv5
 
-      // Final safety check - ensure we always have at least one result
-      if (detectedPlants.length === 0) {
-        console.log('No plants detected even after fallback, adding emergency default');
-
-        // Emergency fallback - always provide something
-        const emergencyPlant = mockPlantDatabase.find(p => p.name === 'Basil');
-        if (emergencyPlant) {
-          detectedPlants.push({
-            ...emergencyPlant,
-            confidence: 0.4,
-            detectionMetadata: {
-              boundingBox: {
-                x: imageMetadata.width * 0.1,
-                y: imageMetadata.height * 0.1,
-                width: imageMetadata.width * 0.8,
-                height: imageMetadata.height * 0.8
-              },
-              imageQuality: imageMetadata.quality,
-              lightingCondition: 'poor' as const,
-              plantHealth: 'healthy' as const,
-              growthStage: 'mature' as const,
-              certaintyFactors: {
-                leafShape: 0.4,
-                flowerStructure: 0.3,
-                stemCharacteristics: 0.35,
-                overallMorphology: 0.4
-              }
-            }
-          });
-          suggestions.push('Plant identification uncertain - showing common herb as reference');
-          suggestions.push('Try uploading a clearer image with better lighting for accurate identification');
-        }
-      } else if (detectedPlants[0].confidence < 0.5) {
-        suggestions.push('Moderate confidence identification - consider retaking photo for better accuracy');
-      } else if (detectedPlants[0].confidence > 0.7) {
-        suggestions.push('High confidence identification based on detected plant features');
-      }
+      // This fallback logic is now handled by the backend API fallback system
 
     } catch (error) {
       errors.push('Error processing image for plant identification');
