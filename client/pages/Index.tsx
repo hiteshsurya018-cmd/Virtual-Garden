@@ -60,7 +60,8 @@ import {
   Copy
 } from 'lucide-react';
 import * as THREE from 'three';
-import RealPlantRecognition from '@/components/RealPlantAI';
+import { PlantDetectionAPI, DetectedPlant as APIDetectedPlant } from '@/services/PlantDetectionAPI';
+import { BoundingBoxOverlay, PlantDetailModal } from '@/components/BoundingBoxOverlay';
 
 interface DetectedPlant {
   id: string;
@@ -97,6 +98,7 @@ interface DetectedPlant {
       overallMorphology: number;
     };
   };
+  bbox?: APIDetectedPlant['bbox'];
 }
 
 interface AIAnalysisResult {
