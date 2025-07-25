@@ -1791,7 +1791,7 @@ export default function Index() {
                                 <div>
                                   <p className="text-xs font-medium mb-1">Key Benefits:</p>
                                   <ul className="text-xs space-y-1">
-                                    {plant.benefits.slice(0, 3).map((benefit, i) => (
+                                    {(plant.benefits || []).slice(0, 3).map((benefit, i) => (
                                       <li key={i} className="flex items-start gap-1">
                                         <CheckCircle className="w-3 h-3 text-green-500 mt-0.5 flex-shrink-0" />
                                         {benefit}
