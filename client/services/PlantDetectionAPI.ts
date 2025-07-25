@@ -189,17 +189,17 @@ export class PlantDetectionAPI {
     detection: PlantDetectionResponse;
     quality: ImageQualityResponse | null;
   }> {
-    const backendAvailable = await this.checkHealth();
-    
-    if (!backendAvailable) {
-      console.warn('Backend unavailable, using fallback detection');
-      return {
-        detection: await this.fallbackDetection(file),
-        quality: null,
-      };
-    }
-
     try {
+      const backendAvailable = await this.checkHealth();
+
+      if (!backendAvailable) {
+        console.warn('Backend unavailable, using fallback detection');
+        return {
+          detection: await this.fallbackDetection(file),
+          quality: null,
+        };
+      }
+
       // Run detection and quality analysis in parallel
       const [detection, quality] = await Promise.all([
         this.detectPlants(file),
