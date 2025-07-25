@@ -2501,7 +2501,7 @@ export default function Index() {
                     </div>
                   </div>
                   
-                  {selectedPlantInfo.warnings.length > 0 && (
+                  {(selectedPlantInfo?.warnings || []).length > 0 && (
                     <div>
                       <h4 className="font-semibold mb-3 text-red-700">Important Warnings</h4>
                       <div className="space-y-2">
