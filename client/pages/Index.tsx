@@ -3060,6 +3060,12 @@ export default function Index() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Plant Detail Modal for Backend API Detected Plants */}
+      <PlantDetailModal
+        plant={selectedDetectedPlant}
+        onClose={() => setSelectedDetectedPlant(null)}
+      />
     </div>
   );
 }
