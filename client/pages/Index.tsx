@@ -1243,6 +1243,25 @@ export default function Index() {
             </div>
             
             <div className="flex items-center gap-4">
+              <Dialog open={showSystemStatus} onOpenChange={setShowSystemStatus}>
+                <DialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="rounded-full"
+                  >
+                    <Settings className="w-4 h-4 mr-1" />
+                    System
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>System Status & Backend Control</DialogTitle>
+                  </DialogHeader>
+                  <SystemStatus />
+                </DialogContent>
+              </Dialog>
+
               <Button
                 variant="outline"
                 size="sm"
@@ -1251,7 +1270,7 @@ export default function Index() {
               >
                 {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
               </Button>
-              
+
               <Button
                 variant="outline"
                 size="sm"
