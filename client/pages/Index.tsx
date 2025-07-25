@@ -791,11 +791,12 @@ function Plant3D({
     }
   });
 
-  const plantColor = categoryColors[plant.category].includes('blue') ? '#3b82f6' :
-                    categoryColors[plant.category].includes('pink') ? '#ec4899' :
-                    categoryColors[plant.category].includes('orange') ? '#f97316' :
-                    categoryColors[plant.category].includes('purple') ? '#8b5cf6' :
-                    categoryColors[plant.category].includes('yellow') ? '#eab308' : '#22c55e';
+  const categoryColorString = categoryColors[plant?.category] || categoryColors['immunity'] || 'bg-green-100';
+  const plantColor = categoryColorString.includes('blue') ? '#3b82f6' :
+                    categoryColorString.includes('pink') ? '#ec4899' :
+                    categoryColorString.includes('orange') ? '#f97316' :
+                    categoryColorString.includes('purple') ? '#8b5cf6' :
+                    categoryColorString.includes('yellow') ? '#eab308' : '#22c55e';
 
   return (
     <group ref={groupRef} position={position} onClick={onClick}>
