@@ -1759,11 +1759,29 @@ export default function Index() {
                 {uploadedImages.length > 0 && (
                   <div className="space-y-3">
                     <div className="relative">
-                      <img 
-                        src={uploadedImages[currentImageIndex]?.url} 
-                        alt="Garden" 
+                      <img
+                        ref={currentImageRef}
+                        src={uploadedImages[currentImageIndex]?.url}
+                        alt="Garden"
                         className="w-full h-40 object-cover rounded-xl"
                       />
+
+                      {/* Bounding Box Overlay for Detected Plants */}
+                      {detectedPlants.length > 0 && (
+                        <BoundingBoxOverlay
+                          detections={detectedPlants.filter(p => p.bbox).map(p => ({
+                            bbox: p.bbox!,
+                            label: p.name,
+                            confidence: p.confidence,
+                            category: p.category,
+                            properties: p.benefits?.slice(0, 3) || [],
+                            scientific_name: p.scientificName
+                          }))}
+                          imageRef={currentImageRef}
+                          onPlantSelect={(plant) => setSelectedDetectedPlant(plant)}
+                        />
+                      )}
+
                       {uploadedImages.length > 1 && (
                         <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex gap-1">
                           {uploadedImages.map((_, index) => (
