@@ -2314,7 +2314,7 @@ export default function Index() {
               </Card>
 
               {/* Errors and Suggestions */}
-              {(lastAnalysisResult.errors.length > 0 || lastAnalysisResult.suggestions.length > 0) && (
+              {((lastAnalysisResult?.errors || []).length > 0 || (lastAnalysisResult?.suggestions || []).length > 0) && (
                 <div className="grid md:grid-cols-2 gap-4">
                   {lastAnalysisResult.errors.length > 0 && (
                     <Card>
