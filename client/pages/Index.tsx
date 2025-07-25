@@ -2337,7 +2337,7 @@ export default function Index() {
                     </Card>
                   )}
 
-                  {lastAnalysisResult.suggestions.length > 0 && (
+                  {(lastAnalysisResult?.suggestions || []).length > 0 && (
                     <Card>
                       <CardHeader>
                         <CardTitle className="text-lg text-blue-600 flex items-center gap-2">
