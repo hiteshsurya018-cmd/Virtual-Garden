@@ -1781,7 +1781,7 @@ export default function Index() {
                       {/* Bounding Box Overlay for Detected Plants */}
                       {detectedPlants.length > 0 && (
                         <BoundingBoxOverlay
-                          detections={detectedPlants.filter(p => p.bbox).map(p => ({
+                          detections={(detectedPlants || []).filter(p => p.bbox).map(p => ({
                             bbox: p.bbox!,
                             label: p.name,
                             confidence: p.confidence,
