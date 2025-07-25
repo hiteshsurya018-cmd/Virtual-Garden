@@ -166,8 +166,9 @@ export class PlantDetectionAPI {
 
       return [];
     } catch (error) {
-      console.warn('Backend detection failed, using fallback:', error);
-      return this.getFallbackDetection();
+      console.warn('Backend detection failed, using intelligent fallback analysis:', error);
+      // Use intelligent image analysis instead of basic fallback
+      return await this.analyzePlantFromImage(file);
     }
   }
 
