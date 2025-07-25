@@ -1421,12 +1421,22 @@ export default function Index() {
           }, 600);
 
           // Step 2: Real backend analysis with quality check
-          const { detection, quality } = await PlantDetectionAPI.detectPlantsWithQualityCheck(file);
+          let detection, quality;
+          try {
+            const result = await PlantDetectionAPI.detectPlantsWithQualityCheck(file);
+            detection = result.detection;
+            quality = result.quality;
+          } catch (error) {
+            console.warn('Backend API unavailable, using fallback detection:', error);
+            // Use fallback detection when backend is not available
+            detection = await PlantDetectionAPI.fallbackDetection(file);
+            quality = null;
+          }
 
           // Convert API results to app format
-          const convertedPlants = detection.plants
+          const convertedPlants = (detection.plants || [])
             .filter(plant => plant.confidence >= confidenceThreshold)
-            .slice(0, enableStrictMode ? maxDetections : detection.plants.length)
+            .slice(0, enableStrictMode ? maxDetections : (detection.plants || []).length)
             .map(apiPlant => {
               const basePlant = mockPlantDatabase.find(p =>
                 p.name.toLowerCase().includes(apiPlant.label.toLowerCase()) ||
@@ -2106,7 +2116,7 @@ export default function Index() {
                 <CardContent>
                   <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2">
                     {filteredPlants.map((plant) => {
-                      const CategoryIcon = categoryIcons[plant.category];
+                      const CategoryIcon = categoryIcons[plant.category] || Shield;
                       return (
                         <TooltipProvider key={plant.id}>
                           <Tooltip>
