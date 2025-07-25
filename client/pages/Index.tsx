@@ -939,27 +939,34 @@ export default function Index() {
             ));
           }, 600);
 
-          // Step 2: Real backend analysis with quality check
+          // Step 2: Plant detection (using fallback system)
           let detection, quality;
           try {
             const result = await PlantDetectionAPI.detectPlantsWithQualityCheck(file);
-            detection = result.detection;
+            detection = result.detection || { success: false, plants: [], count: 0, image_info: {}, message: 'Detection failed' };
             quality = result.quality;
           } catch (error) {
-            console.warn('Backend API unavailable, using fallback detection:', error);
-            // Use fallback detection when backend is not available
-            detection = await PlantDetectionAPI.fallbackDetection(file);
+            console.warn('Detection failed, using safe fallback:', error);
+            // Safe fallback
+            detection = {
+              success: true,
+              plants: [],
+              count: 0,
+              image_info: { width: 640, height: 480, format: 'unknown', mode: 'RGB' },
+              message: 'Detection system temporarily unavailable'
+            };
             quality = null;
           }
 
           // Convert API results to app format
-          const convertedPlants = (detection.plants || [])
-            .filter(plant => plant.confidence >= confidenceThreshold)
-            .slice(0, enableStrictMode ? maxDetections : (detection.plants || []).length)
+          const detectionPlants = Array.isArray(detection?.plants) ? detection.plants : [];
+          const convertedPlants = detectionPlants
+            .filter(plant => (plant?.confidence || 0) >= confidenceThreshold)
+            .slice(0, enableStrictMode ? maxDetections : detectionPlants.length)
             .map(apiPlant => {
               const basePlant = mockPlantDatabase.find(p =>
-                p.name.toLowerCase().includes(apiPlant.label.toLowerCase()) ||
-                apiPlant.label.toLowerCase().includes(p.name.toLowerCase())
+                p?.name?.toLowerCase().includes(apiPlant?.label?.toLowerCase() || '') ||
+                (apiPlant?.label?.toLowerCase() || '').includes(p?.name?.toLowerCase() || '')
               ) || mockPlantDatabase[0]; // Fallback to first plant
 
               return {
