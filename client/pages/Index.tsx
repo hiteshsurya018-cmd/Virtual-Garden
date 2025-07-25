@@ -1338,7 +1338,7 @@ export default function Index() {
                     {/* Enhanced Upload Progress */}
                     {(uploadedImages || []).some(img => img?.uploadProgress < 100 || ['preprocessing', 'analyzing', 'postprocessing'].includes(img?.analysisStatus)) && (
                       <div className="space-y-3">
-                        {uploadedImages.map(img => (
+                        {(uploadedImages || []).map(img => (
                           <div key={img.id} className="space-y-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                             <div className="flex justify-between text-xs">
                               <span className="truncate font-medium">{img.name}</span>
