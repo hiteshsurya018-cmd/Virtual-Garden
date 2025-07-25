@@ -970,13 +970,28 @@ export default function Index() {
               ) || (mockPlantDatabase && mockPlantDatabase[0]) || null; // Fallback to first plant
 
               return {
-                ...basePlant,
+                ...(basePlant || {
+                  name: 'Unknown Plant',
+                  scientificName: 'Species unknown',
+                  category: 'unknown',
+                  description: 'Plant identification pending',
+                  image: '/placeholder.svg',
+                  benefits: ['Identification required'],
+                  difficulty: 'medium',
+                  harvestTime: 'Unknown',
+                  growingConditions: { sunlight: 'full', water: 'medium', soil: 'Any', temperature: 'Variable' },
+                  medicinalUses: ['Requires identification'],
+                  preparations: ['Consult expert'],
+                  warnings: ['Do not use until identified'],
+                  rating: 0,
+                  reviews: 0
+                }),
                 id: `plant_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-                name: apiPlant.label.charAt(0).toUpperCase() + apiPlant.label.slice(1),
-                scientificName: apiPlant.scientific_name,
-                confidence: apiPlant.confidence,
-                category: apiPlant.category as any,
-                bbox: apiPlant.bbox,
+                name: (apiPlant?.label || 'Unknown').charAt(0).toUpperCase() + (apiPlant?.label || 'unknown').slice(1),
+                scientificName: apiPlant?.scientific_name || 'Species unknown',
+                confidence: apiPlant?.confidence || 0,
+                category: (apiPlant?.category as any) || 'unknown',
+                bbox: apiPlant?.bbox,
                 detectionMetadata: {
                   boundingBox: {
                     x: apiPlant.bbox.x1,
