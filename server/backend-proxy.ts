@@ -39,7 +39,20 @@ class BackendManager {
 
     try {
       console.log('🌱 Starting Virtual Garden Backend...');
-      
+
+      // Check if we're in a containerized environment without Python
+      const isContainer = process.env.NODE_ENV === 'production' ||
+                         process.env.RAILWAY_ENVIRONMENT ||
+                         process.env.FLY_APP_NAME ||
+                         !existsSync('/usr/bin/python3');
+
+      if (isContainer) {
+        console.log('⚠️ Container environment detected - Python backend not available');
+        console.log('ℹ️ Virtual Garden will use enhanced fallback detection');
+        this.isStarting = false;
+        return false;
+      }
+
       // Try to start Python backend
       const pythonCmd = this.config.pythonPath || 'python3';
       const args = [
