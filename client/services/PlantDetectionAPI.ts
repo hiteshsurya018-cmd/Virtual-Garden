@@ -49,7 +49,16 @@ export class PlantDetectionAPI {
   // Check if backend is available
   static async checkHealth(): Promise<boolean> {
     try {
-      const response = await fetch(`${this.baseURL}/health`);
+      const response = await fetch(`${this.baseURL}/health`, {
+        method: 'GET',
+        mode: 'cors',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
       const data = await response.json();
       return data.status === 'healthy' && data.model_loaded;
     } catch (error) {
