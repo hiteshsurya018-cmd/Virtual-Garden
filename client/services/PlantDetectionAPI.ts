@@ -207,26 +207,27 @@ export class PlantDetectionAPI {
     console.log('🔍 Starting plant detection with quality analysis...');
     
     try {
-      // Try backend detection first
+      // Try backend detection first, fallback to intelligent analysis
       const [plants, quality] = await Promise.all([
         this.detectPlants(file),
         this.analyzeImageQuality(file),
       ]);
 
-      const usingFallback = plants === this.getFallbackDetection();
-      
-      console.log(`✅ Detection complete: ${plants.length} plants found (backend: ${!usingFallback})`);
-      
+      // Check if we got backend results or fallback analysis
+      const usingFallback = plants.length === 0 || !plants.some(p => p.confidence > 0.9);
+
+      console.log(`✅ Detection complete: ${plants.length} plants found (intelligent analysis: ${usingFallback ? 'yes' : 'backend'})`);
+
       return {
         plants,
         quality,
         usingFallback,
       };
     } catch (error) {
-      console.warn('Full backend detection failed, using complete fallback:', error);
-      
+      console.warn('Full detection failed, using basic fallback:', error);
+
       return {
-        plants: this.getFallbackDetection(),
+        plants: await this.analyzePlantFromImage(file),
         quality: FALLBACK_QUALITY,
         usingFallback: true,
       };
