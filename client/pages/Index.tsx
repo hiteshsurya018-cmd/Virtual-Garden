@@ -2267,7 +2267,7 @@ export default function Index() {
                   <CardContent className="p-4">
                     <div className="text-center">
                       <div className="text-2xl font-bold text-green-600">
-                        {lastAnalysisResult.detectedPlants.length}
+                        {(lastAnalysisResult?.detectedPlants || []).length}
                       </div>
                       <div className="text-sm text-gray-600">Plants Detected</div>
                     </div>
