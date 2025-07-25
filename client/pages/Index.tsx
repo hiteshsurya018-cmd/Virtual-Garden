@@ -889,15 +889,15 @@ export default function Index() {
 
   // Calculate garden statistics
   const gardenStats: GardenStats = {
-    totalPlants: placedPlants.length,
-    categories: placedPlants.reduce((acc, plant) => {
+    totalPlants: (placedPlants || []).length,
+    categories: (placedPlants || []).reduce((acc, plant) => {
       const plantData = detectedPlants.find(p => p.id === plant.plantId);
       if (plantData) {
         acc[plantData.category] = (acc[plantData.category] || 0) + 1;
       }
       return acc;
     }, {} as Record<string, number>),
-    gardenValue: placedPlants.length * 15.99, // Mock calculation
+    gardenValue: (placedPlants || []).length * 15.99, // Mock calculation
     lastUpdated: new Date().toLocaleDateString()
   };
 
@@ -1042,8 +1042,8 @@ export default function Index() {
           setLastAnalysisResult({
             detectedPlants: convertedPlants,
             totalProcessingTime: 2000,
-            confidence: convertedPlants.length > 0 ? Math.max(...convertedPlants.map(p => p.confidence)) : 0,
-            plantCount: convertedPlants.length,
+            confidence: (convertedPlants || []).length > 0 ? Math.max(...(convertedPlants || []).map(p => p.confidence || 0)) : 0,
+            plantCount: (convertedPlants || []).length,
             errors: detection.success ? [] : ['Backend detection failed'],
             imageAnalysis: {
               quality: quality?.quality.score || 0,
@@ -1275,11 +1275,11 @@ export default function Index() {
                   <div className="text-sm text-garden-500">Plants Placed</div>
                 </div>
                 <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-xl p-3 border border-garden-200/50">
-                  <div className="text-2xl font-bold text-garden-600">{detectedPlants.length}</div>
+                  <div className="text-2xl font-bold text-garden-600">{(detectedPlants || []).length}</div>
                   <div className="text-sm text-garden-500">Detected Species</div>
                 </div>
                 <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-xl p-3 border border-garden-200/50">
-                  <div className="text-2xl font-bold text-garden-600">{Object.keys(gardenStats.categories).length}</div>
+                  <div className="text-2xl font-bold text-garden-600">{Object.keys(gardenStats.categories || {}).length}</div>
                   <div className="text-sm text-garden-500">Categories</div>
                 </div>
               </div>
@@ -1302,14 +1302,14 @@ export default function Index() {
                   <Upload className="w-5 h-5" />
                   Upload Garden Images
                   <Badge variant="secondary" className="ml-auto">
-                    {uploadedImages.length}
+                    {(uploadedImages || []).length}
                   </Badge>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 
                 {/* Image Carousel */}
-                {uploadedImages.length > 0 && (
+                {(uploadedImages || []).length > 0 && (
                   <div className="space-y-3">
                     <div className="relative">
                       <img
@@ -1320,7 +1320,7 @@ export default function Index() {
                       />
 
                       {/* Bounding Box Overlay for Detected Plants */}
-                      {detectedPlants.length > 0 && (
+                      {(detectedPlants || []).length > 0 && (
                         <BoundingBoxOverlay
                           detections={(detectedPlants || []).filter(p => p.bbox).map(p => ({
                             bbox: p.bbox!,
