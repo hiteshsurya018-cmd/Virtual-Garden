@@ -25,6 +25,55 @@ interface QualityResponse {
   quality: ImageQuality;
 }
 
+// Plant categories database for intelligent detection
+const PLANT_CATEGORIES = {
+  'cannabis': {
+    category: 'medicinal',
+    properties: ['pain relief', 'anti-inflammatory', 'appetite stimulant', 'anxiety relief'],
+    description: 'Cannabis plant with distinctive serrated leaves'
+  },
+  'aloe': {
+    category: 'medicinal',
+    properties: ['healing', 'anti-inflammatory', 'skin care', 'burn treatment']
+  },
+  'basil': {
+    category: 'herb',
+    properties: ['digestive', 'antibacterial', 'antioxidant', 'anti-inflammatory']
+  },
+  'mint': {
+    category: 'herb',
+    properties: ['digestive', 'cooling', 'respiratory', 'antimicrobial']
+  },
+  'lavender': {
+    category: 'aromatic',
+    properties: ['calming', 'antiseptic', 'sleep aid', 'anxiety relief']
+  },
+  'rosemary': {
+    category: 'herb',
+    properties: ['memory enhancement', 'circulation', 'antioxidant', 'antimicrobial']
+  },
+  'sage': {
+    category: 'herb',
+    properties: ['antimicrobial', 'cognitive support', 'throat health', 'antioxidant']
+  },
+  'thyme': {
+    category: 'herb',
+    properties: ['antibacterial', 'respiratory support', 'immune boost', 'antifungal']
+  },
+  'oregano': {
+    category: 'herb',
+    properties: ['antiviral', 'digestive', 'immune boost', 'antimicrobial']
+  },
+  'chamomile': {
+    category: 'flower',
+    properties: ['calming', 'digestive', 'anti-inflammatory', 'sleep aid']
+  },
+  'echinacea': {
+    category: 'flower',
+    properties: ['immune support', 'antiviral', 'wound healing', 'anti-inflammatory']
+  }
+};
+
 // Fallback plant detection for when backend is unavailable
 const FALLBACK_PLANTS = [
   {
@@ -45,7 +94,7 @@ const FALLBACK_PLANTS = [
   },
   {
     bbox: { x1: 50, y1: 200, x2: 180, y2: 320, width: 130, height: 120 },
-    label: "lavender", 
+    label: "lavender",
     confidence: 0.82,
     category: "aromatic",
     properties: ["calming", "antiseptic", "sleep aid"],
