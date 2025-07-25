@@ -1299,7 +1299,7 @@ export default function Index() {
                     <div className="relative">
                       <img
                         ref={currentImageRef}
-                        src={uploadedImages[currentImageIndex]?.url}
+                        src={(uploadedImages || [])[currentImageIndex]?.url}
                         alt="Garden"
                         className="w-full h-40 object-cover rounded-xl"
                       />
