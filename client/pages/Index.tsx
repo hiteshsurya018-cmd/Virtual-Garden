@@ -1169,7 +1169,7 @@ export default function Index() {
   const exportGarden = () => {
     const gardenData = {
       name: gardenName,
-      plants: placedPlants.map(p => ({
+      plants: (placedPlants || []).map(p => ({
         ...p,
         plantInfo: detectedPlants.find(dp => dp.id === p.plantId)
       })),
@@ -2021,8 +2021,8 @@ export default function Index() {
                   />
                   
                   {/* Placed Plants with Enhanced Models */}
-                  {placedPlants.map((plantPosition) => {
-                    const plantData = detectedPlants.find(p => p.id === plantPosition.plantId);
+                  {(placedPlants || []).map((plantPosition) => {
+                    const plantData = (detectedPlants || []).find(p => p.id === plantPosition.plantId);
                     return plantData ? (
                       <Plant3D 
                         key={plantPosition.id}
@@ -2326,7 +2326,7 @@ export default function Index() {
                       </CardHeader>
                       <CardContent>
                         <ul className="space-y-2">
-                          {lastAnalysisResult.errors.map((error, index) => (
+                          {(lastAnalysisResult?.errors || []).map((error, index) => (
                             <li key={index} className="flex items-start gap-2 text-sm">
                               <div className="w-2 h-2 bg-red-500 rounded-full mt-2 flex-shrink-0"></div>
                               {error}
@@ -2347,7 +2347,7 @@ export default function Index() {
                       </CardHeader>
                       <CardContent>
                         <ul className="space-y-2">
-                          {lastAnalysisResult.suggestions.map((suggestion, index) => (
+                          {(lastAnalysisResult?.suggestions || []).map((suggestion, index) => (
                             <li key={index} className="flex items-start gap-2 text-sm">
                               <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
                               {suggestion}
@@ -2367,7 +2367,7 @@ export default function Index() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {lastAnalysisResult.detectedPlants.map((plant, index) => (
+                    {(lastAnalysisResult?.detectedPlants || []).map((plant, index) => (
                       <div key={plant.id} className="border rounded-lg p-4">
                         <div className="flex items-start gap-4">
                           <img
@@ -2470,7 +2470,7 @@ export default function Index() {
                     <div>
                       <h4 className="font-semibold mb-3">Key Benefits</h4>
                       <ul className="space-y-2">
-                        {selectedPlantInfo.benefits.map((benefit, index) => (
+                        {(selectedPlantInfo?.benefits || []).map((benefit, index) => (
                           <li key={index} className="flex items-start gap-2">
                             <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
                             <span className="text-sm">{benefit}</span>
@@ -2490,7 +2490,7 @@ export default function Index() {
                   <div>
                     <h4 className="font-semibold mb-3">Medicinal Applications</h4>
                     <div className="grid md:grid-cols-2 gap-4">
-                      {selectedPlantInfo.medicinalUses.map((use, index) => (
+                      {(selectedPlantInfo?.medicinalUses || []).map((use, index) => (
                         <div key={index} className="p-3 bg-green-50 rounded-lg border border-green-200">
                           <div className="flex items-start gap-2">
                             <Heart className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
@@ -2505,7 +2505,7 @@ export default function Index() {
                     <div>
                       <h4 className="font-semibold mb-3 text-red-700">Important Warnings</h4>
                       <div className="space-y-2">
-                        {selectedPlantInfo.warnings.map((warning, index) => (
+                        {(selectedPlantInfo?.warnings || []).map((warning, index) => (
                           <div key={index} className="p-3 bg-red-50 rounded-lg border border-red-200">
                             <div className="flex items-start gap-2">
                               <AlertTriangle className="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" />
@@ -2562,7 +2562,7 @@ export default function Index() {
                   <div>
                     <h4 className="font-semibold mb-3">Preparation Methods</h4>
                     <div className="grid md:grid-cols-2 gap-4">
-                      {selectedPlantInfo.preparations.map((prep, index) => (
+                      {(selectedPlantInfo?.preparations || []).map((prep, index) => (
                         <div key={index} className="p-3 bg-blue-50 rounded-lg border border-blue-200">
                           <div className="flex items-start gap-2">
                             <BookOpen className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
