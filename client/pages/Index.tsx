@@ -1559,18 +1559,18 @@ export default function Index() {
   }, []);
 
   // Enhanced plant filtering and searching
-  const filteredPlants = detectedPlants
-    .filter(plant => 
+  const filteredPlants = (detectedPlants || [])
+    .filter(plant =>
       (selectedCategory === 'all' || plant.category === selectedCategory) &&
-      (plant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-       plant.scientificName.toLowerCase().includes(searchTerm.toLowerCase())) &&
-      (!showOnlyDetected || detectedPlants.some(dp => dp.id === plant.id))
+      (plant.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+       plant.scientificName?.toLowerCase().includes(searchTerm.toLowerCase())) &&
+      (!showOnlyDetected || (detectedPlants || []).some(dp => dp.id === plant.id))
     )
     .sort((a, b) => {
       switch (sortBy) {
-        case 'name': return a.name.localeCompare(b.name);
-        case 'confidence': return b.confidence - a.confidence;
-        case 'rating': return b.rating - a.rating;
+        case 'name': return (a.name || '').localeCompare(b.name || '');
+        case 'confidence': return (b.confidence || 0) - (a.confidence || 0);
+        case 'rating': return (b.rating || 0) - (a.rating || 0);
         default: return 0;
       }
     });
