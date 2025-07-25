@@ -75,6 +75,7 @@ export class PlantDetectionAPI {
 
       const response = await fetch(`${this.baseURL}/api/detect-plants`, {
         method: 'POST',
+        mode: 'cors',
         body: formData,
       });
 
