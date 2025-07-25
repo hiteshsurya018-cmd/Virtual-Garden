@@ -831,7 +831,7 @@ function Plant3D({
       {/* Plant label */}
       <Html distanceFactor={10} position={[0, 1.5 * growthStage, 0]}>
         <div className="bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg shadow-lg text-xs font-medium text-gray-800 pointer-events-none">
-          {plant.name}
+          {plant?.name || 'Unknown Plant'}
         </div>
       </Html>
     </group>
