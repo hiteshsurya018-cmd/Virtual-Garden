@@ -1336,7 +1336,7 @@ export default function Index() {
                     </div>
 
                     {/* Enhanced Upload Progress */}
-                    {uploadedImages.some(img => img.uploadProgress < 100 || ['preprocessing', 'analyzing', 'postprocessing'].includes(img.analysisStatus)) && (
+                    {(uploadedImages || []).some(img => img?.uploadProgress < 100 || ['preprocessing', 'analyzing', 'postprocessing'].includes(img?.analysisStatus)) && (
                       <div className="space-y-3">
                         {uploadedImages.map(img => (
                           <div key={img.id} className="space-y-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
