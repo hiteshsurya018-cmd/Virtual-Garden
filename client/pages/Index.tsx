@@ -1549,102 +1549,76 @@ export default function Index() {
               </CardContent>
             </Card>
 
-            {/* Plant Search and Filters */}
+            {/* Enhanced Plant Library */}
             <Card className="shadow-2xl border-garden-200/50 dark:border-gray-700/50 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-garden-900 dark:text-white">
-                  <Search className="w-5 h-5" />
-                  Plant Library
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-garden-400" />
-                  <Input
-                    placeholder="Search plants..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-                
-                <div className="flex gap-2">
-                  <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                    <SelectTrigger className="flex-1">
-                      <SelectValue placeholder="Category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Categories</SelectItem>
-                      <SelectItem value="immunity">Immunity</SelectItem>
-                      <SelectItem value="skincare">Skincare</SelectItem>
-                      <SelectItem value="digestive">Digestive</SelectItem>
-                      <SelectItem value="mental">Mental Health</SelectItem>
-                      <SelectItem value="respiratory">Respiratory</SelectItem>
-                      <SelectItem value="anti-inflammatory">Anti-inflammatory</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  
-                  <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
-                    <SelectTrigger className="flex-1">
-                      <SelectValue placeholder="Sort by" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="confidence">Confidence</SelectItem>
-                      <SelectItem value="name">Name</SelectItem>
-                      <SelectItem value="rating">Rating</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <label className="text-sm font-medium text-garden-700 dark:text-gray-300">
-                      Confidence Threshold
-                    </label>
-                    <span className="text-sm text-garden-600 dark:text-gray-400">
-                      {Math.round(confidenceThreshold * 100)}%
-                    </span>
-                  </div>
-                  <Slider
-                    value={[confidenceThreshold]}
-                    onValueChange={(value) => {
-                      setConfidenceThreshold(value[0]);
-                      if (lastAnalysisResult) {
-                        setDetectedPlants(lastAnalysisResult.detectedPlants.filter(plant =>
-                          plant.confidence >= value[0]
-                        ));
-                      }
-                    }}
-                    max={0.95}
-                    min={0.45}
-                    step={0.05}
-                    className="w-full"
-                  />
-
-                  <div className="flex items-center justify-between">
-                    <label className="text-sm font-medium text-garden-700 dark:text-gray-300">
-                      Detected Only
-                    </label>
-                    <Switch
-                      checked={showOnlyDetected}
-                      onCheckedChange={setShowOnlyDetected}
-                    />
-                  </div>
-
-                  {lastAnalysisResult && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setShowAnalysisDetails(true)}
-                      className="w-full text-xs"
-                    >
-                      <Info className="w-3 h-3 mr-1" />
-                      View Analysis Details
-                    </Button>
-                  )}
-                </div>
+              <CardContent className="p-4">
+                <PlantLibrary
+                  onAddPlantToGarden={handleAddPlantFromLibrary}
+                  className="h-full"
+                />
               </CardContent>
             </Card>
+
+            {/* Analysis Controls */}
+            {(detectedPlants || []).length > 0 && (
+              <Card className="shadow-2xl border-garden-200/50 dark:border-gray-700/50 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-garden-900 dark:text-white text-sm">
+                    <Filter className="w-4 h-4" />
+                    Detection Filters
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm font-medium text-garden-700 dark:text-gray-300">
+                        Confidence Threshold
+                      </label>
+                      <span className="text-sm text-garden-600 dark:text-gray-400">
+                        {Math.round(confidenceThreshold * 100)}%
+                      </span>
+                    </div>
+                    <Slider
+                      value={[confidenceThreshold]}
+                      onValueChange={(value) => {
+                        setConfidenceThreshold(value[0]);
+                        if (lastAnalysisResult) {
+                          setDetectedPlants(lastAnalysisResult.detectedPlants.filter(plant =>
+                            plant.confidence >= value[0]
+                          ));
+                        }
+                      }}
+                      max={0.95}
+                      min={0.45}
+                      step={0.05}
+                      className="w-full"
+                    />
+
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm font-medium text-garden-700 dark:text-gray-300">
+                        Detected Only
+                      </label>
+                      <Switch
+                        checked={showOnlyDetected}
+                        onCheckedChange={setShowOnlyDetected}
+                      />
+                    </div>
+
+                    {lastAnalysisResult && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowAnalysisDetails(true)}
+                        className="w-full text-xs"
+                      >
+                        <Info className="w-3 h-3 mr-1" />
+                        View Analysis Details
+                      </Button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* AI Recognition Status */}
             {isAnalyzing && (
