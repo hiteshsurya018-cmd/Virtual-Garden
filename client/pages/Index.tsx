@@ -2041,6 +2041,24 @@ export default function Index() {
 
                     <div className="w-px h-6 bg-garden-300 dark:bg-gray-600" />
 
+                    {gardenLayout && (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setGardenLayout(null)}
+                              className="border-garden-300 hover:bg-garden-50 dark:border-gray-600 dark:hover:bg-gray-700"
+                            >
+                              <RotateCcw className="w-4 h-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Switch to Virtual Mode</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
+
                     <Dialog>
                       <DialogTrigger asChild>
                         <Button
