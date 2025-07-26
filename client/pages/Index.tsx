@@ -63,6 +63,8 @@ import * as THREE from 'three';
 import { PlantDetectionAPI, DetectedPlant as APIDetectedPlant } from '@/services/PlantDetectionAPI';
 import { BoundingBoxOverlay, PlantDetailModal } from '@/components/BoundingBoxOverlay';
 import SystemStatus from '@/components/SystemStatus';
+import PlantLibrary from '@/components/PlantLibrary';
+import { Plant } from '@/data/plantsDatabase';
 
 interface DetectedPlant {
   id: string;
