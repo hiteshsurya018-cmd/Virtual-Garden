@@ -2131,7 +2131,18 @@ export default function Index() {
               </CardHeader>
               
               <CardContent className="p-0 h-[600px] relative">
-                <Canvas 
+                {gardenLayout ? (
+                  /* Garden Space Recreation */
+                  <GardenSpaceRecreation
+                    layout={gardenLayout}
+                    showMeasurements={true}
+                    showZones={true}
+                    showConstraints={false}
+                    className="h-full"
+                  />
+                ) : (
+                  /* Original Virtual Garden */
+                  <Canvas 
                   camera={{ position: [8, 8, 8], fov: 50 }}
                   shadows
                   className="rounded-b-lg"
@@ -2218,6 +2229,7 @@ export default function Index() {
                     maxPolarAngle={Math.PI / 2}
                   />
                 </Canvas>
+                )}
                 
                 {/* Enhanced Bottom Toolbar */}
                 <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex items-center gap-3 bg-white/95 dark:bg-gray-800/95 backdrop-blur-md rounded-2xl px-6 py-3 shadow-xl border border-garden-200/50 dark:border-gray-600/50">
