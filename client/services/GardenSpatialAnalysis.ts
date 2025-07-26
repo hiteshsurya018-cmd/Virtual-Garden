@@ -956,8 +956,12 @@ export class GardenSpatialAnalysisService {
         humidity: 60,
         windDirection: 'southwest',
         frostPockets: [],
-        hotSpots: brightRatio > 0.4 ? [{ x: estimatedWidth * 0.7, y: estimatedHeight * 0.3 }] : [],
-        drainageIssues: []
+        hotSpots: analysis.brightRatio > 0.4 ? [{ x: estimatedWidth * 0.7, y: estimatedHeight * 0.3 }] : [],
+        drainageIssues: [],
+        sunlightPatterns,
+        shadowMaps,
+        windFlowPatterns: this.analyzeWindPatterns(features, estimatedWidth, estimatedHeight),
+        microzones
       },
       recommendations: [
         {
