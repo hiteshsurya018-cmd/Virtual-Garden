@@ -1280,6 +1280,27 @@ export default function Index() {
     console.log(`Added ${plant.name} to garden from library`);
   };
 
+  // Handle garden analysis completion
+  const handleAnalysisComplete = (result: AnalysisResult) => {
+    setAnalysisResult(result);
+    if (result.success) {
+      setGardenLayout(result.layout);
+      setActiveTab('analysis');
+    }
+  };
+
+  // Handle garden layout selection
+  const handleLayoutSelected = (layout: GardenLayout) => {
+    setGardenLayout(layout);
+    setActiveTab('garden');
+
+    // Update garden stats based on real layout
+    const totalArea = layout.dimensions.estimatedArea;
+    const plantCapacity = layout.zones.reduce((sum, zone) => sum + zone.capacity, 0);
+
+    console.log(`Garden layout selected: ${layout.name} (${totalArea.toFixed(1)}m², capacity: ${plantCapacity} plants)`);
+  };
+
   return (
     <div className={`min-h-screen transition-all duration-500 ${isDarkMode ? 'dark bg-gray-900' : 'bg-gradient-to-br from-garden-50 to-nature-50'}`}>
       <AnimatedBackground />
