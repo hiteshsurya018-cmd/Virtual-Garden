@@ -620,17 +620,99 @@ export class GardenSpatialAnalysisService {
     filename: string
   ) {
     // Estimate real-world dimensions (assuming typical garden photo)
-    const estimatedWidth = Math.min(Math.max(5, imageWidth / 100), 20); // 5-20 meters
-    const estimatedHeight = Math.min(Math.max(5, imageHeight / 100), 20);
+    const estimatedWidth = Math.min(Math.max(5, imageWidth / 100), 25); // 5-25 meters
+    const estimatedHeight = Math.min(Math.max(5, imageHeight / 100), 25);
     const estimatedArea = estimatedWidth * estimatedHeight;
-    
-    // Generate features based on color analysis
+
+    // Generate features based on advanced analysis
     const features: GardenFeature[] = [];
     const zones: GardenZone[] = [];
     const plantingAreas: PlantingArea[] = [];
-    
+
+    // Detect walls and structures
+    if (analysis.whiteRatio > 0.1 || analysis.concreteRatio > 0.05) {
+      const wallHeight = 2.5 + Math.random() * 1.5; // 2.5-4m typical wall height
+
+      features.push({
+        id: 'main-wall',
+        type: 'wall',
+        coordinates: [
+          { x: estimatedWidth * 0.9, y: 0 },
+          { x: estimatedWidth * 0.9, y: estimatedHeight }
+        ],
+        dimensions: { width: 0.2, height: wallHeight, depth: estimatedHeight },
+        properties: {
+          material: analysis.brickRatio > 0.02 ? 'brick' : 'concrete',
+          condition: 'good',
+          wallHeight: wallHeight,
+          orientation: 'north',
+          surfaceMaterial: analysis.brickRatio > 0.02 ? 'brick' : 'concrete'
+        },
+        constraints: {
+          canPlantAround: true,
+          canModify: false,
+          clearanceNeeded: 0.5,
+          shadowCast: [
+            { direction: 'west', length: wallHeight * 1.5, timeOfDay: 'morning' },
+            { direction: 'west', length: wallHeight * 0.8, timeOfDay: 'midday' },
+            { direction: 'west', length: wallHeight * 2.0, timeOfDay: 'afternoon' }
+          ],
+          windBlockage: 80
+        }
+      });
+    }
+
+    // Detect doors and windows from openings analysis
+    analysis.openings.forEach((opening: any, index: number) => {
+      const realX = (opening.center.x / imageWidth) * estimatedWidth;
+      const realY = (opening.center.y / imageHeight) * estimatedHeight;
+      const realWidth = (opening.dimensions.width / imageWidth) * estimatedWidth;
+      const realHeight = (opening.dimensions.height / imageHeight) * estimatedHeight;
+
+      if (opening.type === 'door') {
+        features.push({
+          id: `door-${index}`,
+          type: 'door',
+          coordinates: [{ x: realX, y: realY }],
+          dimensions: { width: realWidth, height: realHeight },
+          properties: {
+            condition: 'good',
+            accessibility: 'easy',
+            openingWidth: realWidth,
+            material: analysis.woodRatio > 0.05 ? 'wood' : 'metal',
+            orientation: realX > estimatedWidth * 0.8 ? 'east' : 'west'
+          },
+          constraints: {
+            canPlantAround: true,
+            canModify: false,
+            clearanceNeeded: 1.5 // need space for door swing
+          }
+        });
+      } else if (opening.type === 'window') {
+        features.push({
+          id: `window-${index}`,
+          type: 'window',
+          coordinates: [{ x: realX, y: realY }],
+          dimensions: { width: realWidth, height: realHeight },
+          properties: {
+            condition: 'good',
+            glassArea: realWidth * realHeight,
+            material: 'glass',
+            orientation: realX > estimatedWidth * 0.8 ? 'east' : 'west',
+            surfaceMaterial: 'glass'
+          },
+          constraints: {
+            canPlantAround: true,
+            canModify: false,
+            clearanceNeeded: 0.8,
+            reflectedLight: 15 // windows can reflect 15% more light to nearby areas
+          }
+        });
+      }
+    });
+
     // Detect existing vegetation
-    if (greenRatio > 0.3) {
+    if (analysis.greenRatio > 0.2) {
       features.push({
         id: 'existing-vegetation',
         type: 'existing_plant',
@@ -640,8 +722,8 @@ export class GardenSpatialAnalysisService {
         ],
         dimensions: { width: estimatedWidth * 0.6, height: estimatedHeight * 0.4 },
         properties: {
-          condition: greenRatio > 0.5 ? 'good' : 'fair',
-          sunlight: brightRatio > 0.3 ? 'full' : 'partial'
+          condition: analysis.greenRatio > 0.4 ? 'good' : 'fair',
+          sunlight: analysis.brightRatio > 0.3 ? 'full' : 'partial'
         },
         constraints: {
           canPlantAround: true,
@@ -650,9 +732,12 @@ export class GardenSpatialAnalysisService {
         }
       });
     }
-    
-    // Detect pathways
-    if (brownRatio > 0.1 || grayRatio > 0.1) {
+
+    // Detect pathways and hardscaping
+    if (analysis.brownRatio > 0.1 || analysis.grayRatio > 0.1 || analysis.concreteRatio > 0.05) {
+      const pathMaterial = analysis.concreteRatio > 0.03 ? 'concrete' :
+                          analysis.grayRatio > analysis.brownRatio ? 'stone' : 'gravel';
+
       features.push({
         id: 'main-path',
         type: 'path',
@@ -662,14 +747,42 @@ export class GardenSpatialAnalysisService {
         ],
         dimensions: { width: estimatedWidth, height: 1.2 },
         properties: {
-          material: grayRatio > brownRatio ? 'stone' : 'gravel',
+          material: pathMaterial,
           condition: 'good',
-          accessibility: 'easy'
+          accessibility: 'easy',
+          surfaceMaterial: pathMaterial
         },
         constraints: {
           canPlantAround: true,
           canModify: false,
           clearanceNeeded: 0.3
+        }
+      });
+    }
+
+    // Detect decks/patios from wood detection
+    if (analysis.woodRatio > 0.08) {
+      features.push({
+        id: 'deck-area',
+        type: 'deck',
+        coordinates: [
+          { x: estimatedWidth * 0.7, y: estimatedHeight * 0.1 },
+          { x: estimatedWidth * 0.95, y: estimatedHeight * 0.4 }
+        ],
+        dimensions: { width: estimatedWidth * 0.25, height: estimatedHeight * 0.3, depth: 0.3 },
+        properties: {
+          material: 'wood',
+          condition: 'good',
+          elevation: 0.3,
+          surfaceMaterial: 'wood'
+        },
+        constraints: {
+          canPlantAround: true,
+          canModify: false,
+          clearanceNeeded: 0.5,
+          shadowCast: [
+            { direction: 'north', length: 2.0, timeOfDay: 'midday' }
+          ]
         }
       });
     }
