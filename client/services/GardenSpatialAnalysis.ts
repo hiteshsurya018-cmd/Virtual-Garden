@@ -5,7 +5,7 @@
 
 export interface GardenFeature {
   id: string;
-  type: 'path' | 'structure' | 'existing_plant' | 'water_feature' | 'fence' | 'building' | 'open_space' | 'shade_area' | 'sunny_area';
+  type: 'path' | 'structure' | 'existing_plant' | 'water_feature' | 'fence' | 'building' | 'open_space' | 'shade_area' | 'sunny_area' | 'wall' | 'door' | 'window' | 'roof' | 'deck' | 'patio' | 'steps' | 'driveway' | 'garage' | 'shed';
   coordinates: { x: number; y: number; z?: number }[];
   dimensions: { width: number; height: number; depth?: number };
   properties: {
@@ -16,12 +16,21 @@ export interface GardenFeature {
     drainage?: 'good' | 'moderate' | 'poor';
     soilType?: string;
     elevation?: number;
+    orientation?: 'north' | 'south' | 'east' | 'west' | 'northeast' | 'northwest' | 'southeast' | 'southwest';
+    wallHeight?: number;
+    glassArea?: number; // for windows
+    openingWidth?: number; // for doors
+    roofType?: 'flat' | 'pitched' | 'shed' | 'gable';
+    surfaceMaterial?: 'concrete' | 'wood' | 'brick' | 'stone' | 'vinyl' | 'metal' | 'glass';
   };
   constraints: {
     canPlantAround: boolean;
     canModify: boolean;
     clearanceNeeded: number; // meters
     seasonalChanges?: boolean;
+    shadowCast?: { direction: string; length: number; timeOfDay: string }[];
+    windBlockage?: number; // percentage
+    reflectedLight?: number; // percentage increase in nearby light
   };
 }
 
