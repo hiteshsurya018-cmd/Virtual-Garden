@@ -102,7 +102,7 @@ except Exception as e:
 '''
     
     # Save and run the test
-    with open("temp_model_test.py", "w") as f:
+    with open("temp_model_test.py", "w", encoding="utf-8") as f:
         f.write(test_script)
     
     try:
