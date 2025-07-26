@@ -1,17 +1,42 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { OrbitControls, Box, Sphere, Text, Environment, ContactShadows, Html } from '@react-three/drei';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Progress } from '@/components/ui/progress';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
-import { Slider } from '@/components/ui/slider';
+import React, { useState, useRef, useCallback, useEffect } from "react";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import {
+  OrbitControls,
+  Box,
+  Sphere,
+  Text,
+  Environment,
+  ContactShadows,
+  Html,
+} from "@react-three/drei";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Slider } from "@/components/ui/slider";
 import {
   Upload,
   ZoomIn,
@@ -58,32 +83,44 @@ import {
   Archive,
   Share2,
   Copy,
-  Home
-} from 'lucide-react';
-import * as THREE from 'three';
-import { PlantDetectionAPI, DetectedPlant as APIDetectedPlant } from '@/services/PlantDetectionAPI';
-import { BoundingBoxOverlay, PlantDetailModal } from '@/components/BoundingBoxOverlay';
-import SystemStatus from '@/components/SystemStatus';
-import PlantLibrary from '@/components/PlantLibrary';
-import { Plant } from '@/data/plantsDatabase';
-import GardenAnalysisUpload from '@/components/GardenAnalysisUpload';
-import GardenSpaceRecreation from '@/components/GardenSpaceRecreation';
-import { GardenLayout, AnalysisResult } from '@/services/GardenSpatialAnalysis';
+  Home,
+} from "lucide-react";
+import * as THREE from "three";
+import {
+  PlantDetectionAPI,
+  DetectedPlant as APIDetectedPlant,
+} from "@/services/PlantDetectionAPI";
+import {
+  BoundingBoxOverlay,
+  PlantDetailModal,
+} from "@/components/BoundingBoxOverlay";
+import SystemStatus from "@/components/SystemStatus";
+import PlantLibrary from "@/components/PlantLibrary";
+import { Plant } from "@/data/plantsDatabase";
+import GardenAnalysisUpload from "@/components/GardenAnalysisUpload";
+import GardenSpaceRecreation from "@/components/GardenSpaceRecreation";
+import { GardenLayout, AnalysisResult } from "@/services/GardenSpatialAnalysis";
 
 interface DetectedPlant {
   id: string;
   name: string;
   scientificName: string;
   confidence: number;
-  category: 'immunity' | 'skincare' | 'digestive' | 'mental' | 'respiratory' | 'anti-inflammatory';
+  category:
+    | "immunity"
+    | "skincare"
+    | "digestive"
+    | "mental"
+    | "respiratory"
+    | "anti-inflammatory";
   description: string;
   image: string;
   benefits: string[];
-  difficulty: 'easy' | 'medium' | 'hard';
+  difficulty: "easy" | "medium" | "hard";
   harvestTime: string;
   growingConditions: {
-    sunlight: 'full' | 'partial' | 'shade';
-    water: 'low' | 'medium' | 'high';
+    sunlight: "full" | "partial" | "shade";
+    water: "low" | "medium" | "high";
     soil: string;
     temperature: string;
   };
@@ -95,9 +132,9 @@ interface DetectedPlant {
   detectionMetadata?: {
     boundingBox: { x: number; y: number; width: number; height: number };
     imageQuality: number;
-    lightingCondition: 'excellent' | 'good' | 'poor';
-    plantHealth: 'healthy' | 'stressed' | 'diseased';
-    growthStage: 'seedling' | 'juvenile' | 'mature' | 'flowering';
+    lightingCondition: "excellent" | "good" | "poor";
+    plantHealth: "healthy" | "stressed" | "diseased";
+    growthStage: "seedling" | "juvenile" | "mature" | "flowering";
     certaintyFactors: {
       leafShape: number;
       flowerStructure: number;
@@ -105,7 +142,7 @@ interface DetectedPlant {
       overallMorphology: number;
     };
   };
-  bbox?: APIDetectedPlant['bbox'];
+  bbox?: APIDetectedPlant["bbox"];
 }
 
 interface AIAnalysisResult {
@@ -142,7 +179,13 @@ interface UploadedImage {
   name: string;
   size: number;
   uploadProgress: number;
-  analysisStatus: 'pending' | 'preprocessing' | 'analyzing' | 'postprocessing' | 'completed' | 'error';
+  analysisStatus:
+    | "pending"
+    | "preprocessing"
+    | "analyzing"
+    | "postprocessing"
+    | "completed"
+    | "error";
   analysisProgress: number;
   imageMetadata?: {
     width: number;
@@ -154,12 +197,12 @@ interface UploadedImage {
     clarityScore: number;
     plantCharacteristics: {
       dominantColors: string[];
-      leafType: 'broad' | 'narrow' | 'needle' | 'succulent' | 'compound';
-      plantStructure: 'herb' | 'shrub' | 'tree' | 'vine' | 'ground-cover';
+      leafType: "broad" | "narrow" | "needle" | "succulent" | "compound";
+      plantStructure: "herb" | "shrub" | "tree" | "vine" | "ground-cover";
       hasFlowers: boolean;
       flowerColor?: string;
-      textureType: 'smooth' | 'rough' | 'fuzzy' | 'waxy' | 'serrated';
-      plantSize: 'small' | 'medium' | 'large';
+      textureType: "smooth" | "rough" | "fuzzy" | "waxy" | "serrated";
+      plantSize: "small" | "medium" | "large";
     };
   };
   errorMessage?: string;
@@ -170,582 +213,890 @@ interface UploadedImage {
 // Comprehensive Plant Database with 50+ Species
 const mockPlantDatabase: DetectedPlant[] = [
   {
-    id: '1',
-    name: 'Aloe Vera',
-    scientificName: 'Aloe barbadensis',
+    id: "1",
+    name: "Aloe Vera",
+    scientificName: "Aloe barbadensis",
     confidence: 0.95,
-    category: 'skincare',
-    description: 'A succulent plant known for its exceptional healing and moisturizing properties, widely used in traditional medicine.',
-    image: '/placeholder.svg',
-    benefits: ['Heals burns and cuts', 'Moisturizes dry skin', 'Reduces inflammation', 'Soothes sunburn'],
-    difficulty: 'easy',
-    harvestTime: '6-8 months',
+    category: "skincare",
+    description:
+      "A succulent plant known for its exceptional healing and moisturizing properties, widely used in traditional medicine.",
+    image: "/placeholder.svg",
+    benefits: [
+      "Heals burns and cuts",
+      "Moisturizes dry skin",
+      "Reduces inflammation",
+      "Soothes sunburn",
+    ],
+    difficulty: "easy",
+    harvestTime: "6-8 months",
     growingConditions: {
-      sunlight: 'full',
-      water: 'low',
-      soil: 'Well-draining, sandy',
-      temperature: '55-80°F (13-27°C)'
+      sunlight: "full",
+      water: "low",
+      soil: "Well-draining, sandy",
+      temperature: "55-80°F (13-27°C)",
     },
-    medicinalUses: ['Topical burns treatment', 'Skin moisturizer', 'Wound healing', 'Digestive aid'],
-    preparations: ['Fresh gel application', 'Aloe juice', 'Topical creams', 'Face masks'],
-    warnings: ['May cause allergic reactions in some people', 'Avoid ingesting whole leaf'],
+    medicinalUses: [
+      "Topical burns treatment",
+      "Skin moisturizer",
+      "Wound healing",
+      "Digestive aid",
+    ],
+    preparations: [
+      "Fresh gel application",
+      "Aloe juice",
+      "Topical creams",
+      "Face masks",
+    ],
+    warnings: [
+      "May cause allergic reactions in some people",
+      "Avoid ingesting whole leaf",
+    ],
     rating: 4.8,
-    reviews: 1247
+    reviews: 1247,
   },
   {
-    id: '2',
-    name: 'Echinacea',
-    scientificName: 'Echinacea purpurea',
+    id: "2",
+    name: "Echinacea",
+    scientificName: "Echinacea purpurea",
     confidence: 0.89,
-    category: 'immunity',
-    description: 'A powerful immune system booster with beautiful purple flowers, native to North America.',
-    image: '/placeholder.svg',
-    benefits: ['Strengthens immune system', 'Fights cold and flu', 'Reduces inflammation', 'Antimicrobial properties'],
-    difficulty: 'medium',
-    harvestTime: '3-4 months',
+    category: "immunity",
+    description:
+      "A powerful immune system booster with beautiful purple flowers, native to North America.",
+    image: "/placeholder.svg",
+    benefits: [
+      "Strengthens immune system",
+      "Fights cold and flu",
+      "Reduces inflammation",
+      "Antimicrobial properties",
+    ],
+    difficulty: "medium",
+    harvestTime: "3-4 months",
     growingConditions: {
-      sunlight: 'full',
-      water: 'medium',
-      soil: 'Well-draining, loamy',
-      temperature: '60-70°F (15-21°C)'
+      sunlight: "full",
+      water: "medium",
+      soil: "Well-draining, loamy",
+      temperature: "60-70°F (15-21°C)",
     },
-    medicinalUses: ['Cold and flu prevention', 'Immune support', 'Wound healing', 'Upper respiratory infections'],
-    preparations: ['Tinctures', 'Teas', 'Capsules', 'Dried root powder'],
-    warnings: ['May interact with immunosuppressant drugs', 'Not recommended for autoimmune conditions'],
+    medicinalUses: [
+      "Cold and flu prevention",
+      "Immune support",
+      "Wound healing",
+      "Upper respiratory infections",
+    ],
+    preparations: ["Tinctures", "Teas", "Capsules", "Dried root powder"],
+    warnings: [
+      "May interact with immunosuppressant drugs",
+      "Not recommended for autoimmune conditions",
+    ],
     rating: 4.6,
-    reviews: 892
+    reviews: 892,
   },
   {
-    id: '3',
-    name: 'Lavender',
-    scientificName: 'Lavandula angustifolia',
+    id: "3",
+    name: "Lavender",
+    scientificName: "Lavandula angustifolia",
     confidence: 0.92,
-    category: 'mental',
-    description: 'A fragrant herb renowned for its calming and relaxing properties, perfect for stress relief.',
-    image: '/placeholder.svg',
-    benefits: ['Reduces anxiety and stress', 'Improves sleep quality', 'Natural antiseptic', 'Headache relief'],
-    difficulty: 'easy',
-    harvestTime: '2-3 months',
+    category: "mental",
+    description:
+      "A fragrant herb renowned for its calming and relaxing properties, perfect for stress relief.",
+    image: "/placeholder.svg",
+    benefits: [
+      "Reduces anxiety and stress",
+      "Improves sleep quality",
+      "Natural antiseptic",
+      "Headache relief",
+    ],
+    difficulty: "easy",
+    harvestTime: "2-3 months",
     growingConditions: {
-      sunlight: 'full',
-      water: 'low',
-      soil: 'Well-draining, alkaline',
-      temperature: '65-75°F (18-24°C)'
+      sunlight: "full",
+      water: "low",
+      soil: "Well-draining, alkaline",
+      temperature: "65-75°F (18-24°C)",
     },
-    medicinalUses: ['Anxiety and stress relief', 'Sleep disorders', 'Minor wounds', 'Headaches'],
-    preparations: ['Essential oil', 'Dried flowers', 'Teas', 'Sachets', 'Bath products'],
-    warnings: ['May cause drowsiness', 'Possible skin irritation in sensitive individuals'],
+    medicinalUses: [
+      "Anxiety and stress relief",
+      "Sleep disorders",
+      "Minor wounds",
+      "Headaches",
+    ],
+    preparations: [
+      "Essential oil",
+      "Dried flowers",
+      "Teas",
+      "Sachets",
+      "Bath products",
+    ],
+    warnings: [
+      "May cause drowsiness",
+      "Possible skin irritation in sensitive individuals",
+    ],
     rating: 4.9,
-    reviews: 2156
+    reviews: 2156,
   },
   {
-    id: '4',
-    name: 'Peppermint',
-    scientificName: 'Mentha piperita',
+    id: "4",
+    name: "Peppermint",
+    scientificName: "Mentha piperita",
     confidence: 0.87,
-    category: 'digestive',
-    description: 'A refreshing herb excellent for digestive health and providing natural cooling properties.',
-    image: '/placeholder.svg',
-    benefits: ['Aids digestion', 'Relieves nausea', 'Natural decongestant', 'Antimicrobial properties'],
-    difficulty: 'easy',
-    harvestTime: '1-2 months',
+    category: "digestive",
+    description:
+      "A refreshing herb excellent for digestive health and providing natural cooling properties.",
+    image: "/placeholder.svg",
+    benefits: [
+      "Aids digestion",
+      "Relieves nausea",
+      "Natural decongestant",
+      "Antimicrobial properties",
+    ],
+    difficulty: "easy",
+    harvestTime: "1-2 months",
     growingConditions: {
-      sunlight: 'partial',
-      water: 'high',
-      soil: 'Moist, rich',
-      temperature: '65-70°F (18-21°C)'
+      sunlight: "partial",
+      water: "high",
+      soil: "Moist, rich",
+      temperature: "65-70°F (18-21°C)",
     },
-    medicinalUses: ['Digestive disorders', 'Nausea and vomiting', 'Respiratory congestion', 'Muscle pain'],
-    preparations: ['Fresh leaves', 'Teas', 'Essential oil', 'Tinctures', 'Topical balms'],
-    warnings: ['May worsen acid reflux', 'Can be too stimulating for some'],
+    medicinalUses: [
+      "Digestive disorders",
+      "Nausea and vomiting",
+      "Respiratory congestion",
+      "Muscle pain",
+    ],
+    preparations: [
+      "Fresh leaves",
+      "Teas",
+      "Essential oil",
+      "Tinctures",
+      "Topical balms",
+    ],
+    warnings: ["May worsen acid reflux", "Can be too stimulating for some"],
     rating: 4.7,
-    reviews: 1683
+    reviews: 1683,
   },
   {
-    id: '5',
-    name: 'Eucalyptus',
-    scientificName: 'Eucalyptus globulus',
+    id: "5",
+    name: "Eucalyptus",
+    scientificName: "Eucalyptus globulus",
     confidence: 0.91,
-    category: 'respiratory',
-    description: 'An aromatic tree known for its powerful respiratory benefits and natural decongestant properties.',
-    image: '/placeholder.svg',
-    benefits: ['Clears respiratory congestion', 'Antibacterial properties', 'Natural decongestant', 'Wound healing'],
-    difficulty: 'medium',
-    harvestTime: '4-6 months',
+    category: "respiratory",
+    description:
+      "An aromatic tree known for its powerful respiratory benefits and natural decongestant properties.",
+    image: "/placeholder.svg",
+    benefits: [
+      "Clears respiratory congestion",
+      "Antibacterial properties",
+      "Natural decongestant",
+      "Wound healing",
+    ],
+    difficulty: "medium",
+    harvestTime: "4-6 months",
     growingConditions: {
-      sunlight: 'full',
-      water: 'medium',
-      soil: 'Well-draining, acidic',
-      temperature: '65-75°F (18-24��C)'
+      sunlight: "full",
+      water: "medium",
+      soil: "Well-draining, acidic",
+      temperature: "65-75°F (18-24��C)",
     },
-    medicinalUses: ['Respiratory infections', 'Congestion relief', 'Wound care', 'Muscle pain'],
-    preparations: ['Essential oil', 'Steam inhalation', 'Topical rubs', 'Teas'],
-    warnings: ['Essential oil is toxic if ingested', 'May cause skin irritation'],
+    medicinalUses: [
+      "Respiratory infections",
+      "Congestion relief",
+      "Wound care",
+      "Muscle pain",
+    ],
+    preparations: ["Essential oil", "Steam inhalation", "Topical rubs", "Teas"],
+    warnings: [
+      "Essential oil is toxic if ingested",
+      "May cause skin irritation",
+    ],
     rating: 4.5,
-    reviews: 734
+    reviews: 734,
   },
   {
-    id: '6',
-    name: 'Turmeric',
-    scientificName: 'Curcuma longa',
+    id: "6",
+    name: "Turmeric",
+    scientificName: "Curcuma longa",
     confidence: 0.94,
-    category: 'anti-inflammatory',
-    description: 'A golden-colored root with powerful anti-inflammatory and antioxidant properties.',
-    image: '/placeholder.svg',
-    benefits: ['Reduces inflammation', 'Antioxidant properties', 'Joint health support', 'Digestive aid'],
-    difficulty: 'hard',
-    harvestTime: '8-10 months',
+    category: "anti-inflammatory",
+    description:
+      "A golden-colored root with powerful anti-inflammatory and antioxidant properties.",
+    image: "/placeholder.svg",
+    benefits: [
+      "Reduces inflammation",
+      "Antioxidant properties",
+      "Joint health support",
+      "Digestive aid",
+    ],
+    difficulty: "hard",
+    harvestTime: "8-10 months",
     growingConditions: {
-      sunlight: 'partial',
-      water: 'high',
-      soil: 'Rich, well-draining',
-      temperature: '70-85°F (21-29°C)'
+      sunlight: "partial",
+      water: "high",
+      soil: "Rich, well-draining",
+      temperature: "70-85°F (21-29°C)",
     },
-    medicinalUses: ['Arthritis and joint pain', 'Digestive issues', 'Skin conditions', 'General inflammation'],
-    preparations: ['Fresh root', 'Powder', 'Golden milk', 'Tinctures', 'Capsules'],
-    warnings: ['May increase bleeding risk', 'Can interact with blood thinners'],
+    medicinalUses: [
+      "Arthritis and joint pain",
+      "Digestive issues",
+      "Skin conditions",
+      "General inflammation",
+    ],
+    preparations: [
+      "Fresh root",
+      "Powder",
+      "Golden milk",
+      "Tinctures",
+      "Capsules",
+    ],
+    warnings: [
+      "May increase bleeding risk",
+      "Can interact with blood thinners",
+    ],
     rating: 4.8,
-    reviews: 1892
+    reviews: 1892,
   },
   {
-    id: '7',
-    name: 'Chamomile',
-    scientificName: 'Matricaria chamomilla',
+    id: "7",
+    name: "Chamomile",
+    scientificName: "Matricaria chamomilla",
     confidence: 0.88,
-    category: 'mental',
-    description: 'A gentle, daisy-like flower known for its calming and soothing properties.',
-    image: '/placeholder.svg',
-    benefits: ['Promotes relaxation', 'Improves sleep', 'Digestive aid', 'Anti-inflammatory'],
-    difficulty: 'easy',
-    harvestTime: '2-3 months',
+    category: "mental",
+    description:
+      "A gentle, daisy-like flower known for its calming and soothing properties.",
+    image: "/placeholder.svg",
+    benefits: [
+      "Promotes relaxation",
+      "Improves sleep",
+      "Digestive aid",
+      "Anti-inflammatory",
+    ],
+    difficulty: "easy",
+    harvestTime: "2-3 months",
     growingConditions: {
-      sunlight: 'full',
-      water: 'medium',
-      soil: 'Well-draining, fertile',
-      temperature: '60-68°F (15-20°C)'
+      sunlight: "full",
+      water: "medium",
+      soil: "Well-draining, fertile",
+      temperature: "60-68°F (15-20°C)",
     },
-    medicinalUses: ['Insomnia', 'Anxiety', 'Digestive upset', 'Skin irritation'],
-    preparations: ['Teas', 'Tinctures', 'Essential oil', 'Topical creams', 'Bath products'],
-    warnings: ['May cause allergic reactions in people allergic to ragweed', 'Possible interaction with blood thinners'],
+    medicinalUses: [
+      "Insomnia",
+      "Anxiety",
+      "Digestive upset",
+      "Skin irritation",
+    ],
+    preparations: [
+      "Teas",
+      "Tinctures",
+      "Essential oil",
+      "Topical creams",
+      "Bath products",
+    ],
+    warnings: [
+      "May cause allergic reactions in people allergic to ragweed",
+      "Possible interaction with blood thinners",
+    ],
     rating: 4.7,
-    reviews: 1456
+    reviews: 1456,
   },
   {
-    id: '8',
-    name: 'Ginger',
-    scientificName: 'Zingiber officinale',
+    id: "8",
+    name: "Ginger",
+    scientificName: "Zingiber officinale",
     confidence: 0.93,
-    category: 'digestive',
-    description: 'A warming root known for its digestive benefits and anti-nausea properties.',
-    image: '/placeholder.svg',
-    benefits: ['Reduces nausea', 'Aids digestion', 'Anti-inflammatory', 'Circulation support'],
-    difficulty: 'medium',
-    harvestTime: '6-8 months',
+    category: "digestive",
+    description:
+      "A warming root known for its digestive benefits and anti-nausea properties.",
+    image: "/placeholder.svg",
+    benefits: [
+      "Reduces nausea",
+      "Aids digestion",
+      "Anti-inflammatory",
+      "Circulation support",
+    ],
+    difficulty: "medium",
+    harvestTime: "6-8 months",
     growingConditions: {
-      sunlight: 'partial',
-      water: 'high',
-      soil: 'Rich, well-draining',
-      temperature: '75-85°F (24-29°C)'
+      sunlight: "partial",
+      water: "high",
+      soil: "Rich, well-draining",
+      temperature: "75-85°F (24-29°C)",
     },
-    medicinalUses: ['Motion sickness', 'Morning sickness', 'Digestive issues', 'Muscle pain'],
-    preparations: ['Fresh root', 'Teas', 'Tinctures', 'Capsules', 'Crystallized ginger'],
-    warnings: ['May increase bleeding risk', 'Can interact with blood thinners'],
+    medicinalUses: [
+      "Motion sickness",
+      "Morning sickness",
+      "Digestive issues",
+      "Muscle pain",
+    ],
+    preparations: [
+      "Fresh root",
+      "Teas",
+      "Tinctures",
+      "Capsules",
+      "Crystallized ginger",
+    ],
+    warnings: [
+      "May increase bleeding risk",
+      "Can interact with blood thinners",
+    ],
     rating: 4.6,
-    reviews: 1123
+    reviews: 1123,
   },
   // Additional Medicinal Plants
   {
-    id: '9',
-    name: 'Rosemary',
-    scientificName: 'Rosmarinus officinalis',
+    id: "9",
+    name: "Rosemary",
+    scientificName: "Rosmarinus officinalis",
     confidence: 0.89,
-    category: 'mental',
-    description: 'An aromatic herb known for improving memory and circulation.',
-    image: '/placeholder.svg',
-    benefits: ['Improves memory', 'Enhances circulation', 'Antioxidant properties', 'Hair growth'],
-    difficulty: 'easy',
-    harvestTime: '3-4 months',
+    category: "mental",
+    description: "An aromatic herb known for improving memory and circulation.",
+    image: "/placeholder.svg",
+    benefits: [
+      "Improves memory",
+      "Enhances circulation",
+      "Antioxidant properties",
+      "Hair growth",
+    ],
+    difficulty: "easy",
+    harvestTime: "3-4 months",
     growingConditions: {
-      sunlight: 'full',
-      water: 'low',
-      soil: 'Well-draining, sandy',
-      temperature: '65-75°F (18-24°C)'
+      sunlight: "full",
+      water: "low",
+      soil: "Well-draining, sandy",
+      temperature: "65-75°F (18-24°C)",
     },
-    medicinalUses: ['Memory enhancement', 'Hair loss', 'Poor circulation', 'Mental fatigue'],
-    preparations: ['Essential oil', 'Teas', 'Hair rinses', 'Tinctures'],
-    warnings: ['High doses may cause seizures', 'Avoid during pregnancy'],
+    medicinalUses: [
+      "Memory enhancement",
+      "Hair loss",
+      "Poor circulation",
+      "Mental fatigue",
+    ],
+    preparations: ["Essential oil", "Teas", "Hair rinses", "Tinctures"],
+    warnings: ["High doses may cause seizures", "Avoid during pregnancy"],
     rating: 4.4,
-    reviews: 876
+    reviews: 876,
   },
   {
-    id: '10',
-    name: 'Calendula',
-    scientificName: 'Calendula officinalis',
+    id: "10",
+    name: "Calendula",
+    scientificName: "Calendula officinalis",
     confidence: 0.91,
-    category: 'skincare',
-    description: 'Bright orange flowers with powerful healing properties for skin conditions.',
-    image: '/placeholder.svg',
-    benefits: ['Heals wounds', 'Reduces inflammation', 'Soothes skin', 'Antimicrobial'],
-    difficulty: 'easy',
-    harvestTime: '2-3 months',
+    category: "skincare",
+    description:
+      "Bright orange flowers with powerful healing properties for skin conditions.",
+    image: "/placeholder.svg",
+    benefits: [
+      "Heals wounds",
+      "Reduces inflammation",
+      "Soothes skin",
+      "Antimicrobial",
+    ],
+    difficulty: "easy",
+    harvestTime: "2-3 months",
     growingConditions: {
-      sunlight: 'full',
-      water: 'medium',
-      soil: 'Well-draining, fertile',
-      temperature: '60-70°F (15-21°C)'
+      sunlight: "full",
+      water: "medium",
+      soil: "Well-draining, fertile",
+      temperature: "60-70°F (15-21°C)",
     },
-    medicinalUses: ['Cuts and wounds', 'Eczema', 'Diaper rash', 'Minor burns'],
-    preparations: ['Salves', 'Tinctures', 'Oils', 'Creams', 'Flower petals'],
-    warnings: ['May cause allergic reactions in some people'],
+    medicinalUses: ["Cuts and wounds", "Eczema", "Diaper rash", "Minor burns"],
+    preparations: ["Salves", "Tinctures", "Oils", "Creams", "Flower petals"],
+    warnings: ["May cause allergic reactions in some people"],
     rating: 4.7,
-    reviews: 1234
+    reviews: 1234,
   },
   {
-    id: '11',
-    name: 'Sage',
-    scientificName: 'Salvia officinalis',
+    id: "11",
+    name: "Sage",
+    scientificName: "Salvia officinalis",
     confidence: 0.85,
-    category: 'respiratory',
-    description: 'A versatile herb with antibacterial and anti-inflammatory properties.',
-    image: '/placeholder.svg',
-    benefits: ['Sore throat relief', 'Reduces sweating', 'Memory support', 'Digestive aid'],
-    difficulty: 'easy',
-    harvestTime: '2-3 months',
+    category: "respiratory",
+    description:
+      "A versatile herb with antibacterial and anti-inflammatory properties.",
+    image: "/placeholder.svg",
+    benefits: [
+      "Sore throat relief",
+      "Reduces sweating",
+      "Memory support",
+      "Digestive aid",
+    ],
+    difficulty: "easy",
+    harvestTime: "2-3 months",
     growingConditions: {
-      sunlight: 'full',
-      water: 'low',
-      soil: 'Well-draining, alkaline',
-      temperature: '65-75°F (18-24°C)'
+      sunlight: "full",
+      water: "low",
+      soil: "Well-draining, alkaline",
+      temperature: "65-75°F (18-24°C)",
     },
-    medicinalUses: ['Sore throat', 'Excessive sweating', 'Memory issues', 'Digestive problems'],
-    preparations: ['Teas', 'Gargles', 'Tinctures', 'Smoking blends'],
-    warnings: ['Avoid long-term use', 'Contains thujone'],
+    medicinalUses: [
+      "Sore throat",
+      "Excessive sweating",
+      "Memory issues",
+      "Digestive problems",
+    ],
+    preparations: ["Teas", "Gargles", "Tinctures", "Smoking blends"],
+    warnings: ["Avoid long-term use", "Contains thujone"],
     rating: 4.3,
-    reviews: 698
+    reviews: 698,
   },
   {
-    id: '12',
-    name: 'Thyme',
-    scientificName: 'Thymus vulgaris',
+    id: "12",
+    name: "Thyme",
+    scientificName: "Thymus vulgaris",
     confidence: 0.88,
-    category: 'respiratory',
-    description: 'A powerful antiseptic herb excellent for respiratory conditions.',
-    image: '/placeholder.svg',
-    benefits: ['Cough relief', 'Antibacterial', 'Expectorant', 'Antifungal'],
-    difficulty: 'easy',
-    harvestTime: '2-3 months',
+    category: "respiratory",
+    description:
+      "A powerful antiseptic herb excellent for respiratory conditions.",
+    image: "/placeholder.svg",
+    benefits: ["Cough relief", "Antibacterial", "Expectorant", "Antifungal"],
+    difficulty: "easy",
+    harvestTime: "2-3 months",
     growingConditions: {
-      sunlight: 'full',
-      water: 'low',
-      soil: 'Well-draining, rocky',
-      temperature: '65-75°F (18-24°C)'
+      sunlight: "full",
+      water: "low",
+      soil: "Well-draining, rocky",
+      temperature: "65-75°F (18-24°C)",
     },
-    medicinalUses: ['Coughs', 'Bronchitis', 'Throat infections', 'Fungal infections'],
-    preparations: ['Teas', 'Essential oil', 'Tinctures', 'Steam inhalation'],
-    warnings: ['Essential oil is very potent', 'May cause skin irritation'],
+    medicinalUses: [
+      "Coughs",
+      "Bronchitis",
+      "Throat infections",
+      "Fungal infections",
+    ],
+    preparations: ["Teas", "Essential oil", "Tinctures", "Steam inhalation"],
+    warnings: ["Essential oil is very potent", "May cause skin irritation"],
     rating: 4.5,
-    reviews: 789
+    reviews: 789,
   },
   {
-    id: '13',
-    name: 'Basil',
-    scientificName: 'Ocimum basilicum',
+    id: "13",
+    name: "Basil",
+    scientificName: "Ocimum basilicum",
     confidence: 0.82,
-    category: 'digestive',
-    description: 'Sacred basil with adaptogenic and digestive properties.',
-    image: '/placeholder.svg',
-    benefits: ['Stress relief', 'Digestive support', 'Immune boost', 'Anti-inflammatory'],
-    difficulty: 'easy',
-    harvestTime: '2-3 months',
+    category: "digestive",
+    description: "Sacred basil with adaptogenic and digestive properties.",
+    image: "/placeholder.svg",
+    benefits: [
+      "Stress relief",
+      "Digestive support",
+      "Immune boost",
+      "Anti-inflammatory",
+    ],
+    difficulty: "easy",
+    harvestTime: "2-3 months",
     growingConditions: {
-      sunlight: 'full',
-      water: 'medium',
-      soil: 'Rich, well-draining',
-      temperature: '70-80°F (21-27°C)'
+      sunlight: "full",
+      water: "medium",
+      soil: "Rich, well-draining",
+      temperature: "70-80°F (21-27°C)",
     },
-    medicinalUses: ['Stress and anxiety', 'Digestive upset', 'Respiratory issues', 'Fever'],
-    preparations: ['Fresh leaves', 'Teas', 'Tinctures', 'Essential oil'],
-    warnings: ['May lower blood sugar', 'Avoid during pregnancy'],
+    medicinalUses: [
+      "Stress and anxiety",
+      "Digestive upset",
+      "Respiratory issues",
+      "Fever",
+    ],
+    preparations: ["Fresh leaves", "Teas", "Tinctures", "Essential oil"],
+    warnings: ["May lower blood sugar", "Avoid during pregnancy"],
     rating: 4.2,
-    reviews: 567
+    reviews: 567,
   },
   {
-    id: '14',
-    name: 'Oregano',
-    scientificName: 'Origanum vulgare',
+    id: "14",
+    name: "Oregano",
+    scientificName: "Origanum vulgare",
     confidence: 0.86,
-    category: 'immunity',
-    description: 'Potent antimicrobial herb with strong immune-supporting properties.',
-    image: '/placeholder.svg',
-    benefits: ['Antimicrobial', 'Antioxidant', 'Digestive aid', 'Respiratory support'],
-    difficulty: 'easy',
-    harvestTime: '2-3 months',
+    category: "immunity",
+    description:
+      "Potent antimicrobial herb with strong immune-supporting properties.",
+    image: "/placeholder.svg",
+    benefits: [
+      "Antimicrobial",
+      "Antioxidant",
+      "Digestive aid",
+      "Respiratory support",
+    ],
+    difficulty: "easy",
+    harvestTime: "2-3 months",
     growingConditions: {
-      sunlight: 'full',
-      water: 'low',
-      soil: 'Well-draining, alkaline',
-      temperature: '65-75°F (18-24°C)'
+      sunlight: "full",
+      water: "low",
+      soil: "Well-draining, alkaline",
+      temperature: "65-75°F (18-24°C)",
     },
-    medicinalUses: ['Infections', 'Digestive issues', 'Respiratory problems', 'Fungal conditions'],
-    preparations: ['Essential oil', 'Teas', 'Tinctures', 'Dried herb'],
-    warnings: ['Essential oil is very strong', 'May cause stomach upset'],
+    medicinalUses: [
+      "Infections",
+      "Digestive issues",
+      "Respiratory problems",
+      "Fungal conditions",
+    ],
+    preparations: ["Essential oil", "Teas", "Tinctures", "Dried herb"],
+    warnings: ["Essential oil is very strong", "May cause stomach upset"],
     rating: 4.4,
-    reviews: 645
+    reviews: 645,
   },
   {
-    id: '15',
-    name: 'Lemon Balm',
-    scientificName: 'Melissa officinalis',
+    id: "15",
+    name: "Lemon Balm",
+    scientificName: "Melissa officinalis",
     confidence: 0.84,
-    category: 'mental',
-    description: 'Calming herb from the mint family, excellent for anxiety and sleep.',
-    image: '/placeholder.svg',
-    benefits: ['Reduces anxiety', 'Improves sleep', 'Antiviral', 'Digestive aid'],
-    difficulty: 'easy',
-    harvestTime: '2-3 months',
+    category: "mental",
+    description:
+      "Calming herb from the mint family, excellent for anxiety and sleep.",
+    image: "/placeholder.svg",
+    benefits: [
+      "Reduces anxiety",
+      "Improves sleep",
+      "Antiviral",
+      "Digestive aid",
+    ],
+    difficulty: "easy",
+    harvestTime: "2-3 months",
     growingConditions: {
-      sunlight: 'partial',
-      water: 'medium',
-      soil: 'Moist, fertile',
-      temperature: '65-75°F (18-24°C)'
+      sunlight: "partial",
+      water: "medium",
+      soil: "Moist, fertile",
+      temperature: "65-75°F (18-24°C)",
     },
-    medicinalUses: ['Anxiety', 'Insomnia', 'Cold sores', 'Digestive upset'],
-    preparations: ['Teas', 'Tinctures', 'Essential oil', 'Fresh leaves'],
-    warnings: ['May interact with thyroid medications'],
+    medicinalUses: ["Anxiety", "Insomnia", "Cold sores", "Digestive upset"],
+    preparations: ["Teas", "Tinctures", "Essential oil", "Fresh leaves"],
+    warnings: ["May interact with thyroid medications"],
     rating: 4.6,
-    reviews: 923
+    reviews: 923,
   },
   {
-    id: '16',
-    name: 'Plantain',
-    scientificName: 'Plantago major',
+    id: "16",
+    name: "Plantain",
+    scientificName: "Plantago major",
     confidence: 0.79,
-    category: 'skincare',
-    description: 'Common weed with excellent wound healing and anti-inflammatory properties.',
-    image: '/placeholder.svg',
-    benefits: ['Wound healing', 'Anti-inflammatory', 'Antimicrobial', 'Soothing'],
-    difficulty: 'easy',
-    harvestTime: '1-2 months',
+    category: "skincare",
+    description:
+      "Common weed with excellent wound healing and anti-inflammatory properties.",
+    image: "/placeholder.svg",
+    benefits: [
+      "Wound healing",
+      "Anti-inflammatory",
+      "Antimicrobial",
+      "Soothing",
+    ],
+    difficulty: "easy",
+    harvestTime: "1-2 months",
     growingConditions: {
-      sunlight: 'partial',
-      water: 'medium',
-      soil: 'Any soil type',
-      temperature: '50-80°F (10-27°C)'
+      sunlight: "partial",
+      water: "medium",
+      soil: "Any soil type",
+      temperature: "50-80°F (10-27°C)",
     },
-    medicinalUses: ['Cuts and scrapes', 'Insect bites', 'Skin irritation', 'Minor wounds'],
-    preparations: ['Poultice', 'Salves', 'Tinctures', 'Fresh leaves'],
-    warnings: ['Generally very safe'],
+    medicinalUses: [
+      "Cuts and scrapes",
+      "Insect bites",
+      "Skin irritation",
+      "Minor wounds",
+    ],
+    preparations: ["Poultice", "Salves", "Tinctures", "Fresh leaves"],
+    warnings: ["Generally very safe"],
     rating: 4.1,
-    reviews: 456
+    reviews: 456,
   },
   {
-    id: '17',
-    name: 'Dandelion',
-    scientificName: 'Taraxacum officinale',
+    id: "17",
+    name: "Dandelion",
+    scientificName: "Taraxacum officinale",
     confidence: 0.77,
-    category: 'digestive',
-    description: 'Nutritious "weed" with excellent liver support and detoxification properties.',
-    image: '/placeholder.svg',
-    benefits: ['Liver support', 'Diuretic', 'Digestive aid', 'Nutritious'],
-    difficulty: 'easy',
-    harvestTime: '1-2 months',
+    category: "digestive",
+    description:
+      'Nutritious "weed" with excellent liver support and detoxification properties.',
+    image: "/placeholder.svg",
+    benefits: ["Liver support", "Diuretic", "Digestive aid", "Nutritious"],
+    difficulty: "easy",
+    harvestTime: "1-2 months",
     growingConditions: {
-      sunlight: 'full',
-      water: 'low',
-      soil: 'Any soil type',
-      temperature: '50-75°F (10-24°C)'
+      sunlight: "full",
+      water: "low",
+      soil: "Any soil type",
+      temperature: "50-75°F (10-24°C)",
     },
-    medicinalUses: ['Liver problems', 'Water retention', 'Digestive issues', 'Kidney support'],
-    preparations: ['Root decoctions', 'Leaf teas', 'Tinctures', 'Fresh greens'],
-    warnings: ['May interact with diuretic medications'],
+    medicinalUses: [
+      "Liver problems",
+      "Water retention",
+      "Digestive issues",
+      "Kidney support",
+    ],
+    preparations: ["Root decoctions", "Leaf teas", "Tinctures", "Fresh greens"],
+    warnings: ["May interact with diuretic medications"],
     rating: 4.0,
-    reviews: 734
+    reviews: 734,
   },
   {
-    id: '18',
-    name: 'Comfrey',
-    scientificName: 'Symphytum officinale',
+    id: "18",
+    name: "Comfrey",
+    scientificName: "Symphytum officinale",
     confidence: 0.81,
-    category: 'skincare',
-    description: 'Traditional healing herb excellent for bone and tissue repair.',
-    image: '/placeholder.svg',
-    benefits: ['Bone healing', 'Wound repair', 'Anti-inflammatory', 'Pain relief'],
-    difficulty: 'medium',
-    harvestTime: '3-4 months',
+    category: "skincare",
+    description:
+      "Traditional healing herb excellent for bone and tissue repair.",
+    image: "/placeholder.svg",
+    benefits: [
+      "Bone healing",
+      "Wound repair",
+      "Anti-inflammatory",
+      "Pain relief",
+    ],
+    difficulty: "medium",
+    harvestTime: "3-4 months",
     growingConditions: {
-      sunlight: 'partial',
-      water: 'high',
-      soil: 'Rich, moist',
-      temperature: '60-75°F (15-24°C)'
+      sunlight: "partial",
+      water: "high",
+      soil: "Rich, moist",
+      temperature: "60-75°F (15-24°C)",
     },
-    medicinalUses: ['Fractures', 'Sprains', 'Wounds', 'Bruises'],
-    preparations: ['Poultices', 'Salves', 'Oils', 'Compresses'],
-    warnings: ['For external use only', 'Contains pyrrolizidine alkaloids'],
+    medicinalUses: ["Fractures", "Sprains", "Wounds", "Bruises"],
+    preparations: ["Poultices", "Salves", "Oils", "Compresses"],
+    warnings: ["For external use only", "Contains pyrrolizidine alkaloids"],
     rating: 4.3,
-    reviews: 512
+    reviews: 512,
   },
   {
-    id: '19',
-    name: 'Violet',
-    scientificName: 'Viola odorata',
+    id: "19",
+    name: "Violet",
+    scientificName: "Viola odorata",
     confidence: 0.75,
-    category: 'respiratory',
-    description: 'Delicate purple flowers with soothing respiratory and skin benefits.',
-    image: '/placeholder.svg',
-    benefits: ['Cough relief', 'Skin soothing', 'Anti-inflammatory', 'Lymphatic support'],
-    difficulty: 'easy',
-    harvestTime: '2-3 months',
+    category: "respiratory",
+    description:
+      "Delicate purple flowers with soothing respiratory and skin benefits.",
+    image: "/placeholder.svg",
+    benefits: [
+      "Cough relief",
+      "Skin soothing",
+      "Anti-inflammatory",
+      "Lymphatic support",
+    ],
+    difficulty: "easy",
+    harvestTime: "2-3 months",
     growingConditions: {
-      sunlight: 'shade',
-      water: 'medium',
-      soil: 'Moist, rich',
-      temperature: '55-70°F (13-21°C)'
+      sunlight: "shade",
+      water: "medium",
+      soil: "Moist, rich",
+      temperature: "55-70°F (13-21°C)",
     },
-    medicinalUses: ['Coughs', 'Skin conditions', 'Lymphatic congestion', 'Inflammation'],
-    preparations: ['Syrups', 'Teas', 'Salves', 'Fresh flowers'],
-    warnings: ['Generally very safe'],
+    medicinalUses: [
+      "Coughs",
+      "Skin conditions",
+      "Lymphatic congestion",
+      "Inflammation",
+    ],
+    preparations: ["Syrups", "Teas", "Salves", "Fresh flowers"],
+    warnings: ["Generally very safe"],
     rating: 4.2,
-    reviews: 398
+    reviews: 398,
   },
   {
-    id: '20',
-    name: 'Clover',
-    scientificName: 'Trifolium pratense',
+    id: "20",
+    name: "Clover",
+    scientificName: "Trifolium pratense",
     confidence: 0.73,
-    category: 'immunity',
-    description: 'Red clover flowers with hormone-balancing and immune-supporting properties.',
-    image: '/placeholder.svg',
-    benefits: ['Hormone balance', 'Immune support', 'Blood purifier', 'Anti-inflammatory'],
-    difficulty: 'easy',
-    harvestTime: '2-3 months',
+    category: "immunity",
+    description:
+      "Red clover flowers with hormone-balancing and immune-supporting properties.",
+    image: "/placeholder.svg",
+    benefits: [
+      "Hormone balance",
+      "Immune support",
+      "Blood purifier",
+      "Anti-inflammatory",
+    ],
+    difficulty: "easy",
+    harvestTime: "2-3 months",
     growingConditions: {
-      sunlight: 'full',
-      water: 'medium',
-      soil: 'Well-draining, fertile',
-      temperature: '60-75°F (15-24°C)'
+      sunlight: "full",
+      water: "medium",
+      soil: "Well-draining, fertile",
+      temperature: "60-75°F (15-24°C)",
     },
-    medicinalUses: ['Menopause symptoms', 'Skin conditions', 'Respiratory issues', 'Blood health'],
-    preparations: ['Teas', 'Tinctures', 'Capsules', 'Dried flowers'],
-    warnings: ['May interact with blood thinners'],
+    medicinalUses: [
+      "Menopause symptoms",
+      "Skin conditions",
+      "Respiratory issues",
+      "Blood health",
+    ],
+    preparations: ["Teas", "Tinctures", "Capsules", "Dried flowers"],
+    warnings: ["May interact with blood thinners"],
     rating: 4.1,
-    reviews: 567
+    reviews: 567,
   },
   // Flowering Plants
   {
-    id: '21',
-    name: 'Hibiscus',
-    scientificName: 'Hibiscus sabdariffa',
+    id: "21",
+    name: "Hibiscus",
+    scientificName: "Hibiscus sabdariffa",
     confidence: 0.87,
-    category: 'immunity',
-    description: 'Beautiful red flowers rich in antioxidants and vitamin C.',
-    image: '/placeholder.svg',
-    benefits: ['High in antioxidants', 'Supports heart health', 'Immune boost', 'Natural diuretic'],
-    difficulty: 'medium',
-    harvestTime: '4-5 months',
+    category: "immunity",
+    description: "Beautiful red flowers rich in antioxidants and vitamin C.",
+    image: "/placeholder.svg",
+    benefits: [
+      "High in antioxidants",
+      "Supports heart health",
+      "Immune boost",
+      "Natural diuretic",
+    ],
+    difficulty: "medium",
+    harvestTime: "4-5 months",
     growingConditions: {
-      sunlight: 'full',
-      water: 'medium',
-      soil: 'Well-draining, fertile',
-      temperature: '70-85°F (21-29°C)'
+      sunlight: "full",
+      water: "medium",
+      soil: "Well-draining, fertile",
+      temperature: "70-85°F (21-29°C)",
     },
-    medicinalUses: ['High blood pressure', 'Immune support', 'Urinary health', 'Antioxidant support'],
-    preparations: ['Teas', 'Cold infusions', 'Syrups', 'Dried petals'],
-    warnings: ['May lower blood pressure'],
+    medicinalUses: [
+      "High blood pressure",
+      "Immune support",
+      "Urinary health",
+      "Antioxidant support",
+    ],
+    preparations: ["Teas", "Cold infusions", "Syrups", "Dried petals"],
+    warnings: ["May lower blood pressure"],
     rating: 4.5,
-    reviews: 892
+    reviews: 892,
   },
   {
-    id: '22',
-    name: 'Marigold',
-    scientificName: 'Tagetes patula',
+    id: "22",
+    name: "Marigold",
+    scientificName: "Tagetes patula",
     confidence: 0.83,
-    category: 'skincare',
-    description: 'Bright orange flowers with antimicrobial and healing properties.',
-    image: '/placeholder.svg',
-    benefits: ['Antimicrobial', 'Wound healing', 'Anti-inflammatory', 'Insect repellent'],
-    difficulty: 'easy',
-    harvestTime: '2-3 months',
+    category: "skincare",
+    description:
+      "Bright orange flowers with antimicrobial and healing properties.",
+    image: "/placeholder.svg",
+    benefits: [
+      "Antimicrobial",
+      "Wound healing",
+      "Anti-inflammatory",
+      "Insect repellent",
+    ],
+    difficulty: "easy",
+    harvestTime: "2-3 months",
     growingConditions: {
-      sunlight: 'full',
-      water: 'low',
-      soil: 'Well-draining',
-      temperature: '65-80°F (18-27°C)'
+      sunlight: "full",
+      water: "low",
+      soil: "Well-draining",
+      temperature: "65-80°F (18-27°C)",
     },
-    medicinalUses: ['Minor wounds', 'Skin infections', 'Eye irritation', 'Fungal conditions'],
-    preparations: ['Oils', 'Salves', 'Washes', 'Compresses'],
-    warnings: ['Generally safe for topical use'],
+    medicinalUses: [
+      "Minor wounds",
+      "Skin infections",
+      "Eye irritation",
+      "Fungal conditions",
+    ],
+    preparations: ["Oils", "Salves", "Washes", "Compresses"],
+    warnings: ["Generally safe for topical use"],
     rating: 4.3,
-    reviews: 676
+    reviews: 676,
   },
   {
-    id: '23',
-    name: 'Sunflower',
-    scientificName: 'Helianthus annuus',
+    id: "23",
+    name: "Sunflower",
+    scientificName: "Helianthus annuus",
     confidence: 0.78,
-    category: 'immunity',
-    description: 'Large bright flowers with nutritious seeds and healing properties.',
-    image: '/placeholder.svg',
-    benefits: ['Rich in vitamin E', 'Anti-inflammatory', 'Skin nourishing', 'Heart healthy'],
-    difficulty: 'easy',
-    harvestTime: '3-4 months',
+    category: "immunity",
+    description:
+      "Large bright flowers with nutritious seeds and healing properties.",
+    image: "/placeholder.svg",
+    benefits: [
+      "Rich in vitamin E",
+      "Anti-inflammatory",
+      "Skin nourishing",
+      "Heart healthy",
+    ],
+    difficulty: "easy",
+    harvestTime: "3-4 months",
     growingConditions: {
-      sunlight: 'full',
-      water: 'medium',
-      soil: 'Well-draining, fertile',
-      temperature: '70-85°F (21-29°C)'
+      sunlight: "full",
+      water: "medium",
+      soil: "Well-draining, fertile",
+      temperature: "70-85°F (21-29°C)",
     },
-    medicinalUses: ['Skin conditions', 'Inflammation', 'Cardiovascular health', 'Nutritional support'],
-    preparations: ['Seed oil', 'Petal tinctures', 'Seeds', 'Flower teas'],
-    warnings: ['Seeds high in calories'],
+    medicinalUses: [
+      "Skin conditions",
+      "Inflammation",
+      "Cardiovascular health",
+      "Nutritional support",
+    ],
+    preparations: ["Seed oil", "Petal tinctures", "Seeds", "Flower teas"],
+    warnings: ["Seeds high in calories"],
     rating: 4.0,
-    reviews: 445
+    reviews: 445,
   },
   {
-    id: '24',
-    name: 'Nasturtium',
-    scientificName: 'Tropaeolum majus',
+    id: "24",
+    name: "Nasturtium",
+    scientificName: "Tropaeolum majus",
     confidence: 0.76,
-    category: 'immunity',
-    description: 'Edible flowers and leaves with natural antibiotic properties.',
-    image: '/placeholder.svg',
-    benefits: ['Natural antibiotic', 'Immune support', 'Respiratory health', 'Rich in vitamin C'],
-    difficulty: 'easy',
-    harvestTime: '2-3 months',
+    category: "immunity",
+    description:
+      "Edible flowers and leaves with natural antibiotic properties.",
+    image: "/placeholder.svg",
+    benefits: [
+      "Natural antibiotic",
+      "Immune support",
+      "Respiratory health",
+      "Rich in vitamin C",
+    ],
+    difficulty: "easy",
+    harvestTime: "2-3 months",
     growingConditions: {
-      sunlight: 'full',
-      water: 'low',
-      soil: 'Poor to average',
-      temperature: '65-75°F (18-24°C)'
+      sunlight: "full",
+      water: "low",
+      soil: "Poor to average",
+      temperature: "65-75°F (18-24°C)",
     },
-    medicinalUses: ['Respiratory infections', 'UTIs', 'Wound healing', 'Immune support'],
-    preparations: ['Fresh leaves', 'Tinctures', 'Salads', 'Teas'],
-    warnings: ['Generally very safe'],
+    medicinalUses: [
+      "Respiratory infections",
+      "UTIs",
+      "Wound healing",
+      "Immune support",
+    ],
+    preparations: ["Fresh leaves", "Tinctures", "Salads", "Teas"],
+    warnings: ["Generally very safe"],
     rating: 4.2,
-    reviews: 334
+    reviews: 334,
   },
   {
-    id: '25',
-    name: 'Rose',
-    scientificName: 'Rosa rugosa',
+    id: "25",
+    name: "Rose",
+    scientificName: "Rosa rugosa",
     confidence: 0.89,
-    category: 'skincare',
-    description: 'Beautiful flowers with skin-nourishing and heart-opening properties.',
-    image: '/placeholder.svg',
-    benefits: ['Skin nourishing', 'Anti-aging', 'Emotional support', 'Rich in vitamin C'],
-    difficulty: 'medium',
-    harvestTime: '3-4 months',
+    category: "skincare",
+    description:
+      "Beautiful flowers with skin-nourishing and heart-opening properties.",
+    image: "/placeholder.svg",
+    benefits: [
+      "Skin nourishing",
+      "Anti-aging",
+      "Emotional support",
+      "Rich in vitamin C",
+    ],
+    difficulty: "medium",
+    harvestTime: "3-4 months",
     growingConditions: {
-      sunlight: 'full',
-      water: 'medium',
-      soil: 'Rich, well-draining',
-      temperature: '65-75°F (18-24°C)'
+      sunlight: "full",
+      water: "medium",
+      soil: "Rich, well-draining",
+      temperature: "65-75°F (18-24°C)",
     },
-    medicinalUses: ['Skin aging', 'Emotional stress', 'Immune support', 'Digestive issues'],
-    preparations: ['Rose water', 'Essential oil', 'Rose hip tea', 'Petal preparations'],
-    warnings: ['Generally very safe'],
+    medicinalUses: [
+      "Skin aging",
+      "Emotional stress",
+      "Immune support",
+      "Digestive issues",
+    ],
+    preparations: [
+      "Rose water",
+      "Essential oil",
+      "Rose hip tea",
+      "Petal preparations",
+    ],
+    warnings: ["Generally very safe"],
     rating: 4.7,
-    reviews: 1456
-  }
+    reviews: 1456,
+  },
 ];
 
 const categoryIcons = {
@@ -754,24 +1105,24 @@ const categoryIcons = {
   digestive: Heart,
   mental: Brain,
   respiratory: Eye,
-  'anti-inflammatory': Award,
-  unknown: Search
+  "anti-inflammatory": Award,
+  unknown: Search,
 };
 
 const categoryColors = {
-  immunity: 'bg-blue-100 text-blue-800 border-blue-200',
-  skincare: 'bg-pink-100 text-pink-800 border-pink-200',
-  digestive: 'bg-orange-100 text-orange-800 border-orange-200',
-  mental: 'bg-purple-100 text-purple-800 border-purple-200',
-  respiratory: 'bg-green-100 text-green-800 border-green-200',
-  'anti-inflammatory': 'bg-yellow-100 text-yellow-800 border-yellow-200',
-  unknown: 'bg-gray-100 text-gray-800 border-gray-200'
+  immunity: "bg-blue-100 text-blue-800 border-blue-200",
+  skincare: "bg-pink-100 text-pink-800 border-pink-200",
+  digestive: "bg-orange-100 text-orange-800 border-orange-200",
+  mental: "bg-purple-100 text-purple-800 border-purple-200",
+  respiratory: "bg-green-100 text-green-800 border-green-200",
+  "anti-inflammatory": "bg-yellow-100 text-yellow-800 border-yellow-200",
+  unknown: "bg-gray-100 text-gray-800 border-gray-200",
 };
 
 const difficultyColors = {
-  easy: 'text-green-600',
-  medium: 'text-yellow-600',
-  hard: 'text-red-600'
+  easy: "text-green-600",
+  medium: "text-yellow-600",
+  hard: "text-red-600",
 };
 
 // Enhanced 3D Plant Component with growth animation
@@ -780,7 +1131,7 @@ function Plant3D({
   plant,
   growthStage = 1,
   isSelected = false,
-  onClick
+  onClick,
 }: {
   position: [number, number, number];
   plant: DetectedPlant;
@@ -794,7 +1145,7 @@ function Plant3D({
   }
   const meshRef = useRef<any>();
   const groupRef = useRef<any>();
-  
+
   useFrame((state) => {
     if (meshRef.current) {
       meshRef.current.rotation.y = state.clock.elapsedTime * 0.3;
@@ -804,29 +1155,38 @@ function Plant3D({
     }
   });
 
-  const categoryColorString = categoryColors[plant?.category] || categoryColors['immunity'] || 'bg-green-100';
-  const plantColor = categoryColorString.includes('blue') ? '#3b82f6' :
-                    categoryColorString.includes('pink') ? '#ec4899' :
-                    categoryColorString.includes('orange') ? '#f97316' :
-                    categoryColorString.includes('purple') ? '#8b5cf6' :
-                    categoryColorString.includes('yellow') ? '#eab308' : '#22c55e';
+  const categoryColorString =
+    categoryColors[plant?.category] ||
+    categoryColors["immunity"] ||
+    "bg-green-100";
+  const plantColor = categoryColorString.includes("blue")
+    ? "#3b82f6"
+    : categoryColorString.includes("pink")
+      ? "#ec4899"
+      : categoryColorString.includes("orange")
+        ? "#f97316"
+        : categoryColorString.includes("purple")
+          ? "#8b5cf6"
+          : categoryColorString.includes("yellow")
+            ? "#eab308"
+            : "#22c55e";
 
   return (
     <group ref={groupRef} position={position} onClick={onClick}>
       {/* Plant stem */}
-      <Box 
-        ref={meshRef} 
-        args={[0.3 * growthStage, 0.8 * growthStage, 0.3 * growthStage]} 
-        position={[0, (0.4 * growthStage), 0]}
+      <Box
+        ref={meshRef}
+        args={[0.3 * growthStage, 0.8 * growthStage, 0.3 * growthStage]}
+        position={[0, 0.4 * growthStage, 0]}
       >
         <meshStandardMaterial color="#16a34a" />
       </Box>
-      
+
       {/* Plant foliage */}
-      <Sphere args={[0.4 * growthStage]} position={[0, (0.9 * growthStage), 0]}>
+      <Sphere args={[0.4 * growthStage]} position={[0, 0.9 * growthStage, 0]}>
         <meshStandardMaterial color={plantColor} />
       </Sphere>
-      
+
       {/* Selection indicator */}
       {isSelected && (
         <mesh position={[0, -0.1, 0]}>
@@ -834,11 +1194,11 @@ function Plant3D({
           <meshStandardMaterial color="#fbbf24" transparent opacity={0.6} />
         </mesh>
       )}
-      
+
       {/* Plant label */}
       <Html distanceFactor={10} position={[0, 1.5 * growthStage, 0]}>
         <div className="bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg shadow-lg text-xs font-medium text-gray-800 pointer-events-none">
-          {plant?.name || 'Unknown Plant'}
+          {plant?.name || "Unknown Plant"}
         </div>
       </Html>
     </group>
@@ -859,7 +1219,7 @@ function AnimatedBackground() {
             left: `${Math.random() * 100}%`,
             top: `${Math.random() * 100}%`,
             animationDelay: `${i * 0.5}s`,
-            animationDuration: `${3 + Math.random() * 2}s`
+            animationDuration: `${3 + Math.random() * 2}s`,
           }}
         >
           <Leaf className="w-8 h-8 text-garden-400 transform rotate-12" />
@@ -874,238 +1234,325 @@ export default function Index() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [detectedPlants, setDetectedPlants] = useState<DetectedPlant[]>([]);
-  const [lastAnalysisResult, setLastAnalysisResult] = useState<AIAnalysisResult | null>(null);
+  const [lastAnalysisResult, setLastAnalysisResult] =
+    useState<AIAnalysisResult | null>(null);
   const [confidenceThreshold, setConfidenceThreshold] = useState(0.65);
   const [showAnalysisDetails, setShowAnalysisDetails] = useState(false);
   const [placedPlants, setPlacedPlants] = useState<PlantPosition[]>([]);
-  const [selectedPlantPosition, setSelectedPlantPosition] = useState<string | null>(null);
+  const [selectedPlantPosition, setSelectedPlantPosition] = useState<
+    string | null
+  >(null);
   const [showGrid, setShowGrid] = useState(true);
-  const [cameraMode, setCameraMode] = useState<'orbit' | 'top' | 'side'>('orbit');
-  const [lightMode, setLightMode] = useState<'day' | 'night' | 'sunset'>('day');
+  const [cameraMode, setCameraMode] = useState<"orbit" | "top" | "side">(
+    "orbit",
+  );
+  const [lightMode, setLightMode] = useState<"day" | "night" | "sunset">("day");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [sortBy, setSortBy] = useState<'name' | 'confidence' | 'rating'>('confidence');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<"name" | "confidence" | "rating">(
+    "confidence",
+  );
   const [showOnlyDetected, setShowOnlyDetected] = useState(false);
-  const [gardenName, setGardenName] = useState('My Medicinal Garden');
+  const [gardenName, setGardenName] = useState("My Medicinal Garden");
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [showStats, setShowStats] = useState(true);
-  const [isGrowthAnimationPlaying, setIsGrowthAnimationPlaying] = useState(false);
-  const [selectedPlantInfo, setSelectedPlantInfo] = useState<DetectedPlant | null>(null);
-  const [selectedDetectedPlant, setSelectedDetectedPlant] = useState<APIDetectedPlant | null>(null);
+  const [isGrowthAnimationPlaying, setIsGrowthAnimationPlaying] =
+    useState(false);
+  const [selectedPlantInfo, setSelectedPlantInfo] =
+    useState<DetectedPlant | null>(null);
+  const [selectedDetectedPlant, setSelectedDetectedPlant] =
+    useState<APIDetectedPlant | null>(null);
   const [gardenTemplateMode, setGardenTemplateMode] = useState(false);
   const [zoom, setZoom] = useState(1);
-  const [currentImageRef, setCurrentImageRef] = useState<React.RefObject<HTMLImageElement>>(React.createRef());
+  const [currentImageRef, setCurrentImageRef] = useState<
+    React.RefObject<HTMLImageElement>
+  >(React.createRef());
   const [enableStrictMode, setEnableStrictMode] = useState(false);
   const [maxDetections, setMaxDetections] = useState(5);
   const [showSystemStatus, setShowSystemStatus] = useState(false);
   const [gardenLayout, setGardenLayout] = useState<GardenLayout | null>(null);
-  const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
-  const [activeTab, setActiveTab] = useState<'upload' | 'library' | 'analysis' | 'garden'>('upload');
+  const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(
+    null,
+  );
+  const [activeTab, setActiveTab] = useState<
+    "upload" | "library" | "analysis" | "garden"
+  >("upload");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Calculate garden statistics
   const gardenStats: GardenStats = {
     totalPlants: (placedPlants || []).length,
-    categories: (placedPlants || []).reduce((acc, plant) => {
-      const plantData = detectedPlants.find(p => p.id === plant.plantId);
-      if (plantData) {
-        acc[plantData.category] = (acc[plantData.category] || 0) + 1;
-      }
-      return acc;
-    }, {} as Record<string, number>),
+    categories: (placedPlants || []).reduce(
+      (acc, plant) => {
+        const plantData = detectedPlants.find((p) => p.id === plant.plantId);
+        if (plantData) {
+          acc[plantData.category] = (acc[plantData.category] || 0) + 1;
+        }
+        return acc;
+      },
+      {} as Record<string, number>,
+    ),
     gardenValue: (placedPlants || []).length * 15.99, // Mock calculation
-    lastUpdated: new Date().toLocaleDateString()
+    lastUpdated: new Date().toLocaleDateString(),
   };
 
   // Real backend API integration for plant detection
-  const handleFileUpload = useCallback(async (files: FileList) => {
-    Array.from(files).forEach(async (file) => {
-      if (file.type.startsWith('image/')) {
-        const imageId = Math.random().toString(36).substr(2, 9);
-        const newImage: UploadedImage = {
-          id: imageId,
-          file,
-          url: URL.createObjectURL(file),
-          name: file.name,
-          size: file.size,
-          uploadProgress: 0,
-          analysisStatus: 'pending',
-          analysisProgress: 0
-        };
+  const handleFileUpload = useCallback(
+    async (files: FileList) => {
+      Array.from(files).forEach(async (file) => {
+        if (file.type.startsWith("image/")) {
+          const imageId = Math.random().toString(36).substr(2, 9);
+          const newImage: UploadedImage = {
+            id: imageId,
+            file,
+            url: URL.createObjectURL(file),
+            name: file.name,
+            size: file.size,
+            uploadProgress: 0,
+            analysisStatus: "pending",
+            analysisProgress: 0,
+          };
 
-        setUploadedImages(prev => [...prev, newImage]);
-        setIsAnalyzing(true);
+          setUploadedImages((prev) => [...prev, newImage]);
+          setIsAnalyzing(true);
 
-        try {
-          // Step 1: Upload progress simulation
-          const uploadInterval = setInterval(() => {
-            setUploadedImages(prev => prev.map(img =>
-              img.id === imageId && img.uploadProgress < 100
-                ? { ...img, uploadProgress: img.uploadProgress + 33 }
-                : img
-            ));
-          }, 200);
-
-          setTimeout(() => {
-            clearInterval(uploadInterval);
-            setUploadedImages(prev => prev.map(img =>
-              img.id === imageId
-                ? { ...img, uploadProgress: 100, analysisStatus: 'analyzing' }
-                : img
-            ));
-          }, 600);
-
-          // Step 2: Plant detection (using fallback system)
-          let detection, quality;
           try {
-            const result = await PlantDetectionAPI.detectPlantsWithQualityCheck(file);
-            detection = result.detection || { success: false, plants: [], count: 0, image_info: {}, message: 'Detection failed' };
-            quality = result.quality;
-          } catch (error) {
-            console.warn('Detection failed, using safe fallback:', error);
-            // Safe fallback
-            detection = {
-              success: true,
-              plants: [],
-              count: 0,
-              image_info: { width: 640, height: 480, format: 'unknown', mode: 'RGB' },
-              message: 'Detection system temporarily unavailable'
-            };
-            quality = null;
-          }
+            // Step 1: Upload progress simulation
+            const uploadInterval = setInterval(() => {
+              setUploadedImages((prev) =>
+                prev.map((img) =>
+                  img.id === imageId && img.uploadProgress < 100
+                    ? { ...img, uploadProgress: img.uploadProgress + 33 }
+                    : img,
+                ),
+              );
+            }, 200);
 
-          // Convert API results to app format
-          const detectionPlants = Array.isArray(detection?.plants) ? detection.plants : [];
-          const convertedPlants = detectionPlants
-            .filter(plant => (plant?.confidence || 0) >= confidenceThreshold)
-            .slice(0, enableStrictMode ? maxDetections : detectionPlants.length)
-            .map(apiPlant => {
-              const basePlant = mockPlantDatabase.find(p =>
-                p?.name?.toLowerCase().includes(apiPlant?.label?.toLowerCase() || '') ||
-                (apiPlant?.label?.toLowerCase() || '').includes(p?.name?.toLowerCase() || '')
-              ) || (mockPlantDatabase && mockPlantDatabase[0]) || null; // Fallback to first plant
+            setTimeout(() => {
+              clearInterval(uploadInterval);
+              setUploadedImages((prev) =>
+                prev.map((img) =>
+                  img.id === imageId
+                    ? {
+                        ...img,
+                        uploadProgress: 100,
+                        analysisStatus: "analyzing",
+                      }
+                    : img,
+                ),
+              );
+            }, 600);
 
-              return {
-                ...(basePlant || {
-                  name: 'Unknown Plant',
-                  scientificName: 'Species unknown',
-                  category: 'unknown',
-                  description: 'Plant identification pending',
-                  image: '/placeholder.svg',
-                  benefits: ['Identification required'],
-                  difficulty: 'medium',
-                  harvestTime: 'Unknown',
-                  growingConditions: { sunlight: 'full', water: 'medium', soil: 'Any', temperature: 'Variable' },
-                  medicinalUses: ['Requires identification'],
-                  preparations: ['Consult expert'],
-                  warnings: ['Do not use until identified'],
-                  rating: 0,
-                  reviews: 0
-                }),
-                id: `plant_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-                name: (apiPlant?.label || 'Unknown').charAt(0).toUpperCase() + (apiPlant?.label || 'unknown').slice(1),
-                scientificName: apiPlant?.scientific_name || 'Species unknown',
-                confidence: apiPlant?.confidence || 0,
-                category: (apiPlant?.category as any) || 'unknown',
-                bbox: apiPlant?.bbox,
-                detectionMetadata: {
-                  boundingBox: {
-                    x: apiPlant?.bbox?.x1 || 0,
-                    y: apiPlant?.bbox?.y1 || 0,
-                    width: apiPlant?.bbox?.width || 100,
-                    height: apiPlant?.bbox?.height || 100
-                  },
-                  imageQuality: quality?.quality?.score || 75,
-                  lightingCondition: (quality?.quality?.score || 75) > 80 ? 'excellent' :
-                                   (quality?.quality?.score || 75) > 60 ? 'good' : 'poor',
-                  plantHealth: 'healthy',
-                  growthStage: 'mature',
-                  certaintyFactors: {
-                    leafShape: (apiPlant?.confidence || 0) * 0.9,
-                    flowerStructure: (apiPlant?.confidence || 0) * 0.85,
-                    stemCharacteristics: (apiPlant?.confidence || 0) * 0.8,
-                    overallMorphology: (apiPlant?.confidence || 0) * 0.95
-                  }
-                }
+            // Step 2: Plant detection (using fallback system)
+            let detection, quality;
+            try {
+              const result =
+                await PlantDetectionAPI.detectPlantsWithQualityCheck(file);
+              detection = result.detection || {
+                success: false,
+                plants: [],
+                count: 0,
+                image_info: {},
+                message: "Detection failed",
               };
+              quality = result.quality;
+            } catch (error) {
+              console.warn("Detection failed, using safe fallback:", error);
+              // Safe fallback
+              detection = {
+                success: true,
+                plants: [],
+                count: 0,
+                image_info: {
+                  width: 640,
+                  height: 480,
+                  format: "unknown",
+                  mode: "RGB",
+                },
+                message: "Detection system temporarily unavailable",
+              };
+              quality = null;
+            }
+
+            // Convert API results to app format
+            const detectionPlants = Array.isArray(detection?.plants)
+              ? detection.plants
+              : [];
+            const convertedPlants = detectionPlants
+              .filter(
+                (plant) => (plant?.confidence || 0) >= confidenceThreshold,
+              )
+              .slice(
+                0,
+                enableStrictMode ? maxDetections : detectionPlants.length,
+              )
+              .map((apiPlant) => {
+                const basePlant =
+                  mockPlantDatabase.find(
+                    (p) =>
+                      p?.name
+                        ?.toLowerCase()
+                        .includes(apiPlant?.label?.toLowerCase() || "") ||
+                      (apiPlant?.label?.toLowerCase() || "").includes(
+                        p?.name?.toLowerCase() || "",
+                      ),
+                  ) ||
+                  (mockPlantDatabase && mockPlantDatabase[0]) ||
+                  null; // Fallback to first plant
+
+                return {
+                  ...(basePlant || {
+                    name: "Unknown Plant",
+                    scientificName: "Species unknown",
+                    category: "unknown",
+                    description: "Plant identification pending",
+                    image: "/placeholder.svg",
+                    benefits: ["Identification required"],
+                    difficulty: "medium",
+                    harvestTime: "Unknown",
+                    growingConditions: {
+                      sunlight: "full",
+                      water: "medium",
+                      soil: "Any",
+                      temperature: "Variable",
+                    },
+                    medicinalUses: ["Requires identification"],
+                    preparations: ["Consult expert"],
+                    warnings: ["Do not use until identified"],
+                    rating: 0,
+                    reviews: 0,
+                  }),
+                  id: `plant_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                  name:
+                    (apiPlant?.label || "Unknown").charAt(0).toUpperCase() +
+                    (apiPlant?.label || "unknown").slice(1),
+                  scientificName:
+                    apiPlant?.scientific_name || "Species unknown",
+                  confidence: apiPlant?.confidence || 0,
+                  category: (apiPlant?.category as any) || "unknown",
+                  bbox: apiPlant?.bbox,
+                  detectionMetadata: {
+                    boundingBox: {
+                      x: apiPlant?.bbox?.x1 || 0,
+                      y: apiPlant?.bbox?.y1 || 0,
+                      width: apiPlant?.bbox?.width || 100,
+                      height: apiPlant?.bbox?.height || 100,
+                    },
+                    imageQuality: quality?.quality?.score || 75,
+                    lightingCondition:
+                      (quality?.quality?.score || 75) > 80
+                        ? "excellent"
+                        : (quality?.quality?.score || 75) > 60
+                          ? "good"
+                          : "poor",
+                    plantHealth: "healthy",
+                    growthStage: "mature",
+                    certaintyFactors: {
+                      leafShape: (apiPlant?.confidence || 0) * 0.9,
+                      flowerStructure: (apiPlant?.confidence || 0) * 0.85,
+                      stemCharacteristics: (apiPlant?.confidence || 0) * 0.8,
+                      overallMorphology: (apiPlant?.confidence || 0) * 0.95,
+                    },
+                  },
+                };
+              });
+
+            setDetectedPlants(convertedPlants);
+            setIsAnalyzing(false);
+
+            // Update image status
+            setUploadedImages((prev) =>
+              prev.map((img) =>
+                img.id === imageId
+                  ? {
+                      ...img,
+                      analysisStatus: detection.success ? "completed" : "error",
+                      analysisProgress: 100,
+                      errorMessage: !detection.success
+                        ? "Detection failed"
+                        : undefined,
+                      imageMetadata: {
+                        width: detection.image_info?.width || 0,
+                        height: detection.image_info?.height || 0,
+                        qualityScore: quality?.quality.score || 0,
+                        brightness: quality?.quality.brightness || 0,
+                        contrast: quality?.quality.contrast || 0,
+                        sharpness: quality?.quality.sharpness || 0,
+                        recommendation:
+                          quality?.quality.recommendation ||
+                          "No analysis available",
+                      },
+                    }
+                  : img,
+              ),
+            );
+
+            // Store analysis result
+            setLastAnalysisResult({
+              detectedPlants: convertedPlants,
+              totalProcessingTime: 2000,
+              confidence:
+                (convertedPlants || []).length > 0
+                  ? Math.max(
+                      ...(convertedPlants || []).map((p) => p.confidence || 0),
+                    )
+                  : 0,
+              plantCount: (convertedPlants || []).length,
+              errors: detection.success ? [] : ["Backend detection failed"],
+              imageAnalysis: {
+                quality: quality?.quality.score || 0,
+                lighting: quality?.quality.brightness || 0,
+                focus: quality?.quality.sharpness || 0,
+                resolution: detection.image_info?.width || 0,
+              },
+              environmentFactors: {
+                lighting: "natural",
+                background: "clean",
+                angle: "optimal",
+                distance: "appropriate",
+              },
+              processingSteps: [
+                "Image uploaded to backend",
+                "YOLOv5 model analysis",
+                "Plant classification",
+                "Confidence scoring",
+                "Medicinal properties mapping",
+              ],
             });
-
-          setDetectedPlants(convertedPlants);
-          setIsAnalyzing(false);
-
-          // Update image status
-          setUploadedImages(prev => prev.map(img =>
-            img.id === imageId
-              ? {
-                  ...img,
-                  analysisStatus: detection.success ? 'completed' : 'error',
-                  analysisProgress: 100,
-                  errorMessage: !detection.success ? 'Detection failed' : undefined,
-                  imageMetadata: {
-                    width: detection.image_info?.width || 0,
-                    height: detection.image_info?.height || 0,
-                    qualityScore: quality?.quality.score || 0,
-                    brightness: quality?.quality.brightness || 0,
-                    contrast: quality?.quality.contrast || 0,
-                    sharpness: quality?.quality.sharpness || 0,
-                    recommendation: quality?.quality.recommendation || 'No analysis available'
-                  }
-                }
-              : img
-          ));
-
-          // Store analysis result
-          setLastAnalysisResult({
-            detectedPlants: convertedPlants,
-            totalProcessingTime: 2000,
-            confidence: (convertedPlants || []).length > 0 ? Math.max(...(convertedPlants || []).map(p => p.confidence || 0)) : 0,
-            plantCount: (convertedPlants || []).length,
-            errors: detection.success ? [] : ['Backend detection failed'],
-            imageAnalysis: {
-              quality: quality?.quality.score || 0,
-              lighting: quality?.quality.brightness || 0,
-              focus: quality?.quality.sharpness || 0,
-              resolution: detection.image_info?.width || 0
-            },
-            environmentFactors: {
-              lighting: 'natural',
-              background: 'clean',
-              angle: 'optimal',
-              distance: 'appropriate'
-            },
-            processingSteps: [
-              'Image uploaded to backend',
-              'YOLOv5 model analysis',
-              'Plant classification',
-              'Confidence scoring',
-              'Medicinal properties mapping'
-            ]
-          });
-
-        } catch (error) {
-          console.error('Plant detection error:', error);
-          setIsAnalyzing(false);
-          setUploadedImages(prev => prev.map(img =>
-            img.id === imageId
-              ? {
-                  ...img,
-                  analysisStatus: 'error',
-                  errorMessage: error instanceof Error ? error.message : 'Analysis failed'
-                }
-              : img
-          ));
+          } catch (error) {
+            console.error("Plant detection error:", error);
+            setIsAnalyzing(false);
+            setUploadedImages((prev) =>
+              prev.map((img) =>
+                img.id === imageId
+                  ? {
+                      ...img,
+                      analysisStatus: "error",
+                      errorMessage:
+                        error instanceof Error
+                          ? error.message
+                          : "Analysis failed",
+                    }
+                  : img,
+              ),
+            );
+          }
         }
-      }
-    });
-  }, [confidenceThreshold, enableStrictMode, maxDetections]);
+      });
+    },
+    [confidenceThreshold, enableStrictMode, maxDetections],
+  );
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-    handleFileUpload(e.dataTransfer.files);
-  }, [handleFileUpload]);
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      setIsDragging(false);
+      handleFileUpload(e.dataTransfer.files);
+    },
+    [handleFileUpload],
+  );
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -1119,18 +1566,26 @@ export default function Index() {
 
   // Enhanced plant filtering and searching
   const filteredPlants = (detectedPlants || [])
-    .filter(plant =>
-      (selectedCategory === 'all' || plant.category === selectedCategory) &&
-      (plant.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-       plant.scientificName?.toLowerCase().includes(searchTerm.toLowerCase())) &&
-      (!showOnlyDetected || (detectedPlants || []).some(dp => dp.id === plant.id))
+    .filter(
+      (plant) =>
+        (selectedCategory === "all" || plant.category === selectedCategory) &&
+        (plant.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          plant.scientificName
+            ?.toLowerCase()
+            .includes(searchTerm.toLowerCase())) &&
+        (!showOnlyDetected ||
+          (detectedPlants || []).some((dp) => dp.id === plant.id)),
     )
     .sort((a, b) => {
       switch (sortBy) {
-        case 'name': return (a.name || '').localeCompare(b.name || '');
-        case 'confidence': return (b.confidence || 0) - (a.confidence || 0);
-        case 'rating': return (b.rating || 0) - (a.rating || 0);
-        default: return 0;
+        case "name":
+          return (a.name || "").localeCompare(b.name || "");
+        case "confidence":
+          return (b.confidence || 0) - (a.confidence || 0);
+        case "rating":
+          return (b.rating || 0) - (a.rating || 0);
+        default:
+          return 0;
       }
     });
 
@@ -1143,13 +1598,13 @@ export default function Index() {
       z: (Math.random() - 0.5) * 6,
       rotation: Math.random() * Math.PI * 2,
       scale: 0.8 + Math.random() * 0.4,
-      growthStage: 0.5 + Math.random() * 0.5
+      growthStage: 0.5 + Math.random() * 0.5,
     };
-    setPlacedPlants(prev => [...prev, newPosition]);
+    setPlacedPlants((prev) => [...prev, newPosition]);
   };
 
   const removePlantFromGarden = (positionId: string) => {
-    setPlacedPlants(prev => prev.filter(p => p.id !== positionId));
+    setPlacedPlants((prev) => prev.filter((p) => p.id !== positionId));
     setSelectedPlantPosition(null);
   };
 
@@ -1163,71 +1618,161 @@ export default function Index() {
       name: gardenName,
       plants: placedPlants,
       settings: { lightMode, showGrid, cameraMode },
-      savedAt: new Date().toISOString()
+      savedAt: new Date().toISOString(),
     };
-    localStorage.setItem('virtualGarden', JSON.stringify(gardenData));
-    alert('Garden layout saved successfully!');
+    localStorage.setItem("virtualGarden", JSON.stringify(gardenData));
+    alert("Garden layout saved successfully!");
   };
 
   const loadLayout = () => {
-    const saved = localStorage.getItem('virtualGarden');
+    const saved = localStorage.getItem("virtualGarden");
     if (saved) {
       const gardenData = JSON.parse(saved);
       setPlacedPlants(gardenData.plants || []);
-      setGardenName(gardenData.name || 'My Medicinal Garden');
+      setGardenName(gardenData.name || "My Medicinal Garden");
       if (gardenData.settings) {
-        setLightMode(gardenData.settings.lightMode || 'day');
+        setLightMode(gardenData.settings.lightMode || "day");
         setShowGrid(gardenData.settings.showGrid ?? true);
-        setCameraMode(gardenData.settings.cameraMode || 'orbit');
+        setCameraMode(gardenData.settings.cameraMode || "orbit");
       }
-      alert('Garden layout loaded successfully!');
+      alert("Garden layout loaded successfully!");
     }
   };
 
   const exportGarden = () => {
     const gardenData = {
       name: gardenName,
-      plants: (placedPlants || []).map(p => ({
+      plants: (placedPlants || []).map((p) => ({
         ...p,
-        plantInfo: detectedPlants.find(dp => dp.id === p.plantId)
+        plantInfo: detectedPlants.find((dp) => dp.id === p.plantId),
       })),
       stats: gardenStats,
-      exportedAt: new Date().toISOString()
+      exportedAt: new Date().toISOString(),
     };
-    
-    const blob = new Blob([JSON.stringify(gardenData, null, 2)], { type: 'application/json' });
+
+    const blob = new Blob([JSON.stringify(gardenData, null, 2)], {
+      type: "application/json",
+    });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    a.download = `${gardenName.replace(/\s+/g, '_')}_garden.json`;
+    a.download = `${gardenName.replace(/\s+/g, "_")}_garden.json`;
     a.click();
     URL.revokeObjectURL(url);
   };
 
   const loadGardenTemplate = (templateName: string) => {
     const templates = {
-      'healing_circle': [
-        { plantId: '1', x: 0, y: 0, z: 0, rotation: 0, scale: 1, growthStage: 1 },
-        { plantId: '2', x: 2, y: 0, z: 0, rotation: 0, scale: 1, growthStage: 0.8 },
-        { plantId: '3', x: -2, y: 0, z: 0, rotation: 0, scale: 1, growthStage: 0.9 },
-        { plantId: '4', x: 0, y: 0, z: 2, rotation: 0, scale: 1, growthStage: 0.7 },
-        { plantId: '5', x: 0, y: 0, z: -2, rotation: 0, scale: 1, growthStage: 0.85 },
+      healing_circle: [
+        {
+          plantId: "1",
+          x: 0,
+          y: 0,
+          z: 0,
+          rotation: 0,
+          scale: 1,
+          growthStage: 1,
+        },
+        {
+          plantId: "2",
+          x: 2,
+          y: 0,
+          z: 0,
+          rotation: 0,
+          scale: 1,
+          growthStage: 0.8,
+        },
+        {
+          plantId: "3",
+          x: -2,
+          y: 0,
+          z: 0,
+          rotation: 0,
+          scale: 1,
+          growthStage: 0.9,
+        },
+        {
+          plantId: "4",
+          x: 0,
+          y: 0,
+          z: 2,
+          rotation: 0,
+          scale: 1,
+          growthStage: 0.7,
+        },
+        {
+          plantId: "5",
+          x: 0,
+          y: 0,
+          z: -2,
+          rotation: 0,
+          scale: 1,
+          growthStage: 0.85,
+        },
       ],
-      'herb_spiral': [
-        { plantId: '1', x: 0, y: 0, z: 0, rotation: 0, scale: 1.2, growthStage: 1 },
-        { plantId: '2', x: 1, y: 0, z: 1, rotation: 0, scale: 1, growthStage: 0.9 },
-        { plantId: '3', x: -1, y: 0, z: 1, rotation: 0, scale: 0.9, growthStage: 0.8 },
-        { plantId: '4', x: -1, y: 0, z: -1, rotation: 0, scale: 1.1, growthStage: 0.85 },
-        { plantId: '5', x: 1, y: 0, z: -1, rotation: 0, scale: 0.8, growthStage: 0.75 },
-        { plantId: '6', x: 2, y: 0, z: 0, rotation: 0, scale: 1, growthStage: 0.9 },
-      ]
+      herb_spiral: [
+        {
+          plantId: "1",
+          x: 0,
+          y: 0,
+          z: 0,
+          rotation: 0,
+          scale: 1.2,
+          growthStage: 1,
+        },
+        {
+          plantId: "2",
+          x: 1,
+          y: 0,
+          z: 1,
+          rotation: 0,
+          scale: 1,
+          growthStage: 0.9,
+        },
+        {
+          plantId: "3",
+          x: -1,
+          y: 0,
+          z: 1,
+          rotation: 0,
+          scale: 0.9,
+          growthStage: 0.8,
+        },
+        {
+          plantId: "4",
+          x: -1,
+          y: 0,
+          z: -1,
+          rotation: 0,
+          scale: 1.1,
+          growthStage: 0.85,
+        },
+        {
+          plantId: "5",
+          x: 1,
+          y: 0,
+          z: -1,
+          rotation: 0,
+          scale: 0.8,
+          growthStage: 0.75,
+        },
+        {
+          plantId: "6",
+          x: 2,
+          y: 0,
+          z: 0,
+          rotation: 0,
+          scale: 1,
+          growthStage: 0.9,
+        },
+      ],
     };
 
     const template = templates[templateName as keyof typeof templates];
     if (template) {
       const newPlants = template.map((plant, index) => ({
         id: `template-${templateName}-${index}`,
-        ...plant
+        ...plant,
       }));
       setPlacedPlants(newPlants);
     }
@@ -1243,10 +1788,10 @@ export default function Index() {
       z: (Math.random() - 0.5) * 8,
       rotation: Math.random() * Math.PI * 2,
       scale: 0.8 + Math.random() * 0.4,
-      growthStage: Math.random() * 0.3 + 0.2 // Start with some growth
+      growthStage: Math.random() * 0.3 + 0.2, // Start with some growth
     };
 
-    setPlacedPlants(prev => [...prev, newPlantPosition]);
+    setPlacedPlants((prev) => [...prev, newPlantPosition]);
 
     // Also add to detected plants for visualization
     const detectedPlant: DetectedPlant = {
@@ -1260,18 +1805,21 @@ export default function Index() {
       harvestTime: plant.harvestTime,
       rating: 4.5 + Math.random() * 0.5,
       uses: plant.medicinalUses.slice(0, 4),
-      climate: plant.growingConditions.climate.join(', '),
+      climate: plant.growingConditions.climate.join(", "),
       soilType: plant.growingConditions.soil,
       spacing: plant.spacing,
       sunlight: plant.growingConditions.sunlight,
       waterNeeds: plant.growingConditions.water,
       companionPlants: plant.companionPlants.slice(0, 3),
-      toxicity: plant.contraindications.length > 0 ? 'Caution advised' : 'Generally safe',
-      description: plant.description
+      toxicity:
+        plant.contraindications.length > 0
+          ? "Caution advised"
+          : "Generally safe",
+      description: plant.description,
     };
 
-    setDetectedPlants(prev => {
-      const existing = prev.find(p => p.id === plant.id);
+    setDetectedPlants((prev) => {
+      const existing = prev.find((p) => p.id === plant.id);
       if (!existing) {
         return [...prev, detectedPlant];
       }
@@ -1286,26 +1834,33 @@ export default function Index() {
     setAnalysisResult(result);
     if (result.success) {
       setGardenLayout(result.layout);
-      setActiveTab('analysis');
+      setActiveTab("analysis");
     }
   };
 
   // Handle garden layout selection
   const handleLayoutSelected = (layout: GardenLayout) => {
     setGardenLayout(layout);
-    setActiveTab('garden');
+    setActiveTab("garden");
 
     // Update garden stats based on real layout
     const totalArea = layout.dimensions.estimatedArea;
-    const plantCapacity = layout.zones.reduce((sum, zone) => sum + zone.capacity, 0);
+    const plantCapacity = layout.zones.reduce(
+      (sum, zone) => sum + zone.capacity,
+      0,
+    );
 
-    console.log(`Garden layout selected: ${layout.name} (${totalArea.toFixed(1)}m², capacity: ${plantCapacity} plants)`);
+    console.log(
+      `Garden layout selected: ${layout.name} (${totalArea.toFixed(1)}m², capacity: ${plantCapacity} plants)`,
+    );
   };
 
   return (
-    <div className={`min-h-screen transition-all duration-500 ${isDarkMode ? 'dark bg-gray-900' : 'bg-gradient-to-br from-garden-50 to-nature-50'}`}>
+    <div
+      className={`min-h-screen transition-all duration-500 ${isDarkMode ? "dark bg-gray-900" : "bg-gradient-to-br from-garden-50 to-nature-50"}`}
+    >
       <AnimatedBackground />
-      
+
       {/* Enhanced Header */}
       <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-md border-b border-garden-200/50 dark:border-gray-700/50">
         <div className="max-w-7xl mx-auto px-4 py-6">
@@ -1315,19 +1870,22 @@ export default function Index() {
                 <Leaf className="w-8 h-8 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-garden-900 dark:text-white">Virtual Garden Studio</h1>
-                <p className="text-garden-600 dark:text-gray-300">Professional Plant Design Platform</p>
+                <h1 className="text-2xl font-bold text-garden-900 dark:text-white">
+                  Virtual Garden Studio
+                </h1>
+                <p className="text-garden-600 dark:text-gray-300">
+                  Professional Plant Design Platform
+                </p>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-4">
-              <Dialog open={showSystemStatus} onOpenChange={setShowSystemStatus}>
+              <Dialog
+                open={showSystemStatus}
+                onOpenChange={setShowSystemStatus}
+              >
                 <DialogTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="rounded-full"
-                  >
+                  <Button variant="outline" size="sm" className="rounded-full">
                     <Settings className="w-4 h-4 mr-1" />
                     System
                   </Button>
@@ -1346,7 +1904,11 @@ export default function Index() {
                 onClick={() => setIsDarkMode(!isDarkMode)}
                 className="rounded-full"
               >
-                {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                {isDarkMode ? (
+                  <Sun className="w-4 h-4" />
+                ) : (
+                  <Moon className="w-4 h-4" />
+                )}
               </Button>
 
               <Button
@@ -1364,28 +1926,39 @@ export default function Index() {
           {/* Hero Section with Enhanced Typography */}
           <div className="text-center mb-8">
             <h2 className="text-4xl md:text-6xl font-bold mb-4">
-              <span className="text-garden-900 dark:text-white">Create Your Own </span>
+              <span className="text-garden-900 dark:text-white">
+                Create Your Own{" "}
+              </span>
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-garden-600 via-nature-600 to-garden-500 animate-pulse">
                 Virtual Medicinal Garden
               </span>
             </h2>
             <p className="text-xl text-garden-700 dark:text-gray-300 mb-6 max-w-3xl mx-auto leading-relaxed">
-              Upload your garden images, detect plants with advanced AI, and design immersive 3D healing spaces with professional-grade tools.
+              Upload your garden images, detect plants with advanced AI, and
+              design immersive 3D healing spaces with professional-grade tools.
             </p>
-            
+
             {/* Quick Stats */}
             {showStats && (
               <div className="flex flex-row gap-4 max-w-2xl mx-auto">
                 <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-xl p-3 border border-garden-200/50">
-                  <div className="text-2xl font-bold text-garden-600">{gardenStats.totalPlants}</div>
+                  <div className="text-2xl font-bold text-garden-600">
+                    {gardenStats.totalPlants}
+                  </div>
                   <div className="text-sm text-garden-500">Plants Placed</div>
                 </div>
                 <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-xl p-3 border border-garden-200/50">
-                  <div className="text-2xl font-bold text-garden-600">{(detectedPlants || []).length}</div>
-                  <div className="text-sm text-garden-500">Detected Species</div>
+                  <div className="text-2xl font-bold text-garden-600">
+                    {(detectedPlants || []).length}
+                  </div>
+                  <div className="text-sm text-garden-500">
+                    Detected Species
+                  </div>
                 </div>
                 <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-xl p-3 border border-garden-200/50">
-                  <div className="text-2xl font-bold text-garden-600">{Object.keys(gardenStats.categories || {}).length}</div>
+                  <div className="text-2xl font-bold text-garden-600">
+                    {Object.keys(gardenStats.categories || {}).length}
+                  </div>
                   <div className="text-sm text-garden-500">Categories</div>
                 </div>
               </div>
@@ -1397,10 +1970,8 @@ export default function Index() {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="grid lg:grid-cols-4 gap-8">
-          
           {/* Enhanced Left Sidebar */}
           <div className="lg:col-span-1 space-y-6">
-            
             {/* Advanced Upload Section */}
             <Card className="shadow-2xl border-garden-200/50 dark:border-gray-700/50 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
               <CardHeader>
@@ -1413,7 +1984,6 @@ export default function Index() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                
                 {/* Image Carousel */}
                 {(uploadedImages || []).length > 0 && (
                   <div className="space-y-3">
@@ -1428,16 +1998,20 @@ export default function Index() {
                       {/* Bounding Box Overlay for Detected Plants */}
                       {(detectedPlants || []).length > 0 && (
                         <BoundingBoxOverlay
-                          detections={(detectedPlants || []).filter(p => p.bbox).map(p => ({
-                            bbox: p.bbox!,
-                            label: p.name,
-                            confidence: p.confidence,
-                            category: p.category,
-                            properties: p.benefits?.slice(0, 3) || [],
-                            scientific_name: p.scientificName
-                          }))}
+                          detections={(detectedPlants || [])
+                            .filter((p) => p.bbox)
+                            .map((p) => ({
+                              bbox: p.bbox!,
+                              label: p.name,
+                              confidence: p.confidence,
+                              category: p.category,
+                              properties: p.benefits?.slice(0, 3) || [],
+                              scientific_name: p.scientificName,
+                            }))}
                           imageRef={currentImageRef}
-                          onPlantSelect={(plant) => setSelectedDetectedPlant(plant)}
+                          onPlantSelect={(plant) =>
+                            setSelectedDetectedPlant(plant)
+                          }
                         />
                       )}
 
@@ -1448,7 +2022,9 @@ export default function Index() {
                               key={index}
                               onClick={() => setCurrentImageIndex(index)}
                               className={`w-2 h-2 rounded-full transition-all ${
-                                index === currentImageIndex ? 'bg-white' : 'bg-white/50'
+                                index === currentImageIndex
+                                  ? "bg-white"
+                                  : "bg-white/50"
                               }`}
                             />
                           ))}
@@ -1457,36 +2033,69 @@ export default function Index() {
                     </div>
 
                     {/* Enhanced Upload Progress */}
-                    {(uploadedImages || []).some(img => img?.uploadProgress < 100 || ['preprocessing', 'analyzing', 'postprocessing'].includes(img?.analysisStatus)) && (
+                    {(uploadedImages || []).some(
+                      (img) =>
+                        img?.uploadProgress < 100 ||
+                        [
+                          "preprocessing",
+                          "analyzing",
+                          "postprocessing",
+                        ].includes(img?.analysisStatus),
+                    ) && (
                       <div className="space-y-3">
-                        {(uploadedImages || []).map(img => (
-                          <div key={img.id} className="space-y-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                        {(uploadedImages || []).map((img) => (
+                          <div
+                            key={img.id}
+                            className="space-y-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
+                          >
                             <div className="flex justify-between text-xs">
-                              <span className="truncate font-medium">{img.name}</span>
-                              <span className={`capitalize ${
-                                img.analysisStatus === 'error' ? 'text-red-600' :
-                                img.analysisStatus === 'completed' ? 'text-green-600' : 'text-blue-600'
-                              }`}>
-                                {img.analysisStatus === 'preprocessing' ? 'Preprocessing...' :
-                                 img.analysisStatus === 'analyzing' ? `Analyzing... ${img.analysisProgress}%` :
-                                 img.analysisStatus === 'postprocessing' ? 'Finalizing...' :
-                                 img.analysisStatus === 'completed' ? 'Completed' :
-                                 img.analysisStatus === 'error' ? 'Error' :
-                                 `Uploading... ${img.uploadProgress}%`}
+                              <span className="truncate font-medium">
+                                {img.name}
+                              </span>
+                              <span
+                                className={`capitalize ${
+                                  img.analysisStatus === "error"
+                                    ? "text-red-600"
+                                    : img.analysisStatus === "completed"
+                                      ? "text-green-600"
+                                      : "text-blue-600"
+                                }`}
+                              >
+                                {img.analysisStatus === "preprocessing"
+                                  ? "Preprocessing..."
+                                  : img.analysisStatus === "analyzing"
+                                    ? `Analyzing... ${img.analysisProgress}%`
+                                    : img.analysisStatus === "postprocessing"
+                                      ? "Finalizing..."
+                                      : img.analysisStatus === "completed"
+                                        ? "Completed"
+                                        : img.analysisStatus === "error"
+                                          ? "Error"
+                                          : `Uploading... ${img.uploadProgress}%`}
                               </span>
                             </div>
 
                             {/* Upload Progress Bar */}
-                            <Progress value={img.uploadProgress} className="h-2" />
+                            <Progress
+                              value={img.uploadProgress}
+                              className="h-2"
+                            />
 
                             {/* Analysis Progress Bar */}
-                            {['preprocessing', 'analyzing', 'postprocessing'].includes(img.analysisStatus) && (
+                            {[
+                              "preprocessing",
+                              "analyzing",
+                              "postprocessing",
+                            ].includes(img.analysisStatus) && (
                               <div className="space-y-1">
                                 <div className="flex justify-between text-xs text-blue-600">
                                   <span>AI Analysis</span>
                                   <span>{img.analysisProgress}%</span>
                                 </div>
-                                <Progress value={img.analysisProgress} className="h-1 bg-blue-100" />
+                                <Progress
+                                  value={img.analysisProgress}
+                                  className="h-1 bg-blue-100"
+                                />
                               </div>
                             )}
 
@@ -1495,32 +2104,60 @@ export default function Index() {
                               <div className="space-y-2">
                                 <div className="grid grid-cols-3 gap-2 text-xs">
                                   <div className="text-center">
-                                    <div className={`w-2 h-2 rounded-full mx-auto mb-1 ${
-                                      (img.imageMetadata?.qualityScore || 0) > 70 ? 'bg-green-500' :
-                                      (img.imageMetadata?.qualityScore || 0) > 40 ? 'bg-yellow-500' : 'bg-red-500'
-                                    }`}></div>
-                                    <span className="text-gray-600">Quality</span>
+                                    <div
+                                      className={`w-2 h-2 rounded-full mx-auto mb-1 ${
+                                        (img.imageMetadata?.qualityScore || 0) >
+                                        70
+                                          ? "bg-green-500"
+                                          : (img.imageMetadata?.qualityScore ||
+                                                0) > 40
+                                            ? "bg-yellow-500"
+                                            : "bg-red-500"
+                                      }`}
+                                    ></div>
+                                    <span className="text-gray-600">
+                                      Quality
+                                    </span>
                                   </div>
                                   <div className="text-center">
-                                    <div className={`w-2 h-2 rounded-full mx-auto mb-1 ${
-                                      (img.imageMetadata?.brightness || 0) > 100 ? 'bg-green-500' :
-                                      (img.imageMetadata?.brightness || 0) > 60 ? 'bg-yellow-500' : 'bg-red-500'
-                                    }`}></div>
-                                    <span className="text-gray-600">Lighting</span>
+                                    <div
+                                      className={`w-2 h-2 rounded-full mx-auto mb-1 ${
+                                        (img.imageMetadata?.brightness || 0) >
+                                        100
+                                          ? "bg-green-500"
+                                          : (img.imageMetadata?.brightness ||
+                                                0) > 60
+                                            ? "bg-yellow-500"
+                                            : "bg-red-500"
+                                      }`}
+                                    ></div>
+                                    <span className="text-gray-600">
+                                      Lighting
+                                    </span>
                                   </div>
                                   <div className="text-center">
-                                    <div className={`w-2 h-2 rounded-full mx-auto mb-1 ${
-                                      (img.imageMetadata?.sharpness || 0) > 50 ? 'bg-green-500' :
-                                      (img.imageMetadata?.sharpness || 0) > 25 ? 'bg-yellow-500' : 'bg-red-500'
-                                    }`}></div>
-                                    <span className="text-gray-600">Clarity</span>
+                                    <div
+                                      className={`w-2 h-2 rounded-full mx-auto mb-1 ${
+                                        (img.imageMetadata?.sharpness || 0) > 50
+                                          ? "bg-green-500"
+                                          : (img.imageMetadata?.sharpness ||
+                                                0) > 25
+                                            ? "bg-yellow-500"
+                                            : "bg-red-500"
+                                      }`}
+                                    ></div>
+                                    <span className="text-gray-600">
+                                      Clarity
+                                    </span>
                                   </div>
                                 </div>
 
                                 {/* Backend Analysis Results */}
                                 {img.imageMetadata?.recommendation && (
                                   <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-xs">
-                                    <div className="font-medium text-blue-800 dark:text-blue-200 mb-1">Analysis:</div>
+                                    <div className="font-medium text-blue-800 dark:text-blue-200 mb-1">
+                                      Analysis:
+                                    </div>
                                     <div className="text-blue-700 dark:text-blue-300">
                                       {img.imageMetadata.recommendation}
                                     </div>
@@ -1533,7 +2170,9 @@ export default function Index() {
                             {img.errorMessage && (
                               <div className="flex items-start gap-2 p-2 bg-red-50 dark:bg-red-900/20 rounded border border-red-200 dark:border-red-800">
                                 <AlertTriangle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
-                                <span className="text-xs text-red-700 dark:text-red-300">{img.errorMessage}</span>
+                                <span className="text-xs text-red-700 dark:text-red-300">
+                                  {img.errorMessage}
+                                </span>
                               </div>
                             )}
                           </div>
@@ -1546,9 +2185,9 @@ export default function Index() {
                 {/* Drop Zone */}
                 <div
                   className={`border-2 border-dashed rounded-2xl p-6 text-center transition-all cursor-pointer ${
-                    isDragging 
-                      ? 'border-garden-500 bg-garden-50 dark:bg-garden-900/20' 
-                      : 'border-garden-300 dark:border-gray-600 hover:border-garden-400 dark:hover:border-gray-500'
+                    isDragging
+                      ? "border-garden-500 bg-garden-50 dark:bg-garden-900/20"
+                      : "border-garden-300 dark:border-gray-600 hover:border-garden-400 dark:hover:border-gray-500"
                   }`}
                   onDrop={handleDrop}
                   onDragOver={handleDragOver}
@@ -1557,13 +2196,13 @@ export default function Index() {
                 >
                   <Upload className="w-8 h-8 mx-auto text-garden-400 mb-2" />
                   <p className="text-garden-600 dark:text-gray-300 font-medium">
-                    {isDragging ? 'Drop images here' : 'Click or drag images'}
+                    {isDragging ? "Drop images here" : "Click or drag images"}
                   </p>
                   <p className="text-xs text-garden-500 dark:text-gray-400 mt-1">
                     Supports JPG, PNG, WebP (Max 10MB each)
                   </p>
                 </div>
-                
+
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -1602,7 +2241,8 @@ export default function Index() {
                       <div>
                         <div className="font-medium">{gardenLayout.name}</div>
                         <div className="text-sm text-gray-600">
-                          {gardenLayout.dimensions.width.toFixed(1)}m × {gardenLayout.dimensions.height.toFixed(1)}m
+                          {gardenLayout.dimensions.width.toFixed(1)}m ×{" "}
+                          {gardenLayout.dimensions.height.toFixed(1)}m
                         </div>
                       </div>
                       <Button
@@ -1620,16 +2260,23 @@ export default function Index() {
 
                     <div className="grid grid-cols-3 gap-2 text-xs">
                       <div className="text-center p-2 bg-blue-50 rounded">
-                        <div className="font-medium">{gardenLayout.zones.length}</div>
+                        <div className="font-medium">
+                          {gardenLayout.zones.length}
+                        </div>
                         <div className="text-gray-600">Zones</div>
                       </div>
                       <div className="text-center p-2 bg-green-50 rounded">
-                        <div className="font-medium">{gardenLayout.features.length}</div>
+                        <div className="font-medium">
+                          {gardenLayout.features.length}
+                        </div>
                         <div className="text-gray-600">Features</div>
                       </div>
                       <div className="text-center p-2 bg-orange-50 rounded">
                         <div className="font-medium">
-                          {gardenLayout.zones.reduce((sum, zone) => sum + zone.capacity, 0)}
+                          {gardenLayout.zones.reduce(
+                            (sum, zone) => sum + zone.capacity,
+                            0,
+                          )}
                         </div>
                         <div className="text-gray-600">Capacity</div>
                       </div>
@@ -1673,9 +2320,11 @@ export default function Index() {
                       onValueChange={(value) => {
                         setConfidenceThreshold(value[0]);
                         if (lastAnalysisResult) {
-                          setDetectedPlants(lastAnalysisResult.detectedPlants.filter(plant =>
-                            plant.confidence >= value[0]
-                          ));
+                          setDetectedPlants(
+                            lastAnalysisResult.detectedPlants.filter(
+                              (plant) => plant.confidence >= value[0],
+                            ),
+                          );
                         }
                       }}
                       max={0.95}
@@ -1717,7 +2366,9 @@ export default function Index() {
                   <div className="flex items-center gap-3">
                     <div className="animate-spin w-6 h-6 border-2 border-blue-300 border-t-blue-600 rounded-full"></div>
                     <div>
-                      <div className="font-medium text-blue-900 dark:text-blue-100">AI Analysis in Progress</div>
+                      <div className="font-medium text-blue-900 dark:text-blue-100">
+                        AI Analysis in Progress
+                      </div>
                       <div className="text-sm text-blue-700 dark:text-blue-300">
                         Analyzing plant features and characteristics...
                       </div>
@@ -1739,7 +2390,12 @@ export default function Index() {
                           Analysis Complete
                         </div>
                         <div className="text-sm text-green-700 dark:text-green-300">
-                          {(lastAnalysisResult?.detectedPlants || []).length} plants detected in {((lastAnalysisResult?.processingTime || 0) / 1000).toFixed(1)}s
+                          {(lastAnalysisResult?.detectedPlants || []).length}{" "}
+                          plants detected in{" "}
+                          {(
+                            (lastAnalysisResult?.processingTime || 0) / 1000
+                          ).toFixed(1)}
+                          s
                         </div>
                       </div>
                     </div>
@@ -1747,14 +2403,17 @@ export default function Index() {
                       <div className="text-lg font-bold text-green-600">
                         {Math.round(lastAnalysisResult.totalConfidence * 100)}%
                       </div>
-                      <div className="text-xs text-green-700 dark:text-green-300">Avg Confidence</div>
+                      <div className="text-xs text-green-700 dark:text-green-300">
+                        Avg Confidence
+                      </div>
                     </div>
                   </div>
 
                   {(lastAnalysisResult?.errors || []).length > 0 && (
                     <div className="mt-3 p-2 bg-yellow-100 dark:bg-yellow-900/30 rounded border-l-4 border-yellow-500">
                       <div className="text-sm text-yellow-800 dark:text-yellow-200">
-                        <strong>Note:</strong> {(lastAnalysisResult?.errors || [])[0]}
+                        <strong>Note:</strong>{" "}
+                        {(lastAnalysisResult?.errors || [])[0]}
                       </div>
                     </div>
                   )}
@@ -1781,7 +2440,8 @@ export default function Index() {
                 <CardContent>
                   <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2">
                     {filteredPlants.map((plant) => {
-                      const CategoryIcon = categoryIcons[plant.category] || Shield;
+                      const CategoryIcon =
+                        categoryIcons[plant.category] || Shield;
                       return (
                         <TooltipProvider key={plant.id}>
                           <Tooltip>
@@ -1789,8 +2449,8 @@ export default function Index() {
                               <div className="group p-4 border border-garden-200 dark:border-gray-600 rounded-xl hover:bg-garden-50 dark:hover:bg-gray-700/50 cursor-pointer transition-all transform hover:scale-[1.02] hover:shadow-lg">
                                 <div className="flex items-start gap-3">
                                   <div className="relative">
-                                    <img 
-                                      src={plant.image} 
+                                    <img
+                                      src={plant.image}
                                       alt={plant.name}
                                       className="w-16 h-16 rounded-xl object-cover bg-garden-100 ring-2 ring-garden-200 dark:ring-gray-600"
                                     />
@@ -1798,7 +2458,7 @@ export default function Index() {
                                       <CategoryIcon className="w-3 h-3 text-garden-600" />
                                     </div>
                                   </div>
-                                  
+
                                   <div className="flex-1 min-w-0">
                                     <div className="flex items-start justify-between mb-2">
                                       <div>
@@ -1811,23 +2471,31 @@ export default function Index() {
                                       </div>
                                       <div className="flex items-center gap-1 text-xs">
                                         <Star className="w-3 h-3 text-yellow-400 fill-current" />
-                                        <span className="text-garden-600 dark:text-gray-400">{plant.rating}</span>
+                                        <span className="text-garden-600 dark:text-gray-400">
+                                          {plant.rating}
+                                        </span>
                                       </div>
                                     </div>
-                                    
+
                                     <div className="flex items-center gap-2 mb-2">
-                                      <Badge variant="secondary" className={`text-xs ${categoryColors[plant.category]}`}>
+                                      <Badge
+                                        variant="secondary"
+                                        className={`text-xs ${categoryColors[plant.category]}`}
+                                      >
                                         {plant.category}
                                       </Badge>
-                                      <Badge variant="outline" className={`text-xs ${difficultyColors[plant.difficulty]}`}>
+                                      <Badge
+                                        variant="outline"
+                                        className={`text-xs ${difficultyColors[plant.difficulty]}`}
+                                      >
                                         {plant.difficulty}
                                       </Badge>
                                     </div>
-                                    
+
                                     <p className="text-xs text-garden-600 dark:text-gray-400 mb-3 line-clamp-2">
                                       {plant.description}
                                     </p>
-                                    
+
                                     {/* Enhanced Confidence Display */}
                                     <div className="space-y-2">
                                       <div className="flex items-center justify-between">
@@ -1835,19 +2503,28 @@ export default function Index() {
                                           <div className="h-2 bg-garden-200 dark:bg-gray-600 rounded-full flex-1 min-w-[50px]">
                                             <div
                                               className={`h-2 rounded-full transition-all ${
-                                                plant.confidence > 0.8 ? 'bg-gradient-to-r from-green-500 to-green-600' :
-                                                plant.confidence > 0.65 ? 'bg-gradient-to-r from-yellow-500 to-yellow-600' :
-                                                'bg-gradient-to-r from-red-500 to-red-600'
+                                                plant.confidence > 0.8
+                                                  ? "bg-gradient-to-r from-green-500 to-green-600"
+                                                  : plant.confidence > 0.65
+                                                    ? "bg-gradient-to-r from-yellow-500 to-yellow-600"
+                                                    : "bg-gradient-to-r from-red-500 to-red-600"
                                               }`}
-                                              style={{ width: `${plant.confidence * 100}%` }}
+                                              style={{
+                                                width: `${plant.confidence * 100}%`,
+                                              }}
                                             />
                                           </div>
-                                          <span className={`text-xs font-bold ${
-                                            plant.confidence > 0.8 ? 'text-green-700 dark:text-green-400' :
-                                            plant.confidence > 0.65 ? 'text-yellow-700 dark:text-yellow-400' :
-                                            'text-red-700 dark:text-red-400'
-                                          }`}>
-                                            {Math.round(plant.confidence * 100)}%
+                                          <span
+                                            className={`text-xs font-bold ${
+                                              plant.confidence > 0.8
+                                                ? "text-green-700 dark:text-green-400"
+                                                : plant.confidence > 0.65
+                                                  ? "text-yellow-700 dark:text-yellow-400"
+                                                  : "text-red-700 dark:text-red-400"
+                                            }`}
+                                          >
+                                            {Math.round(plant.confidence * 100)}
+                                            %
                                           </span>
                                         </div>
                                       </div>
@@ -1855,22 +2532,46 @@ export default function Index() {
                                       {/* Detection Metadata Indicators */}
                                       {plant.detectionMetadata && (
                                         <div className="flex items-center gap-2 text-xs">
-                                          <div className={`px-1.5 py-0.5 rounded text-xs ${
-                                            plant.detectionMetadata.lightingCondition === 'excellent' ? 'bg-green-100 text-green-700' :
-                                            plant.detectionMetadata.lightingCondition === 'good' ? 'bg-yellow-100 text-yellow-700' :
-                                            'bg-red-100 text-red-700'
-                                          }`}>
-                                            {plant.detectionMetadata.lightingCondition}
+                                          <div
+                                            className={`px-1.5 py-0.5 rounded text-xs ${
+                                              plant.detectionMetadata
+                                                .lightingCondition ===
+                                              "excellent"
+                                                ? "bg-green-100 text-green-700"
+                                                : plant.detectionMetadata
+                                                      .lightingCondition ===
+                                                    "good"
+                                                  ? "bg-yellow-100 text-yellow-700"
+                                                  : "bg-red-100 text-red-700"
+                                            }`}
+                                          >
+                                            {
+                                              plant.detectionMetadata
+                                                .lightingCondition
+                                            }
                                           </div>
-                                          <div className={`px-1.5 py-0.5 rounded text-xs ${
-                                            plant.detectionMetadata.plantHealth === 'healthy' ? 'bg-green-100 text-green-700' :
-                                            plant.detectionMetadata.plantHealth === 'stressed' ? 'bg-yellow-100 text-yellow-700' :
-                                            'bg-red-100 text-red-700'
-                                          }`}>
-                                            {plant.detectionMetadata.plantHealth}
+                                          <div
+                                            className={`px-1.5 py-0.5 rounded text-xs ${
+                                              plant.detectionMetadata
+                                                .plantHealth === "healthy"
+                                                ? "bg-green-100 text-green-700"
+                                                : plant.detectionMetadata
+                                                      .plantHealth ===
+                                                    "stressed"
+                                                  ? "bg-yellow-100 text-yellow-700"
+                                                  : "bg-red-100 text-red-700"
+                                            }`}
+                                          >
+                                            {
+                                              plant.detectionMetadata
+                                                .plantHealth
+                                            }
                                           </div>
                                           <div className="px-1.5 py-0.5 rounded text-xs bg-blue-100 text-blue-700 capitalize">
-                                            {plant.detectionMetadata.growthStage}
+                                            {
+                                              plant.detectionMetadata
+                                                .growthStage
+                                            }
                                           </div>
                                         </div>
                                       )}
@@ -1894,7 +2595,9 @@ export default function Index() {
                                               variant="ghost"
                                               onClick={(e) => {
                                                 e.stopPropagation();
-                                                alert(`Detection Details:\n\nConfidence Factors:\n• Leaf Shape: ${Math.round(plant.detectionMetadata.certaintyFactors.leafShape * 100)}%\n• Flower Structure: ${Math.round(plant.detectionMetadata.certaintyFactors.flowerStructure * 100)}%\n• Stem Characteristics: ${Math.round(plant.detectionMetadata.certaintyFactors.stemCharacteristics * 100)}%\n• Overall Morphology: ${Math.round(plant.detectionMetadata.certaintyFactors.overallMorphology * 100)}%`);
+                                                alert(
+                                                  `Detection Details:\n\nConfidence Factors:\n• Leaf Shape: ${Math.round(plant.detectionMetadata.certaintyFactors.leafShape * 100)}%\n• Flower Structure: ${Math.round(plant.detectionMetadata.certaintyFactors.flowerStructure * 100)}%\n• Stem Characteristics: ${Math.round(plant.detectionMetadata.certaintyFactors.stemCharacteristics * 100)}%\n• Overall Morphology: ${Math.round(plant.detectionMetadata.certaintyFactors.overallMorphology * 100)}%`,
+                                                );
                                               }}
                                               className="h-6 w-6 p-0 hover:bg-blue-100 dark:hover:bg-blue-900"
                                             >
@@ -1909,9 +2612,11 @@ export default function Index() {
                                             addPlantToGarden(plant);
                                           }}
                                           className={`h-6 px-2 text-xs text-white ${
-                                            plant.confidence > 0.8 ? 'bg-green-600 hover:bg-green-700' :
-                                            plant.confidence > 0.65 ? 'bg-yellow-600 hover:bg-yellow-700' :
-                                            'bg-red-600 hover:bg-red-700'
+                                            plant.confidence > 0.8
+                                              ? "bg-green-600 hover:bg-green-700"
+                                              : plant.confidence > 0.65
+                                                ? "bg-yellow-600 hover:bg-yellow-700"
+                                                : "bg-red-600 hover:bg-red-700"
                                           }`}
                                         >
                                           <Plus className="w-3 h-3 mr-1" />
@@ -1923,33 +2628,53 @@ export default function Index() {
                                 </div>
                               </div>
                             </TooltipTrigger>
-                            <TooltipContent side="right" className="max-w-xs p-4">
+                            <TooltipContent
+                              side="right"
+                              className="max-w-xs p-4"
+                            >
                               <div className="space-y-3">
                                 <div>
-                                  <p className="font-semibold text-sm">{plant.name}</p>
-                                  <p className="text-xs text-gray-500 italic">{plant.scientificName}</p>
+                                  <p className="font-semibold text-sm">
+                                    {plant.name}
+                                  </p>
+                                  <p className="text-xs text-gray-500 italic">
+                                    {plant.scientificName}
+                                  </p>
                                 </div>
-                                
+
                                 <div>
-                                  <p className="text-xs font-medium mb-1">Key Benefits:</p>
+                                  <p className="text-xs font-medium mb-1">
+                                    Key Benefits:
+                                  </p>
                                   <ul className="text-xs space-y-1">
-                                    {(plant.benefits || []).slice(0, 3).map((benefit, i) => (
-                                      <li key={i} className="flex items-start gap-1">
-                                        <CheckCircle className="w-3 h-3 text-green-500 mt-0.5 flex-shrink-0" />
-                                        {benefit}
-                                      </li>
-                                    ))}
+                                    {(plant.benefits || [])
+                                      .slice(0, 3)
+                                      .map((benefit, i) => (
+                                        <li
+                                          key={i}
+                                          className="flex items-start gap-1"
+                                        >
+                                          <CheckCircle className="w-3 h-3 text-green-500 mt-0.5 flex-shrink-0" />
+                                          {benefit}
+                                        </li>
+                                      ))}
                                   </ul>
                                 </div>
-                                
+
                                 <div className="grid grid-cols-2 gap-2 text-xs">
                                   <div>
                                     <p className="font-medium">Harvest:</p>
-                                    <p className="text-gray-600">{plant.harvestTime}</p>
+                                    <p className="text-gray-600">
+                                      {plant.harvestTime}
+                                    </p>
                                   </div>
                                   <div>
                                     <p className="font-medium">Difficulty:</p>
-                                    <p className={difficultyColors[plant.difficulty]}>
+                                    <p
+                                      className={
+                                        difficultyColors[plant.difficulty]
+                                      }
+                                    >
                                       {plant.difficulty}
                                     </p>
                                   </div>
@@ -1973,7 +2698,9 @@ export default function Index() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <CardTitle className="text-garden-900 dark:text-white">
-                      {gardenLayout ? `${gardenLayout.name} - 3D Recreation` : '3D Garden Studio'}
+                      {gardenLayout
+                        ? `${gardenLayout.name} - 3D Recreation`
+                        : "3D Garden Studio"}
                     </CardTitle>
                     {!gardenLayout && (
                       <Input
@@ -1984,12 +2711,15 @@ export default function Index() {
                       />
                     )}
                     {gardenLayout && (
-                      <Badge variant="outline" className="bg-green-100 text-green-800">
+                      <Badge
+                        variant="outline"
+                        className="bg-green-100 text-green-800"
+                      >
                         Real Garden Layout
                       </Badge>
                     )}
                   </div>
-                  
+
                   {/* Enhanced Toolbar */}
                   <div className="flex items-center gap-2">
                     <TooltipProvider>
@@ -2055,7 +2785,9 @@ export default function Index() {
                               <RotateCcw className="w-4 h-4" />
                             </Button>
                           </TooltipTrigger>
-                          <TooltipContent>Switch to Virtual Mode</TooltipContent>
+                          <TooltipContent>
+                            Switch to Virtual Mode
+                          </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
                     )}
@@ -2078,7 +2810,7 @@ export default function Index() {
                         <div className="grid grid-cols-2 gap-4">
                           <Button
                             variant="outline"
-                            onClick={() => loadGardenTemplate('healing_circle')}
+                            onClick={() => loadGardenTemplate("healing_circle")}
                             className="h-20 flex-col"
                           >
                             <div className="w-8 h-8 rounded-full bg-garden-100 dark:bg-garden-800 mb-2"></div>
@@ -2086,7 +2818,7 @@ export default function Index() {
                           </Button>
                           <Button
                             variant="outline"
-                            onClick={() => loadGardenTemplate('herb_spiral')}
+                            onClick={() => loadGardenTemplate("herb_spiral")}
                             className="h-20 flex-col"
                           >
                             <div className="w-8 h-8 rounded-lg bg-nature-100 dark:bg-nature-800 mb-2"></div>
@@ -2119,7 +2851,7 @@ export default function Index() {
                             variant="outline"
                             size="sm"
                             onClick={() => setShowGrid(!showGrid)}
-                            className={`border-garden-300 dark:border-gray-600 ${showGrid ? 'bg-garden-100 dark:bg-garden-800' : 'hover:bg-garden-50 dark:hover:bg-gray-700'}`}
+                            className={`border-garden-300 dark:border-gray-600 ${showGrid ? "bg-garden-100 dark:bg-garden-800" : "hover:bg-garden-50 dark:hover:bg-gray-700"}`}
                           >
                             <Grid3X3 className="w-4 h-4" />
                           </Button>
@@ -2130,7 +2862,7 @@ export default function Index() {
                   </div>
                 </div>
               </CardHeader>
-              
+
               <CardContent className="p-0 h-[600px] relative">
                 {gardenLayout ? (
                   /* Garden Space Recreation */
@@ -2143,98 +2875,131 @@ export default function Index() {
                   />
                 ) : (
                   /* Original Virtual Garden */
-                  <Canvas 
-                  camera={{ position: [8, 8, 8], fov: 50 }}
-                  shadows
-                  className="rounded-b-lg"
-                >
-                  {/* Enhanced Lighting */}
-                  <ambientLight 
-                    intensity={lightMode === 'day' ? 0.6 : lightMode === 'night' ? 0.2 : 0.4} 
-                  />
-                  <directionalLight 
-                    position={[10, 10, 5]} 
-                    intensity={lightMode === 'day' ? 1 : lightMode === 'night' ? 0.3 : 0.7}
-                    castShadow
-                    shadow-mapSize-width={2048}
-                    shadow-mapSize-height={2048}
-                  />
-                  <pointLight 
-                    position={[-10, 5, -10]} 
-                    intensity={lightMode === 'sunset' ? 0.8 : 0.3}
-                    color={lightMode === 'sunset' ? '#ff6b35' : '#ffffff'}
-                  />
-
-                  {/* Environment */}
-                  <Environment preset={lightMode === 'day' ? 'park' : lightMode === 'night' ? 'night' : 'sunset'} />
-                  
-                  {/* Enhanced Ground */}
-                  <mesh 
-                    rotation={[-Math.PI / 2, 0, 0]} 
-                    position={[0, -0.1, 0]} 
-                    receiveShadow
+                  <Canvas
+                    camera={{ position: [8, 8, 8], fov: 50 }}
+                    shadows
+                    className="rounded-b-lg"
                   >
-                    <planeGeometry args={[20, 20]} />
-                    <meshStandardMaterial 
-                      color={lightMode === 'day' ? '#86d5a4' : lightMode === 'night' ? '#2d4a3e' : '#4a6741'} 
-                      roughness={0.8}
-                      metalness={0.1}
+                    {/* Enhanced Lighting */}
+                    <ambientLight
+                      intensity={
+                        lightMode === "day"
+                          ? 0.6
+                          : lightMode === "night"
+                            ? 0.2
+                            : 0.4
+                      }
                     />
-                  </mesh>
-                  
-                  {/* Grid Helper */}
-                  {showGrid && (
-                    <gridHelper 
-                      args={[20, 20, '#22c55e', '#86d5a4']} 
-                      position={[0, 0, 0]}
+                    <directionalLight
+                      position={[10, 10, 5]}
+                      intensity={
+                        lightMode === "day"
+                          ? 1
+                          : lightMode === "night"
+                            ? 0.3
+                            : 0.7
+                      }
+                      castShadow
+                      shadow-mapSize-width={2048}
+                      shadow-mapSize-height={2048}
                     />
-                  )}
-                  
-                  {/* Contact Shadows */}
-                  <ContactShadows 
-                    opacity={0.4} 
-                    scale={20} 
-                    blur={1} 
-                    far={20} 
-                    resolution={256} 
-                    color="#000000" 
-                  />
-                  
-                  {/* Placed Plants with Enhanced Models */}
-                  {(placedPlants || []).map((plantPosition) => {
-                    const plantData = (detectedPlants || []).find(p => p.id === plantPosition.plantId);
-                    return plantData ? (
-                      <Plant3D 
-                        key={plantPosition.id}
-                        position={[plantPosition.x, plantPosition.y, plantPosition.z]}
-                        plant={plantData}
-                        growthStage={plantPosition.growthStage}
-                        isSelected={selectedPlantPosition === plantPosition.id}
-                        onClick={() => {
-                          if (selectedPlantPosition === plantPosition.id) {
-                            removePlantFromGarden(plantPosition.id);
-                          } else {
-                            setSelectedPlantPosition(plantPosition.id);
-                          }
-                        }}
+                    <pointLight
+                      position={[-10, 5, -10]}
+                      intensity={lightMode === "sunset" ? 0.8 : 0.3}
+                      color={lightMode === "sunset" ? "#ff6b35" : "#ffffff"}
+                    />
+
+                    {/* Environment */}
+                    <Environment
+                      preset={
+                        lightMode === "day"
+                          ? "park"
+                          : lightMode === "night"
+                            ? "night"
+                            : "sunset"
+                      }
+                    />
+
+                    {/* Enhanced Ground */}
+                    <mesh
+                      rotation={[-Math.PI / 2, 0, 0]}
+                      position={[0, -0.1, 0]}
+                      receiveShadow
+                    >
+                      <planeGeometry args={[20, 20]} />
+                      <meshStandardMaterial
+                        color={
+                          lightMode === "day"
+                            ? "#86d5a4"
+                            : lightMode === "night"
+                              ? "#2d4a3e"
+                              : "#4a6741"
+                        }
+                        roughness={0.8}
+                        metalness={0.1}
                       />
-                    ) : null;
-                  })}
-                  
-                  <OrbitControls 
-                    enablePan={true} 
-                    enableZoom={true} 
-                    enableRotate={true}
-                    minDistance={3}
-                    maxDistance={50}
-                    maxPolarAngle={Math.PI / 2}
-                  />
-                </Canvas>
+                    </mesh>
+
+                    {/* Grid Helper */}
+                    {showGrid && (
+                      <gridHelper
+                        args={[20, 20, "#22c55e", "#86d5a4"]}
+                        position={[0, 0, 0]}
+                      />
+                    )}
+
+                    {/* Contact Shadows */}
+                    <ContactShadows
+                      opacity={0.4}
+                      scale={20}
+                      blur={1}
+                      far={20}
+                      resolution={256}
+                      color="#000000"
+                    />
+
+                    {/* Placed Plants with Enhanced Models */}
+                    {(placedPlants || []).map((plantPosition) => {
+                      const plantData = (detectedPlants || []).find(
+                        (p) => p.id === plantPosition.plantId,
+                      );
+                      return plantData ? (
+                        <Plant3D
+                          key={plantPosition.id}
+                          position={[
+                            plantPosition.x,
+                            plantPosition.y,
+                            plantPosition.z,
+                          ]}
+                          plant={plantData}
+                          growthStage={plantPosition.growthStage}
+                          isSelected={
+                            selectedPlantPosition === plantPosition.id
+                          }
+                          onClick={() => {
+                            if (selectedPlantPosition === plantPosition.id) {
+                              removePlantFromGarden(plantPosition.id);
+                            } else {
+                              setSelectedPlantPosition(plantPosition.id);
+                            }
+                          }}
+                        />
+                      ) : null;
+                    })}
+
+                    <OrbitControls
+                      enablePan={true}
+                      enableZoom={true}
+                      enableRotate={true}
+                      minDistance={3}
+                      maxDistance={50}
+                      maxPolarAngle={Math.PI / 2}
+                    />
+                  </Canvas>
                 )}
-                
+
                 {/* Enhanced Bottom Toolbar */}
                 <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex items-center gap-3 bg-white/95 dark:bg-gray-800/95 backdrop-blur-md rounded-2xl px-6 py-3 shadow-xl border border-garden-200/50 dark:border-gray-600/50">
-                  
                   {/* Zoom Controls */}
                   <div className="flex items-center gap-1">
                     <Button
@@ -2262,11 +3027,14 @@ export default function Index() {
                       <ZoomOut className="w-4 h-4" />
                     </Button>
                   </div>
-                  
+
                   <div className="w-px h-6 bg-garden-300 dark:bg-gray-600" />
-                  
+
                   {/* Camera Controls */}
-                  <Select value={cameraMode} onValueChange={(value: any) => setCameraMode(value)}>
+                  <Select
+                    value={cameraMode}
+                    onValueChange={(value: any) => setCameraMode(value)}
+                  >
                     <SelectTrigger className="w-24 h-8">
                       <Camera className="w-4 h-4" />
                     </SelectTrigger>
@@ -2276,39 +3044,54 @@ export default function Index() {
                       <SelectItem value="side">Side View</SelectItem>
                     </SelectContent>
                   </Select>
-                  
+
                   <div className="w-px h-6 bg-garden-300 dark:bg-gray-600" />
-                  
+
                   {/* Lighting Controls */}
                   <div className="flex items-center gap-1">
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => setLightMode(lightMode === 'day' ? 'sunset' : lightMode === 'sunset' ? 'night' : 'day')}
+                      onClick={() =>
+                        setLightMode(
+                          lightMode === "day"
+                            ? "sunset"
+                            : lightMode === "sunset"
+                              ? "night"
+                              : "day",
+                        )
+                      }
                       className="rounded-full w-8 h-8 p-0 hover:bg-garden-100 dark:hover:bg-gray-700"
                     >
-                      {lightMode === 'day' ? <Sun className="w-4 h-4 text-yellow-500" /> : 
-                       lightMode === 'sunset' ? <Sun className="w-4 h-4 text-orange-500" /> :
-                       <Moon className="w-4 h-4 text-blue-500" />}
+                      {lightMode === "day" ? (
+                        <Sun className="w-4 h-4 text-yellow-500" />
+                      ) : lightMode === "sunset" ? (
+                        <Sun className="w-4 h-4 text-orange-500" />
+                      ) : (
+                        <Moon className="w-4 h-4 text-blue-500" />
+                      )}
                     </Button>
                     <span className="text-xs text-garden-600 dark:text-gray-400 capitalize min-w-[40px]">
                       {lightMode}
                     </span>
                   </div>
-                  
+
                   <div className="w-px h-6 bg-garden-300 dark:bg-gray-600" />
-                  
+
                   {/* Growth Animation */}
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => setIsGrowthAnimationPlaying(!isGrowthAnimationPlaying)}
+                    onClick={() =>
+                      setIsGrowthAnimationPlaying(!isGrowthAnimationPlaying)
+                    }
                     className="rounded-full w-8 h-8 p-0 hover:bg-garden-100 dark:hover:bg-gray-700"
                   >
-                    {isGrowthAnimationPlaying ? 
-                      <Pause className="w-4 h-4" /> : 
+                    {isGrowthAnimationPlaying ? (
+                      <Pause className="w-4 h-4" />
+                    ) : (
                       <Play className="w-4 h-4" />
-                    }
+                    )}
                   </Button>
                 </div>
 
@@ -2316,12 +3099,18 @@ export default function Index() {
                 {selectedPlantPosition && (
                   <div className="absolute top-4 right-4 bg-white/95 dark:bg-gray-800/95 backdrop-blur-md rounded-xl p-4 shadow-xl border border-garden-200/50 dark:border-gray-600/50 max-w-xs">
                     {(() => {
-                      const position = placedPlants.find(p => p.id === selectedPlantPosition);
-                      const plantData = position ? detectedPlants.find(p => p.id === position.plantId) : null;
+                      const position = placedPlants.find(
+                        (p) => p.id === selectedPlantPosition,
+                      );
+                      const plantData = position
+                        ? detectedPlants.find((p) => p.id === position.plantId)
+                        : null;
                       return plantData ? (
                         <div>
                           <div className="flex items-center justify-between mb-3">
-                            <h4 className="font-semibold text-garden-900 dark:text-white">{plantData.name}</h4>
+                            <h4 className="font-semibold text-garden-900 dark:text-white">
+                              {plantData.name}
+                            </h4>
                             <Button
                               variant="ghost"
                               size="sm"
@@ -2333,20 +3122,31 @@ export default function Index() {
                           </div>
                           <div className="space-y-2 text-sm">
                             <div className="flex justify-between">
-                              <span className="text-garden-600 dark:text-gray-400">Position:</span>
+                              <span className="text-garden-600 dark:text-gray-400">
+                                Position:
+                              </span>
                               <span className="text-garden-900 dark:text-white">
-                                ({position?.x.toFixed(1)}, {position?.z.toFixed(1)})
+                                ({position?.x.toFixed(1)},{" "}
+                                {position?.z.toFixed(1)})
                               </span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="text-garden-600 dark:text-gray-400">Growth:</span>
+                              <span className="text-garden-600 dark:text-gray-400">
+                                Growth:
+                              </span>
                               <span className="text-garden-900 dark:text-white">
-                                {Math.round((position?.growthStage || 0) * 100)}%
+                                {Math.round((position?.growthStage || 0) * 100)}
+                                %
                               </span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="text-garden-600 dark:text-gray-400">Category:</span>
-                              <Badge variant="secondary" className={`text-xs ${categoryColors[plantData.category]}`}>
+                              <span className="text-garden-600 dark:text-gray-400">
+                                Category:
+                              </span>
+                              <Badge
+                                variant="secondary"
+                                className={`text-xs ${categoryColors[plantData.category]}`}
+                              >
                                 {plantData.category}
                               </Badge>
                             </div>
@@ -2364,7 +3164,9 @@ export default function Index() {
                             <Button
                               size="sm"
                               variant="destructive"
-                              onClick={() => removePlantFromGarden(selectedPlantPosition)}
+                              onClick={() =>
+                                removePlantFromGarden(selectedPlantPosition)
+                              }
                               className="flex-1"
                             >
                               <X className="w-3 h-3 mr-1" />
@@ -2407,19 +3209,28 @@ export default function Index() {
                     <div className="space-y-2 text-sm text-garden-600 dark:text-gray-400">
                       <div className="flex items-start gap-2">
                         <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                        <span>Upload high-resolution images (800x600+) for better accuracy</span>
+                        <span>
+                          Upload high-resolution images (800x600+) for better
+                          accuracy
+                        </span>
                       </div>
                       <div className="flex items-start gap-2">
                         <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                        <span>Ensure good lighting and clear focus on plant features</span>
+                        <span>
+                          Ensure good lighting and clear focus on plant features
+                        </span>
                       </div>
                       <div className="flex items-start gap-2">
                         <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                        <span>Include leaves, flowers, and stems when possible</span>
+                        <span>
+                          Include leaves, flowers, and stems when possible
+                        </span>
                       </div>
                       <div className="flex items-start gap-2">
                         <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                        <span>Adjust confidence threshold to filter results</span>
+                        <span>
+                          Adjust confidence threshold to filter results
+                        </span>
                       </div>
                     </div>
                   </TabsContent>
@@ -2450,7 +3261,9 @@ export default function Index() {
                       <div className="text-2xl font-bold text-green-600">
                         {(lastAnalysisResult?.detectedPlants || []).length}
                       </div>
-                      <div className="text-sm text-gray-600">Plants Detected</div>
+                      <div className="text-sm text-gray-600">
+                        Plants Detected
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -2460,7 +3273,9 @@ export default function Index() {
                       <div className="text-2xl font-bold text-blue-600">
                         {Math.round(lastAnalysisResult.totalConfidence * 100)}%
                       </div>
-                      <div className="text-sm text-gray-600">Avg Confidence</div>
+                      <div className="text-sm text-gray-600">
+                        Avg Confidence
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -2470,7 +3285,9 @@ export default function Index() {
                       <div className="text-2xl font-bold text-purple-600">
                         {(lastAnalysisResult.processingTime / 1000).toFixed(1)}s
                       </div>
-                      <div className="text-sm text-gray-600">Processing Time</div>
+                      <div className="text-sm text-gray-600">
+                        Processing Time
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -2479,15 +3296,22 @@ export default function Index() {
               {/* Image Quality Analysis */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">Image Quality Analysis</CardTitle>
+                  <CardTitle className="text-lg">
+                    Image Quality Analysis
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <span>Overall Quality:</span>
                       <div className="flex items-center gap-2">
-                        <Progress value={lastAnalysisResult.imageQuality} className="w-24" />
-                        <span className="font-medium">{Math.round(lastAnalysisResult.imageQuality)}%</span>
+                        <Progress
+                          value={lastAnalysisResult.imageQuality}
+                          className="w-24"
+                        />
+                        <span className="font-medium">
+                          {Math.round(lastAnalysisResult.imageQuality)}%
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -2495,7 +3319,8 @@ export default function Index() {
               </Card>
 
               {/* Errors and Suggestions */}
-              {((lastAnalysisResult?.errors || []).length > 0 || (lastAnalysisResult?.suggestions || []).length > 0) && (
+              {((lastAnalysisResult?.errors || []).length > 0 ||
+                (lastAnalysisResult?.suggestions || []).length > 0) && (
                 <div className="grid md:grid-cols-2 gap-4">
                   {(lastAnalysisResult?.errors || []).length > 0 && (
                     <Card>
@@ -2507,12 +3332,17 @@ export default function Index() {
                       </CardHeader>
                       <CardContent>
                         <ul className="space-y-2">
-                          {(lastAnalysisResult?.errors || []).map((error, index) => (
-                            <li key={index} className="flex items-start gap-2 text-sm">
-                              <div className="w-2 h-2 bg-red-500 rounded-full mt-2 flex-shrink-0"></div>
-                              {error}
-                            </li>
-                          ))}
+                          {(lastAnalysisResult?.errors || []).map(
+                            (error, index) => (
+                              <li
+                                key={index}
+                                className="flex items-start gap-2 text-sm"
+                              >
+                                <div className="w-2 h-2 bg-red-500 rounded-full mt-2 flex-shrink-0"></div>
+                                {error}
+                              </li>
+                            ),
+                          )}
                         </ul>
                       </CardContent>
                     </Card>
@@ -2528,12 +3358,17 @@ export default function Index() {
                       </CardHeader>
                       <CardContent>
                         <ul className="space-y-2">
-                          {(lastAnalysisResult?.suggestions || []).map((suggestion, index) => (
-                            <li key={index} className="flex items-start gap-2 text-sm">
-                              <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-                              {suggestion}
-                            </li>
-                          ))}
+                          {(lastAnalysisResult?.suggestions || []).map(
+                            (suggestion, index) => (
+                              <li
+                                key={index}
+                                className="flex items-start gap-2 text-sm"
+                              >
+                                <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                                {suggestion}
+                              </li>
+                            ),
+                          )}
                         </ul>
                       </CardContent>
                     </Card>
@@ -2548,38 +3383,85 @@ export default function Index() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {(lastAnalysisResult?.detectedPlants || []).map((plant, index) => (
-                      <div key={plant.id} className="border rounded-lg p-4">
-                        <div className="flex items-start gap-4">
-                          <img
-                            src={plant.image}
-                            alt={plant.name}
-                            className="w-16 h-16 rounded-lg object-cover"
-                          />
-                          <div className="flex-1">
-                            <h4 className="font-semibold">{plant.name}</h4>
-                            <p className="text-sm text-gray-600 italic">{plant.scientificName}</p>
+                    {(lastAnalysisResult?.detectedPlants || []).map(
+                      (plant, index) => (
+                        <div key={plant.id} className="border rounded-lg p-4">
+                          <div className="flex items-start gap-4">
+                            <img
+                              src={plant.image}
+                              alt={plant.name}
+                              className="w-16 h-16 rounded-lg object-cover"
+                            />
+                            <div className="flex-1">
+                              <h4 className="font-semibold">{plant.name}</h4>
+                              <p className="text-sm text-gray-600 italic">
+                                {plant.scientificName}
+                              </p>
 
-                            {plant.detectionMetadata && (
-                              <div className="mt-2 space-y-2">
-                                <div className="flex items-center gap-4 text-sm">
-                                  <span>Confidence: <strong>{Math.round(plant.confidence * 100)}%</strong></span>
-                                  <span>Health: <strong>{plant.detectionMetadata.plantHealth}</strong></span>
-                                  <span>Stage: <strong>{plant.detectionMetadata.growthStage}</strong></span>
-                                </div>
+                              {plant.detectionMetadata && (
+                                <div className="mt-2 space-y-2">
+                                  <div className="flex items-center gap-4 text-sm">
+                                    <span>
+                                      Confidence:{" "}
+                                      <strong>
+                                        {Math.round(plant.confidence * 100)}%
+                                      </strong>
+                                    </span>
+                                    <span>
+                                      Health:{" "}
+                                      <strong>
+                                        {plant.detectionMetadata.plantHealth}
+                                      </strong>
+                                    </span>
+                                    <span>
+                                      Stage:{" "}
+                                      <strong>
+                                        {plant.detectionMetadata.growthStage}
+                                      </strong>
+                                    </span>
+                                  </div>
 
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
-                                  <div>Leaf Shape: {Math.round(plant.detectionMetadata.certaintyFactors.leafShape * 100)}%</div>
-                                  <div>Flowers: {Math.round(plant.detectionMetadata.certaintyFactors.flowerStructure * 100)}%</div>
-                                  <div>Stem: {Math.round(plant.detectionMetadata.certaintyFactors.stemCharacteristics * 100)}%</div>
-                                  <div>Overall: {Math.round(plant.detectionMetadata.certaintyFactors.overallMorphology * 100)}%</div>
+                                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+                                    <div>
+                                      Leaf Shape:{" "}
+                                      {Math.round(
+                                        plant.detectionMetadata.certaintyFactors
+                                          .leafShape * 100,
+                                      )}
+                                      %
+                                    </div>
+                                    <div>
+                                      Flowers:{" "}
+                                      {Math.round(
+                                        plant.detectionMetadata.certaintyFactors
+                                          .flowerStructure * 100,
+                                      )}
+                                      %
+                                    </div>
+                                    <div>
+                                      Stem:{" "}
+                                      {Math.round(
+                                        plant.detectionMetadata.certaintyFactors
+                                          .stemCharacteristics * 100,
+                                      )}
+                                      %
+                                    </div>
+                                    <div>
+                                      Overall:{" "}
+                                      {Math.round(
+                                        plant.detectionMetadata.certaintyFactors
+                                          .overallMorphology * 100,
+                                      )}
+                                      %
+                                    </div>
+                                  </div>
                                 </div>
-                              </div>
-                            )}
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      ),
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -2589,21 +3471,26 @@ export default function Index() {
       </Dialog>
 
       {/* Enhanced Plant Information Modal */}
-      <Dialog open={!!selectedPlantInfo} onOpenChange={() => setSelectedPlantInfo(null)}>
+      <Dialog
+        open={!!selectedPlantInfo}
+        onOpenChange={() => setSelectedPlantInfo(null)}
+      >
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
           {selectedPlantInfo && (
             <div>
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-3 text-2xl">
-                  <img 
-                    src={selectedPlantInfo.image} 
+                  <img
+                    src={selectedPlantInfo.image}
                     alt={selectedPlantInfo.name}
                     className="w-12 h-12 rounded-xl object-cover"
                   />
                   <div>
                     <div className="flex items-center gap-2">
                       {selectedPlantInfo.name}
-                      <Badge className={categoryColors[selectedPlantInfo.category]}>
+                      <Badge
+                        className={categoryColors[selectedPlantInfo.category]}
+                      >
                         {selectedPlantInfo.category}
                       </Badge>
                     </div>
@@ -2613,7 +3500,7 @@ export default function Index() {
                   </div>
                 </DialogTitle>
               </DialogHeader>
-              
+
               <Tabs defaultValue="overview" className="mt-6">
                 <TabsList className="grid w-full grid-cols-4">
                   <TabsTrigger value="overview">Overview</TabsTrigger>
@@ -2621,7 +3508,7 @@ export default function Index() {
                   <TabsTrigger value="growing">Growing Guide</TabsTrigger>
                   <TabsTrigger value="preparation">Preparation</TabsTrigger>
                 </TabsList>
-                
+
                 <TabsContent value="overview" className="space-y-6">
                   <div className="grid md:grid-cols-2 gap-6">
                     <div>
@@ -2629,7 +3516,12 @@ export default function Index() {
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
                           <span className="text-gray-600">Difficulty:</span>
-                          <Badge variant="outline" className={difficultyColors[selectedPlantInfo.difficulty]}>
+                          <Badge
+                            variant="outline"
+                            className={
+                              difficultyColors[selectedPlantInfo.difficulty]
+                            }
+                          >
                             {selectedPlantInfo.difficulty}
                           </Badge>
                         </div>
@@ -2642,94 +3534,127 @@ export default function Index() {
                           <div className="flex items-center gap-1">
                             <Star className="w-4 h-4 text-yellow-400 fill-current" />
                             <span>{selectedPlantInfo.rating}</span>
-                            <span className="text-gray-500">({selectedPlantInfo.reviews} reviews)</span>
+                            <span className="text-gray-500">
+                              ({selectedPlantInfo.reviews} reviews)
+                            </span>
                           </div>
                         </div>
                       </div>
                     </div>
-                    
+
                     <div>
                       <h4 className="font-semibold mb-3">Key Benefits</h4>
                       <ul className="space-y-2">
-                        {(selectedPlantInfo?.benefits || []).map((benefit, index) => (
-                          <li key={index} className="flex items-start gap-2">
-                            <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                            <span className="text-sm">{benefit}</span>
-                          </li>
-                        ))}
+                        {(selectedPlantInfo?.benefits || []).map(
+                          (benefit, index) => (
+                            <li key={index} className="flex items-start gap-2">
+                              <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                              <span className="text-sm">{benefit}</span>
+                            </li>
+                          ),
+                        )}
                       </ul>
                     </div>
                   </div>
-                  
+
                   <div>
                     <h4 className="font-semibold mb-3">Description</h4>
-                    <p className="text-gray-700 leading-relaxed">{selectedPlantInfo.description}</p>
+                    <p className="text-gray-700 leading-relaxed">
+                      {selectedPlantInfo.description}
+                    </p>
                   </div>
                 </TabsContent>
-                
+
                 <TabsContent value="medicinal" className="space-y-4">
                   <div>
-                    <h4 className="font-semibold mb-3">Medicinal Applications</h4>
+                    <h4 className="font-semibold mb-3">
+                      Medicinal Applications
+                    </h4>
                     <div className="grid md:grid-cols-2 gap-4">
-                      {(selectedPlantInfo?.medicinalUses || []).map((use, index) => (
-                        <div key={index} className="p-3 bg-green-50 rounded-lg border border-green-200">
-                          <div className="flex items-start gap-2">
-                            <Heart className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
-                            <span className="text-sm">{use}</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  {(selectedPlantInfo?.warnings || []).length > 0 && (
-                    <div>
-                      <h4 className="font-semibold mb-3 text-red-700">Important Warnings</h4>
-                      <div className="space-y-2">
-                        {(selectedPlantInfo?.warnings || []).map((warning, index) => (
-                          <div key={index} className="p-3 bg-red-50 rounded-lg border border-red-200">
+                      {(selectedPlantInfo?.medicinalUses || []).map(
+                        (use, index) => (
+                          <div
+                            key={index}
+                            className="p-3 bg-green-50 rounded-lg border border-green-200"
+                          >
                             <div className="flex items-start gap-2">
-                              <AlertTriangle className="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" />
-                              <span className="text-sm text-red-700">{warning}</span>
+                              <Heart className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                              <span className="text-sm">{use}</span>
                             </div>
                           </div>
-                        ))}
+                        ),
+                      )}
+                    </div>
+                  </div>
+
+                  {(selectedPlantInfo?.warnings || []).length > 0 && (
+                    <div>
+                      <h4 className="font-semibold mb-3 text-red-700">
+                        Important Warnings
+                      </h4>
+                      <div className="space-y-2">
+                        {(selectedPlantInfo?.warnings || []).map(
+                          (warning, index) => (
+                            <div
+                              key={index}
+                              className="p-3 bg-red-50 rounded-lg border border-red-200"
+                            >
+                              <div className="flex items-start gap-2">
+                                <AlertTriangle className="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" />
+                                <span className="text-sm text-red-700">
+                                  {warning}
+                                </span>
+                              </div>
+                            </div>
+                          ),
+                        )}
                       </div>
                     </div>
                   )}
                 </TabsContent>
-                
+
                 <TabsContent value="growing" className="space-y-4">
                   <div className="grid md:grid-cols-2 gap-6">
                     <div className="space-y-4">
                       <div>
-                        <h4 className="font-semibold mb-3">Growing Conditions</h4>
+                        <h4 className="font-semibold mb-3">
+                          Growing Conditions
+                        </h4>
                         <div className="space-y-3">
                           <div className="flex items-center gap-3">
                             <Sun className="w-5 h-5 text-yellow-500" />
                             <div>
                               <span className="font-medium">Sunlight:</span>
-                              <span className="ml-2 capitalize">{selectedPlantInfo.growingConditions.sunlight}</span>
+                              <span className="ml-2 capitalize">
+                                {selectedPlantInfo.growingConditions.sunlight}
+                              </span>
                             </div>
                           </div>
                           <div className="flex items-center gap-3">
                             <Droplets className="w-5 h-5 text-blue-500" />
                             <div>
                               <span className="font-medium">Water:</span>
-                              <span className="ml-2 capitalize">{selectedPlantInfo.growingConditions.water}</span>
+                              <span className="ml-2 capitalize">
+                                {selectedPlantInfo.growingConditions.water}
+                              </span>
                             </div>
                           </div>
                           <div className="flex items-center gap-3">
                             <Thermometer className="w-5 h-5 text-orange-500" />
                             <div>
                               <span className="font-medium">Temperature:</span>
-                              <span className="ml-2">{selectedPlantInfo.growingConditions.temperature}</span>
+                              <span className="ml-2">
+                                {
+                                  selectedPlantInfo.growingConditions
+                                    .temperature
+                                }
+                              </span>
                             </div>
                           </div>
                         </div>
                       </div>
                     </div>
-                    
+
                     <div>
                       <h4 className="font-semibold mb-3">Soil Requirements</h4>
                       <p className="text-gray-700 p-3 bg-gray-50 rounded-lg">
@@ -2738,24 +3663,29 @@ export default function Index() {
                     </div>
                   </div>
                 </TabsContent>
-                
+
                 <TabsContent value="preparation" className="space-y-4">
                   <div>
                     <h4 className="font-semibold mb-3">Preparation Methods</h4>
                     <div className="grid md:grid-cols-2 gap-4">
-                      {(selectedPlantInfo?.preparations || []).map((prep, index) => (
-                        <div key={index} className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                          <div className="flex items-start gap-2">
-                            <BookOpen className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                            <span className="text-sm">{prep}</span>
+                      {(selectedPlantInfo?.preparations || []).map(
+                        (prep, index) => (
+                          <div
+                            key={index}
+                            className="p-3 bg-blue-50 rounded-lg border border-blue-200"
+                          >
+                            <div className="flex items-start gap-2">
+                              <BookOpen className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                              <span className="text-sm">{prep}</span>
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        ),
+                      )}
                     </div>
                   </div>
                 </TabsContent>
               </Tabs>
-              
+
               <div className="flex gap-3 mt-6 pt-6 border-t">
                 <Button
                   onClick={() => {
