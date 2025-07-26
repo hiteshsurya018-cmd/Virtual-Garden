@@ -1226,6 +1226,54 @@ export default function Index() {
     }
   };
 
+  // Handle adding plants from library to garden
+  const handleAddPlantFromLibrary = (plant: Plant) => {
+    const newPlantPosition: PlantPosition = {
+      id: Math.random().toString(36).substr(2, 9),
+      plantId: plant.id,
+      x: (Math.random() - 0.5) * 8, // Random position within garden bounds
+      y: 0,
+      z: (Math.random() - 0.5) * 8,
+      rotation: Math.random() * Math.PI * 2,
+      scale: 0.8 + Math.random() * 0.4,
+      growthStage: Math.random() * 0.3 + 0.2 // Start with some growth
+    };
+
+    setPlacedPlants(prev => [...prev, newPlantPosition]);
+
+    // Also add to detected plants for visualization
+    const detectedPlant: DetectedPlant = {
+      id: plant.id,
+      name: plant.name,
+      scientificName: plant.scientificName,
+      confidence: 0.95, // High confidence for manually added plants
+      category: plant.category,
+      benefits: plant.medicinalUses,
+      difficulty: plant.growingConditions.difficulty,
+      harvestTime: plant.harvestTime,
+      rating: 4.5 + Math.random() * 0.5,
+      uses: plant.medicinalUses.slice(0, 4),
+      climate: plant.growingConditions.climate.join(', '),
+      soilType: plant.growingConditions.soil,
+      spacing: plant.spacing,
+      sunlight: plant.growingConditions.sunlight,
+      waterNeeds: plant.growingConditions.water,
+      companionPlants: plant.companionPlants.slice(0, 3),
+      toxicity: plant.contraindications.length > 0 ? 'Caution advised' : 'Generally safe',
+      description: plant.description
+    };
+
+    setDetectedPlants(prev => {
+      const existing = prev.find(p => p.id === plant.id);
+      if (!existing) {
+        return [...prev, detectedPlant];
+      }
+      return prev;
+    });
+
+    console.log(`Added ${plant.name} to garden from library`);
+  };
+
   return (
     <div className={`min-h-screen transition-all duration-500 ${isDarkMode ? 'dark bg-gray-900' : 'bg-gradient-to-br from-garden-50 to-nature-50'}`}>
       <AnimatedBackground />
