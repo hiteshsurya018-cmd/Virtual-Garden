@@ -1971,13 +1971,22 @@ export default function Index() {
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <CardTitle className="text-garden-900 dark:text-white">3D Garden Studio</CardTitle>
-                    <Input
-                      value={gardenName}
-                      onChange={(e) => setGardenName(e.target.value)}
-                      className="w-48 text-sm"
-                      placeholder="Garden name..."
-                    />
+                    <CardTitle className="text-garden-900 dark:text-white">
+                      {gardenLayout ? `${gardenLayout.name} - 3D Recreation` : '3D Garden Studio'}
+                    </CardTitle>
+                    {!gardenLayout && (
+                      <Input
+                        value={gardenName}
+                        onChange={(e) => setGardenName(e.target.value)}
+                        className="w-48 text-sm"
+                        placeholder="Garden name..."
+                      />
+                    )}
+                    {gardenLayout && (
+                      <Badge variant="outline" className="bg-green-100 text-green-800">
+                        Real Garden Layout
+                      </Badge>
+                    )}
                   </div>
                   
                   {/* Enhanced Toolbar */}
