@@ -103,6 +103,56 @@ export interface MicroclimaData {
   frostPockets: { x: number; y: number }[];
   hotSpots: { x: number; y: number }[];
   drainageIssues: { x: number; y: number }[];
+  sunlightPatterns: SunlightPattern[];
+  shadowMaps: ShadowMap[];
+  windFlowPatterns: WindPattern[];
+  microzones: Microzone[];
+}
+
+export interface SunlightPattern {
+  id: string;
+  timeOfDay: 'morning' | 'midday' | 'afternoon' | 'evening';
+  season: 'spring' | 'summer' | 'fall' | 'winter';
+  coordinates: { x: number; y: number }[];
+  intensity: number; // 0-100%
+  duration: number; // hours
+  angle: number; // degrees from horizontal
+  qualityScore: number; // overall light quality for plants
+}
+
+export interface ShadowMap {
+  id: string;
+  castingFeature: string; // feature ID that casts shadow
+  affectedArea: { x: number; y: number }[];
+  timeOfDay: string;
+  shadowLength: number;
+  shadowDirection: number; // degrees
+  opacity: number; // 0-100%
+  seasonalVariation: boolean;
+}
+
+export interface WindPattern {
+  id: string;
+  direction: string;
+  strength: 'light' | 'moderate' | 'strong';
+  affectedArea: { x: number; y: number }[];
+  blockingFeatures: string[]; // feature IDs
+  channeling: boolean; // if wind is channeled between structures
+  turbulence: 'low' | 'medium' | 'high';
+}
+
+export interface Microzone {
+  id: string;
+  name: string;
+  coordinates: { x: number; y: number }[];
+  characteristics: {
+    temperature: number; // relative to base temp
+    humidity: number;
+    airflow: 'still' | 'gentle' | 'breezy' | 'windy';
+    lightLevel: 'deep_shade' | 'shade' | 'partial_shade' | 'partial_sun' | 'full_sun';
+    moisture: 'dry' | 'moderate' | 'moist' | 'wet';
+  };
+  influences: string[]; // feature IDs that influence this microzone
 }
 
 export interface LayoutRecommendation {
