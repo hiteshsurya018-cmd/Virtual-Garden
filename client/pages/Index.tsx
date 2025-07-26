@@ -65,6 +65,9 @@ import { BoundingBoxOverlay, PlantDetailModal } from '@/components/BoundingBoxOv
 import SystemStatus from '@/components/SystemStatus';
 import PlantLibrary from '@/components/PlantLibrary';
 import { Plant } from '@/data/plantsDatabase';
+import GardenAnalysisUpload from '@/components/GardenAnalysisUpload';
+import GardenSpaceRecreation from '@/components/GardenSpaceRecreation';
+import { GardenLayout, AnalysisResult } from '@/services/GardenSpatialAnalysis';
 
 interface DetectedPlant {
   id: string;
@@ -411,7 +414,7 @@ const mockPlantDatabase: DetectedPlant[] = [
       sunlight: 'full',
       water: 'low',
       soil: 'Well-draining, alkaline',
-      temperature: '65-75°F (18-24°C)'
+      temperature: '65-75°F (18-24��C)'
     },
     medicinalUses: ['Sore throat', 'Excessive sweating', 'Memory issues', 'Digestive problems'],
     preparations: ['Teas', 'Gargles', 'Tinctures', 'Smoking blends'],
