@@ -979,7 +979,11 @@ export class GardenSpatialAnalysisService {
       ]
     };
     
-    const confidence = Math.min(0.95, 0.6 + (greenRatio * 0.2) + (brightRatio * 0.15));
+    const confidence = Math.min(0.95, 0.7 +
+      (analysis.greenRatio * 0.15) +
+      (analysis.brightRatio * 0.1) +
+      (analysis.structures.length * 0.05) +
+      (analysis.openings.length * 0.03));
     
     return {
       confidence,
