@@ -1576,6 +1576,68 @@ export default function Index() {
               </CardContent>
             </Card>
 
+            {/* Garden Space Analysis */}
+            <Card className="shadow-2xl border-garden-200/50 dark:border-gray-700/50 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-garden-900 dark:text-white">
+                  <Home className="w-5 h-5" />
+                  Garden Space Analysis
+                  {gardenLayout && (
+                    <Badge variant="secondary" className="ml-auto">
+                      {gardenLayout.dimensions.estimatedArea.toFixed(0)}m²
+                    </Badge>
+                  )}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4">
+                {!gardenLayout ? (
+                  <GardenAnalysisUpload
+                    onAnalysisComplete={handleAnalysisComplete}
+                    onLayoutSelected={handleLayoutSelected}
+                  />
+                ) : (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="font-medium">{gardenLayout.name}</div>
+                        <div className="text-sm text-gray-600">
+                          {gardenLayout.dimensions.width.toFixed(1)}m × {gardenLayout.dimensions.height.toFixed(1)}m
+                        </div>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setGardenLayout(null);
+                          setAnalysisResult(null);
+                        }}
+                      >
+                        <Upload className="w-4 h-4 mr-1" />
+                        New
+                      </Button>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-2 text-xs">
+                      <div className="text-center p-2 bg-blue-50 rounded">
+                        <div className="font-medium">{gardenLayout.zones.length}</div>
+                        <div className="text-gray-600">Zones</div>
+                      </div>
+                      <div className="text-center p-2 bg-green-50 rounded">
+                        <div className="font-medium">{gardenLayout.features.length}</div>
+                        <div className="text-gray-600">Features</div>
+                      </div>
+                      <div className="text-center p-2 bg-orange-50 rounded">
+                        <div className="font-medium">
+                          {gardenLayout.zones.reduce((sum, zone) => sum + zone.capacity, 0)}
+                        </div>
+                        <div className="text-gray-600">Capacity</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
             {/* Enhanced Plant Library */}
             <Card className="shadow-2xl border-garden-200/50 dark:border-gray-700/50 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
               <CardContent className="p-4">
