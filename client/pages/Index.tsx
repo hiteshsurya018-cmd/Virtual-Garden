@@ -414,7 +414,7 @@ const mockPlantDatabase: DetectedPlant[] = [
       sunlight: 'full',
       water: 'low',
       soil: 'Well-draining, alkaline',
-      temperature: '65-75°F (18-24��C)'
+      temperature: '65-75°F (18-24°C)'
     },
     medicinalUses: ['Sore throat', 'Excessive sweating', 'Memory issues', 'Digestive problems'],
     preparations: ['Teas', 'Gargles', 'Tinctures', 'Smoking blends'],
@@ -898,6 +898,9 @@ export default function Index() {
   const [enableStrictMode, setEnableStrictMode] = useState(false);
   const [maxDetections, setMaxDetections] = useState(5);
   const [showSystemStatus, setShowSystemStatus] = useState(false);
+  const [gardenLayout, setGardenLayout] = useState<GardenLayout | null>(null);
+  const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
+  const [activeTab, setActiveTab] = useState<'upload' | 'library' | 'analysis' | 'garden'>('upload');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
