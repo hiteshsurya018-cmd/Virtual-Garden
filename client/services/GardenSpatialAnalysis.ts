@@ -1082,6 +1082,68 @@ export class GardenSpatialAnalysisService {
     };
   }
 
+  // Helper methods for enhanced analysis
+  private calculatePolygonArea(coordinates: { x: number; y: number }[]): number {
+    if (coordinates.length < 3) return 0;
+
+    let area = 0;
+    for (let i = 0; i < coordinates.length; i++) {
+      const j = (i + 1) % coordinates.length;
+      area += coordinates[i].x * coordinates[j].y;
+      area -= coordinates[j].x * coordinates[i].y;
+    }
+    return Math.abs(area) / 2;
+  }
+
+  private analyzeWindPatterns(features: GardenFeature[], width: number, height: number): WindPattern[] {
+    const patterns: WindPattern[] = [];
+
+    // Find wind-blocking features
+    const blockingFeatures = features.filter(f =>
+      f.type === 'wall' || f.type === 'building' || f.type === 'fence'
+    );
+
+    if (blockingFeatures.length > 0) {
+      // Create wind shadow behind blocking features
+      blockingFeatures.forEach((feature, index) => {
+        const shadowArea = [
+          { x: feature.coordinates[0].x, y: feature.coordinates[0].y },
+          { x: feature.coordinates[0].x - 3, y: feature.coordinates[0].y },
+          { x: feature.coordinates[0].x - 3, y: feature.coordinates[0].y + (feature.dimensions.depth || 5) },
+          { x: feature.coordinates[0].x, y: feature.coordinates[0].y + (feature.dimensions.depth || 5) }
+        ];
+
+        patterns.push({
+          id: `wind-shadow-${index}`,
+          direction: 'variable',
+          strength: 'light',
+          affectedArea: shadowArea,
+          blockingFeatures: [feature.id],
+          channeling: false,
+          turbulence: 'low'
+        });
+      });
+    }
+
+    // Detect wind channeling between buildings
+    if (blockingFeatures.length >= 2) {
+      patterns.push({
+        id: 'wind-channel',
+        direction: 'southwest',
+        strength: 'moderate',
+        affectedArea: [
+          { x: width * 0.2, y: height * 0.3 },
+          { x: width * 0.8, y: height * 0.7 }
+        ],
+        blockingFeatures: blockingFeatures.slice(0, 2).map(f => f.id),
+        channeling: true,
+        turbulence: 'medium'
+      });
+    }
+
+    return patterns;
+  }
+
   // Helper methods for garden planning
   canPlaceAt(x: number, y: number, layout: GardenLayout, plantSpacing: number = 0.5): boolean {
     // Check if position conflicts with existing features
