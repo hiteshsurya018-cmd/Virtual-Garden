@@ -613,14 +613,10 @@ export class GardenSpatialAnalysisService {
     };
   }
 
-  private generateGardenLayout(
+  private generateAdvancedGardenLayout(
     imageWidth: number,
     imageHeight: number,
-    greenRatio: number,
-    brownRatio: number,
-    grayRatio: number,
-    brightRatio: number,
-    darkRatio: number,
+    analysis: any,
     filename: string
   ) {
     // Estimate real-world dimensions (assuming typical garden photo)
