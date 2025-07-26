@@ -787,50 +787,122 @@ export class GardenSpatialAnalysisService {
       });
     }
     
-    // Detect sunny and shady areas
-    if (brightRatio > 0.2) {
-      zones.push({
-        id: 'sunny-zone',
-        name: 'Sunny Area',
-        type: 'planting',
-        coordinates: [
-          { x: estimatedWidth * 0.1, y: estimatedHeight * 0.1 },
-          { x: estimatedWidth * 0.9, y: estimatedHeight * 0.4 }
-        ],
-        area: estimatedWidth * 0.8 * estimatedHeight * 0.3,
-        conditions: {
-          sunlight: 'full',
-          soilType: 'loam',
-          drainage: 'good',
-          windExposure: 'moderate',
-          accessibility: 'easy'
-        },
-        suitablePlants: ['basil', 'rosemary', 'lavender', 'echinacea'],
-        capacity: Math.floor((estimatedWidth * 0.8 * estimatedHeight * 0.3) / 0.5)
-      });
-    }
-    
-    if (darkRatio > 0.2) {
-      zones.push({
-        id: 'shady-zone',
-        name: 'Shade Area',
-        type: 'planting',
-        coordinates: [
-          { x: estimatedWidth * 0.1, y: estimatedHeight * 0.6 },
-          { x: estimatedWidth * 0.9, y: estimatedHeight * 0.9 }
-        ],
-        area: estimatedWidth * 0.8 * estimatedHeight * 0.3,
-        conditions: {
-          sunlight: 'shade',
-          soilType: 'loam',
-          drainage: 'moderate',
-          windExposure: 'low',
-          accessibility: 'easy'
-        },
-        suitablePlants: ['lemon-balm', 'mint', 'ginseng-american'],
-        capacity: Math.floor((estimatedWidth * 0.8 * estimatedHeight * 0.3) / 0.6)
-      });
-    }
+    // Advanced sunlight and microclimate zone analysis
+    const sunlightPatterns: SunlightPattern[] = [];
+    const shadowMaps: ShadowMap[] = [];
+    const microzones: Microzone[] = [];
+
+    // Analyze sunlight patterns from image analysis
+    analysis.sunlightPatterns.forEach((pattern: any, index: number) => {
+      const realArea = pattern.area.map((point: any) => ({
+        x: (point.x / imageWidth) * estimatedWidth,
+        y: (point.y / imageHeight) * estimatedHeight
+      }));
+
+      if (pattern.type === 'bright_light') {
+        sunlightPatterns.push({
+          id: `sunlight-${index}`,
+          timeOfDay: 'midday',
+          season: 'summer',
+          coordinates: realArea,
+          intensity: pattern.intensity * 100,
+          duration: 6,
+          angle: 60,
+          qualityScore: 90
+        });
+
+        // Create sunny planting zone
+        zones.push({
+          id: `sunny-zone-${index}`,
+          name: `Sunny Area ${index + 1}`,
+          type: 'planting',
+          coordinates: realArea,
+          area: this.calculatePolygonArea(realArea),
+          conditions: {
+            sunlight: 'full',
+            soilType: 'loam',
+            drainage: 'good',
+            windExposure: 'moderate',
+            accessibility: 'easy'
+          },
+          suitablePlants: ['basil', 'rosemary', 'lavender', 'echinacea', 'thyme'],
+          capacity: Math.floor(this.calculatePolygonArea(realArea) / 0.4)
+        });
+      } else if (pattern.type === 'shadow') {
+        // Find the feature casting this shadow
+        const castingFeature = features.find(f => f.type === 'wall' || f.type === 'building');
+
+        shadowMaps.push({
+          id: `shadow-${index}`,
+          castingFeature: castingFeature?.id || 'unknown',
+          affectedArea: realArea,
+          timeOfDay: 'afternoon',
+          shadowLength: Math.sqrt(this.calculatePolygonArea(realArea)),
+          shadowDirection: 270, // west
+          opacity: 70,
+          seasonalVariation: true
+        });
+
+        // Create shade planting zone
+        zones.push({
+          id: `shade-zone-${index}`,
+          name: `Shade Area ${index + 1}`,
+          type: 'planting',
+          coordinates: realArea,
+          area: this.calculatePolygonArea(realArea),
+          conditions: {
+            sunlight: 'shade',
+            soilType: 'loam',
+            drainage: 'moderate',
+            windExposure: 'low',
+            accessibility: 'easy'
+          },
+          suitablePlants: ['lemon-balm', 'mint', 'ginseng-american', 'chamomile'],
+          capacity: Math.floor(this.calculatePolygonArea(realArea) / 0.6)
+        });
+      }
+    });
+
+    // Create microzones based on architectural features and their influence
+    features.forEach(feature => {
+      if (feature.type === 'wall') {
+        // Create microzone near wall (reflected heat, wind protection)
+        microzones.push({
+          id: `microzone-${feature.id}`,
+          name: `Wall Microzone`,
+          coordinates: [
+            { x: feature.coordinates[0].x - 2, y: feature.coordinates[0].y },
+            { x: feature.coordinates[0].x - 0.5, y: feature.coordinates[1].y }
+          ],
+          characteristics: {
+            temperature: 2, // 2°C warmer
+            humidity: -5, // drier
+            airflow: 'still',
+            lightLevel: feature.properties.orientation === 'south' ? 'full_sun' : 'partial_shade',
+            moisture: 'dry'
+          },
+          influences: [feature.id]
+        });
+      } else if (feature.type === 'window') {
+        // Create bright microzone from window reflection
+        microzones.push({
+          id: `microzone-${feature.id}`,
+          name: `Window Reflection Zone`,
+          coordinates: [
+            { x: feature.coordinates[0].x - 1, y: feature.coordinates[0].y - 1 },
+            { x: feature.coordinates[0].x + 1, y: feature.coordinates[0].y + 1 }
+          ],
+          characteristics: {
+            temperature: 1,
+            humidity: 0,
+            airflow: 'gentle',
+            lightLevel: 'full_sun',
+            moisture: 'moderate'
+          },
+          influences: [feature.id]
+        });
+      }
+    });
     
     // Create planting areas
     zones.forEach(zone => {
