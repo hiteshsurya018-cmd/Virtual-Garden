@@ -12,17 +12,17 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
-import { 
-  Upload, 
-  ZoomIn, 
-  ZoomOut, 
-  Camera, 
-  Sun, 
-  Moon, 
-  Save, 
-  RotateCcw, 
-  Download, 
-  Grid3X3, 
+import {
+  Upload,
+  ZoomIn,
+  ZoomOut,
+  Camera,
+  Sun,
+  Moon,
+  Save,
+  RotateCcw,
+  Download,
+  Grid3X3,
   Leaf,
   Heart,
   Shield,
@@ -57,7 +57,8 @@ import {
   CheckCircle,
   Archive,
   Share2,
-  Copy
+  Copy,
+  Home
 } from 'lucide-react';
 import * as THREE from 'three';
 import { PlantDetectionAPI, DetectedPlant as APIDetectedPlant } from '@/services/PlantDetectionAPI';
