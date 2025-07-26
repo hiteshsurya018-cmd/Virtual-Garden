@@ -239,59 +239,378 @@ export class GardenSpatialAnalysisService {
 
   private analyzeImageFeatures(imageData: ImageData | undefined, width: number, height: number, filename: string) {
     if (!imageData) return this.getFallbackAnalysisData();
-    
+
     const data = imageData.data;
-    let greenArea = 0;
-    let brownArea = 0;
-    let grayArea = 0;
-    let brightAreas = 0;
-    let darkAreas = 0;
-    
-    // Analyze color patterns to identify features
-    for (let i = 0; i < data.length; i += 4) {
-      const r = data[i];
-      const g = data[i + 1];
-      const b = data[i + 2];
-      const brightness = (r + g + b) / 3;
-      
-      // Detect green areas (vegetation)
-      if (g > r && g > b && g > 100) {
-        greenArea++;
-      }
-      
-      // Detect brown areas (soil, paths)
-      if (r > 100 && g > 80 && b < 100 && Math.abs(r - g) < 50) {
-        brownArea++;
-      }
-      
-      // Detect gray areas (structures, paths)
-      if (Math.abs(r - g) < 20 && Math.abs(g - b) < 20 && r > 80 && r < 180) {
-        grayArea++;
-      }
-      
-      // Track brightness for sun/shade analysis
-      if (brightness > 200) brightAreas++;
-      if (brightness < 80) darkAreas++;
-    }
-    
-    const totalPixels = data.length / 4;
-    const greenRatio = greenArea / totalPixels;
-    const brownRatio = brownArea / totalPixels;
-    const grayRatio = grayArea / totalPixels;
-    const brightRatio = brightAreas / totalPixels;
-    const darkRatio = darkAreas / totalPixels;
-    
-    // Generate realistic garden layout based on analysis
-    return this.generateGardenLayout(
+
+    // Enhanced color and pattern analysis
+    const analysis = this.performAdvancedImageAnalysis(data, width, height);
+
+    // Generate realistic garden layout with architectural features
+    return this.generateAdvancedGardenLayout(
       width,
       height,
-      greenRatio,
-      brownRatio,
-      grayRatio,
-      brightRatio,
-      darkRatio,
+      analysis,
       filename
     );
+  }
+
+  private performAdvancedImageAnalysis(data: Uint8ClampedArray, width: number, height: number) {
+    let greenArea = 0, brownArea = 0, grayArea = 0, brightAreas = 0, darkAreas = 0;
+    let whiteAreas = 0, blueAreas = 0, redBrickAreas = 0, woodAreas = 0;
+    let glassSurfaces = 0, metallicSurfaces = 0, concreteSurfaces = 0;
+
+    // Edge detection data for structural analysis
+    const edges: boolean[][] = [];
+    const shadows: boolean[][] = [];
+    const highlights: boolean[][] = [];
+
+    // Initialize 2D arrays
+    for (let y = 0; y < height; y++) {
+      edges[y] = [];
+      shadows[y] = [];
+      highlights[y] = [];
+    }
+
+    // Color and texture analysis
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const i = (y * width + x) * 4;
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+        const brightness = (r + g + b) / 3;
+
+        // Basic color detection
+        if (g > r && g > b && g > 100) greenArea++;
+        if (r > 100 && g > 80 && b < 100 && Math.abs(r - g) < 50) brownArea++;
+        if (Math.abs(r - g) < 20 && Math.abs(g - b) < 20 && r > 80 && r < 180) grayArea++;
+
+        // Advanced material detection
+
+        // White/light surfaces (walls, concrete)
+        if (r > 200 && g > 200 && b > 200) {
+          whiteAreas++;
+          concreteSurfaces++;
+        }
+
+        // Blue areas (windows, sky reflection, water)
+        if (b > r && b > g && b > 120) {
+          blueAreas++;
+          if (brightness > 150) glassSurfaces++; // bright blue = glass reflection
+        }
+
+        // Red brick detection
+        if (r > 120 && r > g && r > b && g < 100 && b < 100) {
+          redBrickAreas++;
+        }
+
+        // Wood detection (brown with texture)
+        if (r > 80 && g > 60 && b < 80 && r > g && g > b) {
+          woodAreas++;
+        }
+
+        // Metallic surfaces (uniform gray with highlights)
+        if (Math.abs(r - g) < 15 && Math.abs(g - b) < 15 && brightness > 100 && brightness < 200) {
+          metallicSurfaces++;
+        }
+
+        // Track brightness patterns
+        if (brightness > 220) {
+          brightAreas++;
+          highlights[y][x] = true;
+        } else {
+          highlights[y][x] = false;
+        }
+
+        if (brightness < 60) {
+          darkAreas++;
+          shadows[y][x] = true;
+        } else {
+          shadows[y][x] = false;
+        }
+
+        // Edge detection (simple Sobel operator)
+        if (x > 0 && y > 0 && x < width - 1 && y < height - 1) {
+          const gx = this.getSobelX(data, x, y, width);
+          const gy = this.getSobelY(data, x, y, width);
+          const magnitude = Math.sqrt(gx * gx + gy * gy);
+          edges[y][x] = magnitude > 50; // threshold for edge detection
+        }
+      }
+    }
+
+    // Architectural feature detection
+    const structures = this.detectStructuralFeatures(edges, shadows, highlights, width, height);
+    const sunlightPatterns = this.analyzeSunlightPatterns(shadows, highlights, width, height);
+    const openings = this.detectDoorsAndWindows(edges, data, width, height);
+
+    const totalPixels = data.length / 4;
+
+    return {
+      // Basic ratios
+      greenRatio: greenArea / totalPixels,
+      brownRatio: brownArea / totalPixels,
+      grayRatio: grayArea / totalPixels,
+      brightRatio: brightAreas / totalPixels,
+      darkRatio: darkAreas / totalPixels,
+
+      // Advanced material ratios
+      whiteRatio: whiteAreas / totalPixels,
+      blueRatio: blueAreas / totalPixels,
+      brickRatio: redBrickAreas / totalPixels,
+      woodRatio: woodAreas / totalPixels,
+      glassRatio: glassSurfaces / totalPixels,
+      metallicRatio: metallicSurfaces / totalPixels,
+      concreteRatio: concreteSurfaces / totalPixels,
+
+      // Structural analysis
+      structures,
+      sunlightPatterns,
+      openings,
+      edgeMap: edges,
+      shadowMap: shadows,
+      highlightMap: highlights
+    };
+  }
+
+  private getSobelX(data: Uint8ClampedArray, x: number, y: number, width: number): number {
+    const getPixel = (px: number, py: number) => {
+      const i = (py * width + px) * 4;
+      return (data[i] + data[i + 1] + data[i + 2]) / 3;
+    };
+
+    return (
+      -1 * getPixel(x - 1, y - 1) +
+      -2 * getPixel(x - 1, y) +
+      -1 * getPixel(x - 1, y + 1) +
+      1 * getPixel(x + 1, y - 1) +
+      2 * getPixel(x + 1, y) +
+      1 * getPixel(x + 1, y + 1)
+    );
+  }
+
+  private getSobelY(data: Uint8ClampedArray, x: number, y: number, width: number): number {
+    const getPixel = (px: number, py: number) => {
+      const i = (py * width + px) * 4;
+      return (data[i] + data[i + 1] + data[i + 2]) / 3;
+    };
+
+    return (
+      -1 * getPixel(x - 1, y - 1) +
+      -2 * getPixel(x, y - 1) +
+      -1 * getPixel(x + 1, y - 1) +
+      1 * getPixel(x - 1, y + 1) +
+      2 * getPixel(x, y + 1) +
+      1 * getPixel(x + 1, y + 1)
+    );
+  }
+
+  private detectStructuralFeatures(edges: boolean[][], shadows: boolean[][], highlights: boolean[][], width: number, height: number) {
+    const structures = [];
+
+    // Find long horizontal edges (likely walls or roof lines)
+    for (let y = 0; y < height; y++) {
+      let edgeStart = -1;
+      let edgeLength = 0;
+
+      for (let x = 0; x < width; x++) {
+        if (edges[y][x]) {
+          if (edgeStart === -1) edgeStart = x;
+          edgeLength++;
+        } else {
+          if (edgeLength > width * 0.3) { // Long horizontal edge
+            structures.push({
+              type: 'horizontal_edge',
+              start: { x: edgeStart, y },
+              end: { x: edgeStart + edgeLength, y },
+              length: edgeLength,
+              confidence: Math.min(1, edgeLength / (width * 0.5))
+            });
+          }
+          edgeStart = -1;
+          edgeLength = 0;
+        }
+      }
+    }
+
+    // Find long vertical edges (likely wall corners or door frames)
+    for (let x = 0; x < width; x++) {
+      let edgeStart = -1;
+      let edgeLength = 0;
+
+      for (let y = 0; y < height; y++) {
+        if (edges[y][x]) {
+          if (edgeStart === -1) edgeStart = y;
+          edgeLength++;
+        } else {
+          if (edgeLength > height * 0.2) { // Long vertical edge
+            structures.push({
+              type: 'vertical_edge',
+              start: { x, y: edgeStart },
+              end: { x, y: edgeStart + edgeLength },
+              length: edgeLength,
+              confidence: Math.min(1, edgeLength / (height * 0.4))
+            });
+          }
+          edgeStart = -1;
+          edgeLength = 0;
+        }
+      }
+    }
+
+    return structures;
+  }
+
+  private analyzeSunlightPatterns(shadows: boolean[][], highlights: boolean[][], width: number, height: number) {
+    const patterns = [];
+
+    // Find large shadow areas
+    const shadowClusters = this.findClusters(shadows, width, height, false);
+    shadowClusters.forEach((cluster, index) => {
+      if (cluster.size > (width * height) * 0.05) { // At least 5% of image
+        patterns.push({
+          type: 'shadow',
+          id: `shadow-${index}`,
+          area: cluster.points,
+          size: cluster.size,
+          center: cluster.center,
+          intensity: 0.2 // shadows reduce light to 20%
+        });
+      }
+    });
+
+    // Find bright areas (direct sunlight)
+    const lightClusters = this.findClusters(highlights, width, height, true);
+    lightClusters.forEach((cluster, index) => {
+      if (cluster.size > (width * height) * 0.03) { // At least 3% of image
+        patterns.push({
+          type: 'bright_light',
+          id: `light-${index}`,
+          area: cluster.points,
+          size: cluster.size,
+          center: cluster.center,
+          intensity: 1.0 // full sunlight
+        });
+      }
+    });
+
+    return patterns;
+  }
+
+  private detectDoorsAndWindows(edges: boolean[][], data: Uint8ClampedArray, width: number, height: number) {
+    const openings = [];
+
+    // Look for rectangular shapes with high contrast edges
+    for (let y = 10; y < height - 10; y += 5) {
+      for (let x = 10; x < width - 10; x += 5) {
+        const rect = this.analyzeRectangularRegion(edges, data, x, y, width, height);
+
+        if (rect.isLikelyOpening) {
+          openings.push({
+            type: rect.aspectRatio > 2 ? 'door' : 'window',
+            center: { x: rect.centerX, y: rect.centerY },
+            dimensions: { width: rect.width, height: rect.height },
+            confidence: rect.confidence,
+            glassDetected: rect.hasGlassSignature,
+            frameDetected: rect.hasFrameEdges
+          });
+        }
+      }
+    }
+
+    return openings;
+  }
+
+  private analyzeRectangularRegion(edges: boolean[][], data: Uint8ClampedArray, startX: number, startY: number, imgWidth: number, imgHeight: number) {
+    // Analyze a small region for door/window characteristics
+    const regionSize = 20;
+    let edgeCount = 0;
+    let glassSignature = 0;
+    let avgBrightness = 0;
+    let pixelCount = 0;
+
+    for (let y = startY; y < Math.min(startY + regionSize, imgHeight); y++) {
+      for (let x = startX; x < Math.min(startX + regionSize, imgWidth); x++) {
+        if (edges[y] && edges[y][x]) edgeCount++;
+
+        const i = (y * imgWidth + x) * 4;
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+        const brightness = (r + g + b) / 3;
+
+        avgBrightness += brightness;
+
+        // Glass signature: blue tint with high brightness
+        if (b > r && b > g && brightness > 150) {
+          glassSignature++;
+        }
+
+        pixelCount++;
+      }
+    }
+
+    avgBrightness /= pixelCount;
+    const edgeDensity = edgeCount / pixelCount;
+    const glassRatio = glassSignature / pixelCount;
+
+    return {
+      isLikelyOpening: edgeDensity > 0.1 && (avgBrightness > 140 || glassRatio > 0.1),
+      confidence: Math.min(1, edgeDensity * 2 + glassRatio * 3),
+      aspectRatio: regionSize / regionSize, // simplified for this analysis
+      centerX: startX + regionSize / 2,
+      centerY: startY + regionSize / 2,
+      width: regionSize,
+      height: regionSize,
+      hasGlassSignature: glassRatio > 0.05,
+      hasFrameEdges: edgeDensity > 0.15
+    };
+  }
+
+  private findClusters(boolMap: boolean[][], width: number, height: number, targetValue: boolean) {
+    const visited: boolean[][] = Array(height).fill(null).map(() => Array(width).fill(false));
+    const clusters = [];
+
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        if (!visited[y][x] && boolMap[y][x] === targetValue) {
+          const cluster = this.floodFill(boolMap, visited, x, y, width, height, targetValue);
+          if (cluster.size > 10) { // Minimum cluster size
+            clusters.push(cluster);
+          }
+        }
+      }
+    }
+
+    return clusters;
+  }
+
+  private floodFill(boolMap: boolean[][], visited: boolean[][], startX: number, startY: number, width: number, height: number, targetValue: boolean) {
+    const stack = [{ x: startX, y: startY }];
+    const points = [];
+    let totalX = 0, totalY = 0;
+
+    while (stack.length > 0) {
+      const { x, y } = stack.pop()!;
+
+      if (x < 0 || x >= width || y < 0 || y >= height || visited[y][x] || boolMap[y][x] !== targetValue) {
+        continue;
+      }
+
+      visited[y][x] = true;
+      points.push({ x, y });
+      totalX += x;
+      totalY += y;
+
+      // Add adjacent cells
+      stack.push({ x: x + 1, y }, { x: x - 1, y }, { x, y: y + 1 }, { x, y: y - 1 });
+    }
+
+    return {
+      points,
+      size: points.length,
+      center: { x: totalX / points.length, y: totalY / points.length }
+    };
   }
 
   private generateGardenLayout(
