@@ -37,6 +37,115 @@ import {
   PlantingArea,
 } from "../services/GardenSpatialAnalysis";
 
+// 3D Detected Plant Component
+const DetectedPlant3D: React.FC<{
+  plant: DetectedPlant;
+  layout: GardenLayout;
+  onClick?: () => void;
+}> = ({ plant, layout, onClick }) => {
+  const meshRef = useRef<THREE.Mesh>(null);
+  const [hovered, setHovered] = useState(false);
+
+  useFrame((state) => {
+    if (meshRef.current) {
+      meshRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.5) * 0.1;
+      if (hovered) {
+        meshRef.current.position.y = 0.5 + Math.sin(state.clock.elapsedTime * 3) * 0.1;
+      }
+    }
+  });
+
+  const getCategoryColor = (category: string): string => {
+    switch (category) {
+      case "medicinal":
+        return "#10B981";
+      case "herb":
+        return "#059669";
+      case "aromatic":
+        return "#8B5CF6";
+      case "flower":
+        return "#EC4899";
+      case "leafy":
+        return "#22C55E";
+      case "culinary":
+        return "#F59E0B";
+      default:
+        return "#6B7280";
+    }
+  };
+
+  // Convert bbox coordinates to 3D position
+  // Assuming bbox is relative to image dimensions and layout represents real-world meters
+  const bboxCenterX = plant.bbox ? (plant.bbox.x1 + plant.bbox.x2) / 2 : layout.dimensions.width / 2;
+  const bboxCenterY = plant.bbox ? (plant.bbox.y1 + plant.bbox.y2) / 2 : layout.dimensions.height / 2;
+
+  // Convert normalized coordinates to 3D space
+  const x = (bboxCenterX / 500) * layout.dimensions.width - layout.dimensions.width / 2; // Assuming 500px image width
+  const z = (bboxCenterY / 400) * layout.dimensions.height - layout.dimensions.height / 2; // Assuming 400px image height
+
+  const color = getCategoryColor(plant.category);
+  const plantHeight = 0.3 + Math.random() * 0.7; // 0.3-1.0m height
+
+  return (
+    <group position={[x, plantHeight / 2, z]}>
+      {/* Plant stem */}
+      <Box
+        args={[0.1, plantHeight, 0.1]}
+        position={[0, 0, 0]}
+      >
+        <meshStandardMaterial color="#4ADE80" />
+      </Box>
+
+      {/* Plant foliage */}
+      <mesh
+        ref={meshRef}
+        position={[0, plantHeight * 0.7, 0]}
+        onClick={onClick}
+        onPointerEnter={() => setHovered(true)}
+        onPointerLeave={() => setHovered(false)}
+      >
+        <sphereGeometry args={[0.15 + Math.random() * 0.1]} />
+        <meshStandardMaterial
+          color={color}
+          transparent
+          opacity={hovered ? 0.9 : 0.7}
+        />
+      </mesh>
+
+      {/* Confidence indicator */}
+      <mesh position={[0, plantHeight + 0.1, 0]}>
+        <cylinderGeometry args={[0.05, 0.05, 0.02]} />
+        <meshStandardMaterial
+          color={plant.confidence > 0.8 ? "#10B981" : plant.confidence > 0.6 ? "#F59E0B" : "#EF4444"}
+        />
+      </mesh>
+
+      {/* Plant label */}
+      {hovered && (
+        <Html position={[0, plantHeight + 0.3, 0]} center>
+          <div className="bg-white/90 backdrop-blur-sm px-3 py-2 rounded-lg shadow-lg text-xs pointer-events-none max-w-xs">
+            <div className="font-semibold text-gray-800">{plant.name}</div>
+            <div className="text-gray-600 italic text-xs">{plant.scientificName}</div>
+            <div className="flex items-center gap-2 mt-1">
+              <Badge variant="outline" className="text-xs">
+                {Math.round(plant.confidence * 100)}%
+              </Badge>
+              <Badge variant="outline" className="text-xs capitalize">
+                {plant.category}
+              </Badge>
+            </div>
+            {plant.properties && plant.properties.length > 0 && (
+              <div className="text-xs text-gray-500 mt-1">
+                {plant.properties.slice(0, 2).join(", ")}
+              </div>
+            )}
+          </div>
+        </Html>
+      )}
+    </group>
+  );
+};
+
 interface DetectedPlant {
   id: string;
   name: string;
