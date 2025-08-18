@@ -2230,9 +2230,56 @@ export default function Index() {
               </CardHeader>
               <CardContent className="p-4">
                 {!gardenLayout ? (
-                  <GardenAnalysisUpload
-                    onAnalysisComplete={handleAnalysisComplete}
-                    onLayoutSelected={handleLayoutSelected}
+                  <UnifiedGardenAnalysis
+                    onAnalysisComplete={(result) => {
+                      handleAnalysisComplete(result.spatialResult);
+                      handleLayoutSelected(result.gardenLayout);
+                      // Update detected plants
+                      setDetectedPlants(result.detectedPlants.map(plant => ({
+                        ...plant,
+                        detectionMetadata: {
+                          boundingBox: {
+                            x: plant.bbox?.x1 || 0,
+                            y: plant.bbox?.y1 || 0,
+                            width: plant.bbox?.width || 100,
+                            height: plant.bbox?.height || 100,
+                          },
+                          imageQuality: 85,
+                          lightingCondition: "good",
+                          plantHealth: "healthy",
+                          growthStage: "mature",
+                          certaintyFactors: {
+                            leafShape: plant.confidence * 0.9,
+                            flowerStructure: plant.confidence * 0.85,
+                            stemCharacteristics: plant.confidence * 0.8,
+                            overallMorphology: plant.confidence * 0.95,
+                          },
+                        },
+                      })));
+                    }}
+                    onPlantsDetected={(plants) => {
+                      setDetectedPlants(plants.map(plant => ({
+                        ...plant,
+                        detectionMetadata: {
+                          boundingBox: {
+                            x: plant.bbox?.x1 || 0,
+                            y: plant.bbox?.y1 || 0,
+                            width: plant.bbox?.width || 100,
+                            height: plant.bbox?.height || 100,
+                          },
+                          imageQuality: 85,
+                          lightingCondition: "good",
+                          plantHealth: "healthy",
+                          growthStage: "mature",
+                          certaintyFactors: {
+                            leafShape: plant.confidence * 0.9,
+                            flowerStructure: plant.confidence * 0.85,
+                            stemCharacteristics: plant.confidence * 0.8,
+                            overallMorphology: plant.confidence * 0.95,
+                          },
+                        },
+                      })));
+                    }}
                   />
                 ) : (
                   <div className="space-y-4">
