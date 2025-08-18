@@ -574,11 +574,23 @@ export const GardenSpaceRecreation: React.FC<GardenSpaceRecreationProps> = ({
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Route className="w-4 h-4 text-purple-500" />
-              <div>
-                <div className="font-medium">{layout.accessPaths.length}</div>
-                <div className="text-gray-500">Paths</div>
-              </div>
+              {detectedPlants.length > 0 ? (
+                <>
+                  <TreePine className="w-4 h-4 text-emerald-500" />
+                  <div>
+                    <div className="font-medium">{detectedPlants.length}</div>
+                    <div className="text-gray-500">Detected Plants</div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <Route className="w-4 h-4 text-purple-500" />
+                  <div>
+                    <div className="font-medium">{layout.accessPaths.length}</div>
+                    <div className="text-gray-500">Paths</div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </CardContent>
