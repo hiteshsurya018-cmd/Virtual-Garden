@@ -2234,9 +2234,29 @@ export default function Index() {
                     onAnalysisComplete={(result) => {
                       handleAnalysisComplete(result.spatialResult);
                       handleLayoutSelected(result.gardenLayout);
-                      // Update detected plants
-                      setDetectedPlants(result.detectedPlants.map(plant => ({
-                        ...plant,
+                      // Update detected plants with converted format
+                      const convertedPlants = result.detectedPlants.map(plant => ({
+                        id: plant.id,
+                        name: plant.name,
+                        scientificName: plant.scientificName,
+                        confidence: plant.confidence,
+                        category: plant.category,
+                        description: `Detected ${plant.name} plant`,
+                        image: "/placeholder.svg",
+                        benefits: plant.properties || [],
+                        difficulty: "medium" as const,
+                        harvestTime: "Unknown",
+                        growingConditions: {
+                          sunlight: "partial" as const,
+                          water: "medium" as const,
+                          soil: "Well-draining",
+                          temperature: "Variable",
+                        },
+                        medicinalUses: plant.properties || [],
+                        preparations: ["Consult expert"],
+                        warnings: ["Proper identification required"],
+                        rating: Math.round(plant.confidence * 5),
+                        reviews: 0,
                         detectionMetadata: {
                           boundingBox: {
                             x: plant.bbox?.x1 || 0,
@@ -2245,9 +2265,9 @@ export default function Index() {
                             height: plant.bbox?.height || 100,
                           },
                           imageQuality: 85,
-                          lightingCondition: "good",
-                          plantHealth: "healthy",
-                          growthStage: "mature",
+                          lightingCondition: "good" as const,
+                          plantHealth: "healthy" as const,
+                          growthStage: "mature" as const,
                           certaintyFactors: {
                             leafShape: plant.confidence * 0.9,
                             flowerStructure: plant.confidence * 0.85,
@@ -2255,7 +2275,9 @@ export default function Index() {
                             overallMorphology: plant.confidence * 0.95,
                           },
                         },
-                      })));
+                        bbox: plant.bbox,
+                      }));
+                      setDetectedPlants(convertedPlants);
                     }}
                     onPlantsDetected={(plants) => {
                       setDetectedPlants(plants.map(plant => ({
