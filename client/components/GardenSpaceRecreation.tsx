@@ -383,11 +383,13 @@ const GardenZone3D: React.FC<{
 // Main Garden Scene
 const GardenScene: React.FC<{
   layout: GardenLayout;
+  detectedPlants: DetectedPlant[];
   showZones: boolean;
   showConstraints: boolean;
+  showDetectedPlants: boolean;
   onFeatureClick?: (feature: GardenFeature) => void;
   onZoneClick?: (zone: GardenZone) => void;
-}> = ({ layout, showZones, showConstraints, onFeatureClick, onZoneClick }) => {
+}> = ({ layout, detectedPlants, showZones, showConstraints, showDetectedPlants, onFeatureClick, onZoneClick }) => {
   return (
     <>
       {/* Ground plane */}
