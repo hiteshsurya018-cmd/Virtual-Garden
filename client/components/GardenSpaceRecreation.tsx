@@ -37,14 +37,33 @@ import {
   PlantingArea,
 } from "../services/GardenSpatialAnalysis";
 
+interface DetectedPlant {
+  id: string;
+  name: string;
+  scientificName: string;
+  confidence: number;
+  category: string;
+  bbox?: {
+    x1: number;
+    y1: number;
+    x2: number;
+    y2: number;
+    width: number;
+    height: number;
+  };
+  properties?: string[];
+}
+
 interface GardenSpaceRecreationProps {
   layout: GardenLayout | null;
+  detectedPlants?: DetectedPlant[];
   onFeatureClick?: (feature: GardenFeature) => void;
   onZoneClick?: (zone: GardenZone) => void;
   onPlantingAreaClick?: (area: PlantingArea) => void;
   showMeasurements?: boolean;
   showZones?: boolean;
   showConstraints?: boolean;
+  showDetectedPlants?: boolean;
   className?: string;
 }
 
