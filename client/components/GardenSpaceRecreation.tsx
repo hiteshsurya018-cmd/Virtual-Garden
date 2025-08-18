@@ -482,12 +482,14 @@ const GardenScene: React.FC<{
 
 export const GardenSpaceRecreation: React.FC<GardenSpaceRecreationProps> = ({
   layout,
+  detectedPlants = [],
   onFeatureClick,
   onZoneClick,
   onPlantingAreaClick,
   showMeasurements = true,
   showZones = true,
   showConstraints = false,
+  showDetectedPlants = true,
   className = "",
 }) => {
   const [selectedFeature, setSelectedFeature] = useState<GardenFeature | null>(
