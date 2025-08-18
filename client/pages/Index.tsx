@@ -1275,8 +1275,8 @@ export default function Index() {
     null,
   );
   const [activeTab, setActiveTab] = useState<
-    "upload" | "library" | "analysis" | "garden"
-  >("upload");
+    "analysis" | "library"
+  >("analysis");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
