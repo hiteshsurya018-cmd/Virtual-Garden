@@ -1300,6 +1300,10 @@ export class GardenSpatialAnalysisService {
         frostPockets: [],
         hotSpots: [],
         drainageIssues: [],
+        sunlightPatterns: [],
+        shadowMaps: [],
+        windFlowPatterns: [],
+        microzones: [],
       },
       recommendations: [],
     };
