@@ -97,8 +97,7 @@ import {
 import SystemStatus from "@/components/SystemStatus";
 import PlantLibrary from "@/components/PlantLibrary";
 import { Plant } from "@/data/plantsDatabase";
-import GardenAnalysisUpload from "@/components/GardenAnalysisUpload";
-import GardenSpaceRecreation from "@/components/GardenSpaceRecreation";
+import UnifiedGardenAnalysis from "@/components/UnifiedGardenAnalysis";
 import { GardenLayout, AnalysisResult } from "@/services/GardenSpatialAnalysis";
 
 interface DetectedPlant {
