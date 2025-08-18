@@ -106,6 +106,19 @@ const LoginScreen: React.FC = () => {
           </CardHeader>
 
           <CardContent className="space-y-4">
+            {/* Demo credentials notice */}
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="bg-green-50 border border-green-200 rounded-lg p-3 text-center"
+            >
+              <p className="text-sm text-green-700 font-medium">🌱 Try the Demo</p>
+              <p className="text-xs text-green-600 mt-1">
+                Click "Demo Login" or use: <code className="bg-green-100 px-1 rounded">demo@garden.com</code> / <code className="bg-green-100 px-1 rounded">demo123</code>
+              </p>
+            </motion.div>
+
             {error && (
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
