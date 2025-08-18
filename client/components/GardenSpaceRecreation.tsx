@@ -441,6 +441,17 @@ const GardenScene: React.FC<{
         />
       ))}
 
+      {/* Detected Plants */}
+      {showDetectedPlants &&
+        detectedPlants.map((plant) => (
+          <DetectedPlant3D
+            key={plant.id}
+            plant={plant}
+            layout={layout}
+            onClick={() => console.log("Clicked plant:", plant.name)}
+          />
+        ))}
+
       {/* Constraints visualization */}
       {showConstraints &&
         layout.features.map(
