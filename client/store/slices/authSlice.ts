@@ -31,11 +31,40 @@ const initialState: AuthState = {
   error: null,
 };
 
+// Demo credentials for testing
+const DEMO_CREDENTIALS = {
+  email: 'demo@garden.com',
+  password: 'demo123'
+};
+
 // Async thunks
 export const login = createAsyncThunk(
   'auth/login',
   async ({ email, password }: { email: string; password: string }, { rejectWithValue }) => {
     try {
+      // Check for demo credentials first
+      if (email === DEMO_CREDENTIALS.email && password === DEMO_CREDENTIALS.password) {
+        const demoResponse = {
+          user: {
+            id: 'demo-user-123',
+            email: 'demo@garden.com',
+            username: 'demo_gardener',
+            firstName: 'Demo',
+            lastName: 'User',
+            avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=demo',
+            level: 5,
+            experience: 2500,
+            coins: 1250
+          },
+          accessToken: 'demo-access-token',
+          refreshToken: 'demo-refresh-token'
+        };
+        localStorage.setItem('accessToken', demoResponse.accessToken);
+        localStorage.setItem('refreshToken', demoResponse.refreshToken);
+        return demoResponse;
+      }
+
+      // Otherwise, try regular API login
       const response = await authAPI.login(email, password);
       localStorage.setItem('accessToken', response.accessToken);
       localStorage.setItem('refreshToken', response.refreshToken);
