@@ -1216,7 +1216,7 @@ export class GardenSpatialAnalysisService {
         identifiedZones: zones.length,
         estimatedAccuracy: confidence * 100,
         processingTime: 2000,
-        imageQuality: Math.min(100, 60 + brightRatio * 40),
+        imageQuality: Math.min(100, 60 + analysis.brightRatio * 40),
       },
       warnings: confidence < 0.7 ? ["Low lighting may affect accuracy"] : [],
       suggestions: [
