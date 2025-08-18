@@ -1228,6 +1228,7 @@ function AnimatedBackground() {
   );
 }
 
+// Unified Garden Analysis - combining spatial analysis and plant recognition
 export default function Index() {
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
