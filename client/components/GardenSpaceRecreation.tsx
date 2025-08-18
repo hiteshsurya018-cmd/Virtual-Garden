@@ -590,8 +590,10 @@ export const GardenSpaceRecreation: React.FC<GardenSpaceRecreationProps> = ({
           <Canvas camera={{ position: [0, 8, 8], fov: 60 }}>
             <GardenScene
               layout={layout}
+              detectedPlants={detectedPlants}
               showZones={showZones}
               showConstraints={showConstraints}
+              showDetectedPlants={showDetectedPlants}
               onFeatureClick={handleFeatureClick}
               onZoneClick={handleZoneClick}
             />
