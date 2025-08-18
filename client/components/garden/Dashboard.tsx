@@ -17,6 +17,7 @@ import {
   MapPin,
   Settings,
   Camera,
+  TreePine,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
