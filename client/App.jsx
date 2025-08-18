@@ -8,6 +8,7 @@ import { Provider } from "react-redux";
 import { store, useAppSelector, useAppDispatch } from "@/store/store";
 import { refreshToken } from "@/store/slices/authSlice";
 import ErrorBoundary from "./components/ErrorBoundary";
+import Layout from "./components/layout/Layout";
 
 // Import pages and components
 import OnboardingScreen from "./components/auth/OnboardingScreen";
@@ -84,22 +85,44 @@ const AppContent = () => {
         {/* Protected routes */}
         <Route path="/dashboard" element={
           <ProtectedRoute>
-            <Dashboard />
+            <Layout>
+              <Dashboard />
+            </Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/gardens" element={
+          <ProtectedRoute>
+            <Layout>
+              <div>My Gardens Page</div>
+            </Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/community" element={
+          <ProtectedRoute>
+            <Layout>
+              <div>Community Page</div>
+            </Layout>
           </ProtectedRoute>
         } />
         <Route path="/garden/:gardenId" element={
           <ProtectedRoute>
-            <GardenView />
+            <Layout>
+              <GardenView />
+            </Layout>
           </ProtectedRoute>
         } />
         <Route path="/store" element={
           <ProtectedRoute>
-            <Store />
+            <Layout>
+              <Store />
+            </Layout>
           </ProtectedRoute>
         } />
         <Route path="/profile" element={
           <ProtectedRoute>
-            <Profile />
+            <Layout>
+              <Profile />
+            </Layout>
           </ProtectedRoute>
         } />
 
