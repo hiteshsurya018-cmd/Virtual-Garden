@@ -1840,7 +1840,7 @@ export default function Index() {
   // Handle garden layout selection
   const handleLayoutSelected = (layout: GardenLayout) => {
     setGardenLayout(layout);
-    setActiveTab("garden");
+    setActiveTab("analysis");
 
     // Update garden stats based on real layout
     const totalArea = layout.dimensions.estimatedArea;
