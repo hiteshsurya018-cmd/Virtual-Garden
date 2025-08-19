@@ -87,7 +87,7 @@ const ProfilePage: React.FC = () => {
             </div>
           </div>
           <h1 className="text-3xl font-bold text-gray-900">
-            {user?.firstName} {user?.lastName} || 'HITESH SURYA'}
+            {user?.firstName} {user?.lastName} || 'HITESH SURYA'
           </h1>
           <p className="text-gray-600 mb-4">
             {user?.email || 'hiteshsurya018@gmail.com'}
