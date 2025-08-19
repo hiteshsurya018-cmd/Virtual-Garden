@@ -15,9 +15,11 @@ import OnboardingScreen from "./components/auth/OnboardingScreen";
 import LoginScreen from "./components/auth/LoginScreen";
 import RegisterScreen from "./components/auth/RegisterScreen";
 import Dashboard from "./components/garden/Dashboard";
+import MyGardens from "./components/garden/MyGardens";
 import GardenView from "./components/garden/GardenView";
-import Store from "./components/store/Store";
-import Profile from "./components/profile/Profile";
+import StorePage from "./components/store/StorePage";
+import CommunityPage from "./components/community/CommunityPage";
+import ProfilePage from "./components/profile/ProfilePage";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 
@@ -93,14 +95,14 @@ const AppContent = () => {
         <Route path="/gardens" element={
           <ProtectedRoute>
             <Layout>
-              <div>My Gardens Page</div>
+              <MyGardens />
             </Layout>
           </ProtectedRoute>
         } />
         <Route path="/community" element={
           <ProtectedRoute>
             <Layout>
-              <div>Community Page</div>
+              <CommunityPage />
             </Layout>
           </ProtectedRoute>
         } />
@@ -114,14 +116,14 @@ const AppContent = () => {
         <Route path="/store" element={
           <ProtectedRoute>
             <Layout>
-              <Store />
+              <StorePage />
             </Layout>
           </ProtectedRoute>
         } />
         <Route path="/profile" element={
           <ProtectedRoute>
             <Layout>
-              <Profile />
+              <ProfilePage />
             </Layout>
           </ProtectedRoute>
         } />
