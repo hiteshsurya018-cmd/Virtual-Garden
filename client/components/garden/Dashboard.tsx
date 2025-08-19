@@ -103,20 +103,7 @@ const Dashboard: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
           >
-            <Card className="bg-white border-0 shadow-lg">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Total Plants</p>
-                    <p className="text-3xl font-bold text-gray-900">3</p>
-                    <p className="text-xs text-gray-500 mt-1">4 gardens</p>
-                  </div>
-                  <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                    <Leaf className="w-6 h-6 text-green-600" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <Card className="bg-white border-0 shadow-lg" />
           </motion.div>
 
           <motion.div
@@ -124,20 +111,7 @@ const Dashboard: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
           >
-            <Card className="bg-white border-0 shadow-lg">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Healthy Plants</p>
-                    <p className="text-3xl font-bold text-gray-900">3</p>
-                    <p className="text-xs text-gray-500 mt-1">100% healthy</p>
-                  </div>
-                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                    <Droplets className="w-6 h-6 text-blue-600" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <Card className="bg-white border-0 shadow-lg" />
           </motion.div>
 
           <motion.div
@@ -145,20 +119,7 @@ const Dashboard: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
           >
-            <Card className="bg-white border-0 shadow-lg">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Ready to Harvest</p>
-                    <p className="text-3xl font-bold text-gray-900">0</p>
-                    <p className="text-xs text-gray-500 mt-1">Mature plants</p>
-                  </div>
-                  <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
-                    <Sparkles className="w-6 h-6 text-purple-600" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <Card className="bg-white border-0 shadow-lg" />
           </motion.div>
         </div>
 
