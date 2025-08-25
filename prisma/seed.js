@@ -216,7 +216,7 @@ async function main() {
       itemType: 'seed',
       categoryId: seedsCategory.id,
       speciesId: sunflowerSpecies.id,
-      properties: {
+      properties: JSON.stringify({
         growthBoost: 15,
         type: 'flower'
       }
@@ -233,7 +233,7 @@ async function main() {
       itemType: 'seed',
       categoryId: seedsCategory.id,
       speciesId: tulipSpecies.id,
-      properties: {
+      properties: JSON.stringify({
         growthBoost: 20,
         type: 'flower'
       }
@@ -250,7 +250,7 @@ async function main() {
       itemType: 'seed',
       categoryId: seedsCategory.id,
       speciesId: lavenderSpecies.id,
-      properties: {
+      properties: JSON.stringify({
         growthBoost: 15,
         type: 'herb'
       }
@@ -268,7 +268,7 @@ async function main() {
       itemType: 'plant',
       categoryId: plantsCategory.id,
       speciesId: cactusSpecies.id,
-      properties: {
+      properties: JSON.stringify({
         healthBoost: 25,
         type: 'succulent'
       }
@@ -285,7 +285,7 @@ async function main() {
       itemType: 'plant',
       categoryId: plantsCategory.id,
       speciesId: basilSpecies.id,
-      properties: {
+      properties: JSON.stringify({
         healthBoost: 20,
         type: 'herb'
       }
@@ -302,7 +302,7 @@ async function main() {
       price: 15,
       itemType: 'tool',
       categoryId: toolsCategory.id,
-      properties: {
+      properties: JSON.stringify({
         wateringBoost: 5,
         durability: 100
       }
@@ -318,7 +318,7 @@ async function main() {
       price: 60,
       itemType: 'tool',
       categoryId: toolsCategory.id,
-      properties: {
+      properties: JSON.stringify({
         growthBoost: 15,
         uses: 10
       }
@@ -334,7 +334,7 @@ async function main() {
       price: 40,
       itemType: 'decoration',
       categoryId: decorationsCategory.id,
-      properties: {
+      properties: JSON.stringify({
         luckBoost: 40,
         type: 'spiritual'
       }
@@ -351,7 +351,7 @@ async function main() {
       price: 35,
       itemType: 'decoration',
       categoryId: decorationsCategory.id,
-      properties: {
+      properties: JSON.stringify({
         decorationBoost: 5,
         type: 'ornament'
       }
@@ -383,7 +383,7 @@ async function main() {
       description: 'Maintained 5 healthy plants',
       type: 'healthy_plants',
       target: 5,
-      reward: {
+      reward: JSON.stringify({
         coins: 200,
         experience: 100
       }
@@ -398,7 +398,7 @@ async function main() {
       description: 'Successfully grew 10 plants to maturity',
       type: 'mature_plants',
       target: 10,
-      reward: {
+      reward: JSON.stringify({
         coins: 500,
         experience: 250
       }
@@ -413,7 +413,7 @@ async function main() {
       description: 'Grow 25 plants to maturity',
       type: 'total_plants',
       target: 25,
-      reward: {
+      reward: JSON.stringify({
         coins: 1000,
         experience: 500
       }
@@ -428,7 +428,7 @@ async function main() {
       description: 'Create 5 different gardens',
       type: 'garden_count',
       target: 5,
-      reward: {
+      reward: JSON.stringify({
         coins: 300,
         experience: 150
       }
@@ -443,7 +443,7 @@ async function main() {
       description: 'Grow 10 different plant species',
       type: 'species_diversity',
       target: 10,
-      reward: {
+      reward: JSON.stringify({
         coins: 400,
         experience: 200
       }
@@ -458,7 +458,7 @@ async function main() {
       description: 'Spend 1000 coins in the store',
       type: 'coins_spent',
       target: 1000,
-      reward: {
+      reward: JSON.stringify({
         coins: 150,
         experience: 75
       }
@@ -473,7 +473,7 @@ async function main() {
       description: 'Reach level 5',
       type: 'user_level',
       target: 5,
-      reward: {
+      reward: JSON.stringify({
         coins: 250,
         experience: 0
       }
