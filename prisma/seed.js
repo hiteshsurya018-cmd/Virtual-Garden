@@ -199,10 +199,10 @@ async function main() {
       itemType: 'seed',
       categoryId: seedsCategory.id,
       speciesId: roseSpecies.id,
-      properties: {
+      properties: JSON.stringify({
         growthBoost: 10,
         type: 'flower'
-      }
+      })
     }
   });
 
@@ -368,10 +368,10 @@ async function main() {
       description: 'Created your first virtual garden',
       type: 'garden_count',
       target: 1,
-      reward: {
+      reward: JSON.stringify({
         coins: 100,
         experience: 50
-      }
+      })
     }
   });
 
