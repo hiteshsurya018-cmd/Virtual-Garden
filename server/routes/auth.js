@@ -1,43 +1,41 @@
-import express from 'express';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import { generateTokens } from '../middleware/auth.js';
+import express from "express";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import { generateTokens } from "../middleware/auth.js";
 
 const router = express.Router();
 
 // Register new user
-router.post('/register', async (req, res) => {
+router.post("/register", async (req, res) => {
   try {
     const { email, username, password, firstName, lastName } = req.body;
 
     // Validation
     if (!email || !username || !password) {
-      return res.status(400).json({ 
-        error: 'Email, username, and password are required' 
+      return res.status(400).json({
+        error: "Email, username, and password are required",
       });
     }
 
     if (password.length < 6) {
-      return res.status(400).json({ 
-        error: 'Password must be at least 6 characters long' 
+      return res.status(400).json({
+        error: "Password must be at least 6 characters long",
       });
     }
 
     // Check if user already exists
     const existingUser = await req.prisma.user.findFirst({
       where: {
-        OR: [
-          { email },
-          { username }
-        ]
-      }
+        OR: [{ email }, { username }],
+      },
     });
 
     if (existingUser) {
-      return res.status(400).json({ 
-        error: existingUser.email === email 
-          ? 'Email already registered' 
-          : 'Username already taken'
+      return res.status(400).json({
+        error:
+          existingUser.email === email
+            ? "Email already registered"
+            : "Username already taken",
       });
     }
 
@@ -51,7 +49,7 @@ router.post('/register', async (req, res) => {
         username,
         password: hashedPassword,
         firstName,
-        lastName
+        lastName,
       },
       select: {
         id: true,
@@ -63,51 +61,51 @@ router.post('/register', async (req, res) => {
         level: true,
         experience: true,
         coins: true,
-        createdAt: true
-      }
+        createdAt: true,
+      },
     });
 
     // Generate tokens
     const tokens = generateTokens(user.id);
 
     res.status(201).json({
-      message: 'User registered successfully',
+      message: "User registered successfully",
       user,
-      ...tokens
+      ...tokens,
     });
   } catch (error) {
-    console.error('Registration error:', error);
-    res.status(500).json({ error: 'Failed to register user' });
+    console.error("Registration error:", error);
+    res.status(500).json({ error: "Failed to register user" });
   }
 });
 
 // Login user
-router.post('/login', async (req, res) => {
+router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({ 
-        error: 'Email and password are required' 
+      return res.status(400).json({
+        error: "Email and password are required",
       });
     }
 
     // Find user
     const user = await req.prisma.user.findUnique({
-      where: { email }
+      where: { email },
     });
 
     if (!user || !user.password) {
-      return res.status(401).json({ 
-        error: 'Invalid credentials' 
+      return res.status(401).json({
+        error: "Invalid credentials",
       });
     }
 
     // Verify password
     const isValidPassword = await bcrypt.compare(password, user.password);
     if (!isValidPassword) {
-      return res.status(401).json({ 
-        error: 'Invalid credentials' 
+      return res.status(401).json({
+        error: "Invalid credentials",
       });
     }
 
@@ -118,35 +116,32 @@ router.post('/login', async (req, res) => {
     const { password: _, ...userWithoutPassword } = user;
 
     res.json({
-      message: 'Login successful',
+      message: "Login successful",
       user: userWithoutPassword,
-      ...tokens
+      ...tokens,
     });
   } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ error: 'Failed to login' });
+    console.error("Login error:", error);
+    res.status(500).json({ error: "Failed to login" });
   }
 });
 
 // Google OAuth login
-router.post('/google', async (req, res) => {
+router.post("/google", async (req, res) => {
   try {
     const { googleId, email, firstName, lastName, avatar } = req.body;
 
     if (!googleId || !email) {
-      return res.status(400).json({ 
-        error: 'Google ID and email are required' 
+      return res.status(400).json({
+        error: "Google ID and email are required",
       });
     }
 
     // Check if user exists
     let user = await req.prisma.user.findFirst({
       where: {
-        OR: [
-          { googleId },
-          { email }
-        ]
-      }
+        OR: [{ googleId }, { email }],
+      },
     });
 
     if (user) {
@@ -154,13 +149,14 @@ router.post('/google', async (req, res) => {
       if (!user.googleId) {
         user = await req.prisma.user.update({
           where: { id: user.id },
-          data: { googleId }
+          data: { googleId },
         });
       }
     } else {
       // Create new user
-      const username = email.split('@')[0] + Math.random().toString(36).substr(2, 4);
-      
+      const username =
+        email.split("@")[0] + Math.random().toString(36).substr(2, 4);
+
       user = await req.prisma.user.create({
         data: {
           googleId,
@@ -168,8 +164,8 @@ router.post('/google', async (req, res) => {
           username,
           firstName,
           lastName,
-          avatar
-        }
+          avatar,
+        },
       });
     }
 
@@ -179,35 +175,32 @@ router.post('/google', async (req, res) => {
     const { password: _, ...userWithoutPassword } = user;
 
     res.json({
-      message: 'Google login successful',
+      message: "Google login successful",
       user: userWithoutPassword,
-      ...tokens
+      ...tokens,
     });
   } catch (error) {
-    console.error('Google login error:', error);
-    res.status(500).json({ error: 'Failed to authenticate with Google' });
+    console.error("Google login error:", error);
+    res.status(500).json({ error: "Failed to authenticate with Google" });
   }
 });
 
 // Apple OAuth login
-router.post('/apple', async (req, res) => {
+router.post("/apple", async (req, res) => {
   try {
     const { appleId, email, firstName, lastName } = req.body;
 
     if (!appleId) {
-      return res.status(400).json({ 
-        error: 'Apple ID is required' 
+      return res.status(400).json({
+        error: "Apple ID is required",
       });
     }
 
     // Check if user exists
     let user = await req.prisma.user.findFirst({
       where: {
-        OR: [
-          { appleId },
-          email ? { email } : {}
-        ].filter(Boolean)
-      }
+        OR: [{ appleId }, email ? { email } : {}].filter(Boolean),
+      },
     });
 
     if (user) {
@@ -215,22 +208,23 @@ router.post('/apple', async (req, res) => {
       if (!user.appleId) {
         user = await req.prisma.user.update({
           where: { id: user.id },
-          data: { appleId }
+          data: { appleId },
         });
       }
     } else {
       // Create new user
-      const username = (email ? email.split('@')[0] : 'user') + 
-                      Math.random().toString(36).substr(2, 4);
-      
+      const username =
+        (email ? email.split("@")[0] : "user") +
+        Math.random().toString(36).substr(2, 4);
+
       user = await req.prisma.user.create({
         data: {
           appleId,
           email,
           username,
           firstName,
-          lastName
-        }
+          lastName,
+        },
       });
     }
 
@@ -240,27 +234,27 @@ router.post('/apple', async (req, res) => {
     const { password: _, ...userWithoutPassword } = user;
 
     res.json({
-      message: 'Apple login successful',
+      message: "Apple login successful",
       user: userWithoutPassword,
-      ...tokens
+      ...tokens,
     });
   } catch (error) {
-    console.error('Apple login error:', error);
-    res.status(500).json({ error: 'Failed to authenticate with Apple' });
+    console.error("Apple login error:", error);
+    res.status(500).json({ error: "Failed to authenticate with Apple" });
   }
 });
 
 // Refresh token
-router.post('/refresh', async (req, res) => {
+router.post("/refresh", async (req, res) => {
   try {
     const { refreshToken } = req.body;
 
     if (!refreshToken) {
-      return res.status(401).json({ error: 'Refresh token required' });
+      return res.status(401).json({ error: "Refresh token required" });
     }
 
     const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
-    
+
     // Check if user still exists
     const user = await req.prisma.user.findUnique({
       where: { id: decoded.userId },
@@ -273,25 +267,25 @@ router.post('/refresh', async (req, res) => {
         avatar: true,
         level: true,
         experience: true,
-        coins: true
-      }
+        coins: true,
+      },
     });
 
     if (!user) {
-      return res.status(401).json({ error: 'User not found' });
+      return res.status(401).json({ error: "User not found" });
     }
 
     // Generate new tokens
     const tokens = generateTokens(user.id);
 
     res.json({
-      message: 'Token refreshed successfully',
+      message: "Token refreshed successfully",
       user,
-      ...tokens
+      ...tokens,
     });
   } catch (error) {
-    console.error('Token refresh error:', error);
-    res.status(401).json({ error: 'Invalid refresh token' });
+    console.error("Token refresh error:", error);
+    res.status(401).json({ error: "Invalid refresh token" });
   }
 });
 

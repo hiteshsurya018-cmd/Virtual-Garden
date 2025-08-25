@@ -7,24 +7,28 @@ The Virtual Garden backend is a comprehensive REST API built with Node.js, Expre
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js 18+ 
+
+- Node.js 18+
 - PostgreSQL database
 - npm or yarn
 
 ### Installation & Setup
 
 1. **Clone and install dependencies:**
+
 ```bash
 npm install
 ```
 
 2. **Set up environment variables:**
+
 ```bash
 cp .env.example .env
 # Edit .env with your database URL and other configuration
 ```
 
 3. **Initialize database:**
+
 ```bash
 npm run db:generate
 npm run db:push
@@ -32,6 +36,7 @@ npm run db:seed
 ```
 
 4. **Start the server:**
+
 ```bash
 npm run server        # Production
 npm run server:dev    # Development with hot reload
@@ -45,9 +50,11 @@ The API will be available at `http://localhost:3001`
 ### Authentication (`/api/auth`)
 
 #### POST `/api/auth/register`
+
 Register a new user account.
 
 **Request Body:**
+
 ```json
 {
   "email": "user@example.com",
@@ -59,6 +66,7 @@ Register a new user account.
 ```
 
 **Response:**
+
 ```json
 {
   "message": "User registered successfully",
@@ -78,9 +86,11 @@ Register a new user account.
 ```
 
 #### POST `/api/auth/login`
+
 Login with email and password.
 
 **Request Body:**
+
 ```json
 {
   "email": "user@example.com",
@@ -89,9 +99,11 @@ Login with email and password.
 ```
 
 #### POST `/api/auth/google`
+
 OAuth login with Google.
 
 **Request Body:**
+
 ```json
 {
   "googleId": "google_id",
@@ -103,9 +115,11 @@ OAuth login with Google.
 ```
 
 #### POST `/api/auth/refresh`
+
 Refresh access token.
 
 **Request Body:**
+
 ```json
 {
   "refreshToken": "refresh_token"
@@ -115,9 +129,11 @@ Refresh access token.
 ### User Management (`/api/user`)
 
 #### GET `/api/user/profile`
+
 Get current user profile. Requires authentication.
 
 **Response:**
+
 ```json
 {
   "id": "user_id",
@@ -140,9 +156,11 @@ Get current user profile. Requires authentication.
 ```
 
 #### PUT `/api/user/profile`
+
 Update user profile. Requires authentication.
 
 **Request Body:**
+
 ```json
 {
   "firstName": "Jane",
@@ -152,18 +170,23 @@ Update user profile. Requires authentication.
 ```
 
 #### GET `/api/user/achievements`
+
 Get user achievements with progress.
 
 #### GET `/api/user/stats`
+
 Get detailed user statistics.
 
 #### GET `/api/user/friends`
+
 Get user's friends list.
 
 #### POST `/api/user/reward`
+
 Award coins or experience (internal use).
 
 **Request Body:**
+
 ```json
 {
   "type": "coins", // or "experience"
@@ -175,12 +198,15 @@ Award coins or experience (internal use).
 ### Gardens (`/api/garden`)
 
 #### GET `/api/garden`
+
 Get all user's gardens. Requires authentication.
 
 #### POST `/api/garden`
+
 Create a new garden. Requires authentication.
 
 **Request Body:**
+
 ```json
 {
   "name": "My Rose Garden",
@@ -189,18 +215,23 @@ Create a new garden. Requires authentication.
 ```
 
 #### GET `/api/garden/:id`
+
 Get specific garden details.
 
 #### PUT `/api/garden/:id`
+
 Update garden information.
 
 #### DELETE `/api/garden/:id`
+
 Delete a garden.
 
 #### POST `/api/garden/plants`
+
 Add a plant to a garden.
 
 **Request Body:**
+
 ```json
 {
   "gardenId": "garden_id",
@@ -212,20 +243,25 @@ Add a plant to a garden.
 ```
 
 #### POST `/api/garden/plants/:plantId/water`
+
 Water a specific plant.
 
 #### POST `/api/garden/plants/:plantId/harvest`
+
 Harvest a mature plant.
 
 #### DELETE `/api/garden/plants/:plantId`
+
 Remove a plant from garden.
 
 ### Plants (`/api/plants`)
 
 #### GET `/api/plants/species`
+
 Get all available plant species.
 
 **Query Parameters:**
+
 - `category`: Filter by category (herb, flower, vegetable, etc.)
 - `careLevel`: Filter by care difficulty (easy, medium, hard)
 - `sunlight`: Filter by sunlight requirement (full, partial, shade)
@@ -234,29 +270,37 @@ Get all available plant species.
 - `offset`: Page offset (default: 0)
 
 #### GET `/api/plants/species/:id`
+
 Get detailed information about a plant species.
 
 #### GET `/api/plants/species/:id/care`
+
 Get care instructions for a specific plant species.
 
 #### GET `/api/plants/categories`
+
 Get all plant categories with counts.
 
 #### GET `/api/plants/my-plants`
+
 Get all plants owned by the current user. Requires authentication.
 
 #### GET `/api/plants/health-stats`
+
 Get health statistics for user's plants. Requires authentication.
 
 ### Store (`/api/store`)
 
 #### GET `/api/store/categories`
+
 Get all store categories with items.
 
 #### GET `/api/store/items`
+
 Get store items with filtering.
 
 **Query Parameters:**
+
 - `category`: Filter by category ID
 - `type`: Filter by item type (seed, plant, tool, decoration)
 - `search`: Search by name or description
@@ -264,12 +308,15 @@ Get store items with filtering.
 - `offset`: Page offset
 
 #### GET `/api/store/items/:id`
+
 Get specific store item details.
 
 #### POST `/api/store/purchase`
+
 Purchase an item from the store. Requires authentication.
 
 **Request Body:**
+
 ```json
 {
   "itemId": "item_id",
@@ -278,19 +325,23 @@ Purchase an item from the store. Requires authentication.
 ```
 
 #### GET `/api/store/purchases`
+
 Get user's purchase history. Requires authentication.
 
 #### GET `/api/store/featured`
+
 Get featured/recommended store items.
 
 ### AI Services (`/api/ai`)
 
 #### POST `/api/ai/analyze-garden`
+
 Upload and analyze a garden image. Requires authentication.
 
 **Request:** Multipart form with image file.
 
 **Response:**
+
 ```json
 {
   "message": "Image uploaded successfully, analysis in progress",
@@ -300,9 +351,11 @@ Upload and analyze a garden image. Requires authentication.
 ```
 
 #### GET `/api/ai/analysis/:id`
+
 Get analysis results. Requires authentication.
 
 **Response:**
+
 ```json
 {
   "id": "analysis_id",
@@ -319,14 +372,17 @@ Get analysis results. Requires authentication.
 ```
 
 #### POST `/api/ai/identify-plant`
+
 Identify a plant from an image. Requires authentication.
 
 **Request:** Multipart form with image file.
 
 #### POST `/api/ai/detect-objects`
+
 Detect objects in a garden image. Requires authentication.
 
 #### POST `/api/ai/segment-layout`
+
 Perform spatial segmentation on a garden image. Requires authentication.
 
 ## 🔐 Authentication
@@ -359,11 +415,13 @@ The backend uses PostgreSQL with Prisma ORM. Key models include:
 ### Manual Testing
 
 1. **Health Check:**
+
 ```bash
 curl http://localhost:3001/api/health
 ```
 
 2. **Register User:**
+
 ```bash
 curl -X POST http://localhost:3001/api/auth/register \
   -H "Content-Type: application/json" \
@@ -371,6 +429,7 @@ curl -X POST http://localhost:3001/api/auth/register \
 ```
 
 3. **Login:**
+
 ```bash
 curl -X POST http://localhost:3001/api/auth/login \
   -H "Content-Type: application/json" \
@@ -378,6 +437,7 @@ curl -X POST http://localhost:3001/api/auth/login \
 ```
 
 4. **Get Plant Species:**
+
 ```bash
 curl http://localhost:3001/api/plants/species
 ```
@@ -385,6 +445,7 @@ curl http://localhost:3001/api/plants/species
 ### Demo Credentials
 
 For testing, you can use the demo login in the frontend:
+
 - **Email:** `demo@garden.com`
 - **Password:** `demo123`
 
@@ -412,11 +473,13 @@ PLANTNET_API_KEY="your-plantnet-api-key"
 ### Production Deployment Steps
 
 1. **Build the application:**
+
 ```bash
 npm run build
 ```
 
 2. **Set up database:**
+
 ```bash
 npm run db:generate
 npm run db:push
@@ -424,6 +487,7 @@ npm run db:seed
 ```
 
 3. **Start the server:**
+
 ```bash
 npm run server
 ```
@@ -431,15 +495,18 @@ npm run server
 ## 🔧 Configuration
 
 ### Rate Limiting
+
 - API endpoints are limited to 100 requests per 15 minutes per IP
 - Adjust in `server/index.js` if needed
 
 ### File Uploads
+
 - Image uploads limited to 10MB
 - Supported formats: JPG, PNG, WEBP
 - Configure in `server/routes/ai.js`
 
 ### CORS
+
 - Configured to allow requests from frontend URL
 - Update `FRONTEND_URL` environment variable for production
 
@@ -496,6 +563,7 @@ Future versions will be accessible via `/api/v2/`, etc.
 ## 📞 Support
 
 For API issues or questions:
+
 - Check this documentation
 - Review error logs
 - Test with provided curl examples

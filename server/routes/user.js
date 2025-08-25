@@ -1,11 +1,11 @@
-import express from 'express';
-import bcrypt from 'bcryptjs';
-import { authenticateToken } from '../middleware/auth.js';
+import express from "express";
+import bcrypt from "bcryptjs";
+import { authenticateToken } from "../middleware/auth.js";
 
 const router = express.Router();
 
 // Get user profile
-router.get('/profile', authenticateToken, async (req, res) => {
+router.get("/profile", authenticateToken, async (req, res) => {
   try {
     const user = await req.prisma.user.findUnique({
       where: { id: req.user.id },
@@ -25,40 +25,48 @@ router.get('/profile', authenticateToken, async (req, res) => {
             id: true,
             name: true,
             plantsCount: true,
-            createdAt: true
-          }
+            createdAt: true,
+          },
         },
         achievements: {
           include: {
-            achievement: true
-          }
-        }
-      }
+            achievement: true,
+          },
+        },
+      },
     });
 
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ error: "User not found" });
     }
 
     // Calculate additional stats
-    const totalPlants = user.gardens.reduce((sum, garden) => sum + garden.plantsCount, 0);
+    const totalPlants = user.gardens.reduce(
+      (sum, garden) => sum + garden.plantsCount,
+      0,
+    );
     const totalGardens = user.gardens.length;
-    
+
     const plantsWithHealth = await req.prisma.plantInstance.findMany({
       where: {
         garden: {
-          userId: req.user.id
-        }
+          userId: req.user.id,
+        },
       },
       select: {
         health: true,
-        growthStage: true
-      }
+        growthStage: true,
+      },
     });
 
-    const healthyPlants = plantsWithHealth.filter(plant => plant.health >= 80).length;
-    const maturePlants = plantsWithHealth.filter(plant => plant.growthStage >= 80).length;
-    const successRate = totalPlants > 0 ? Math.round((healthyPlants / totalPlants) * 100) : 100;
+    const healthyPlants = plantsWithHealth.filter(
+      (plant) => plant.health >= 80,
+    ).length;
+    const maturePlants = plantsWithHealth.filter(
+      (plant) => plant.growthStage >= 80,
+    ).length;
+    const successRate =
+      totalPlants > 0 ? Math.round((healthyPlants / totalPlants) * 100) : 100;
 
     res.json({
       ...user,
@@ -67,45 +75,39 @@ router.get('/profile', authenticateToken, async (req, res) => {
         totalPlants,
         healthyPlants,
         maturePlants,
-        successRate
-      }
+        successRate,
+      },
     });
   } catch (error) {
-    console.error('Get profile error:', error);
-    res.status(500).json({ error: 'Failed to fetch user profile' });
+    console.error("Get profile error:", error);
+    res.status(500).json({ error: "Failed to fetch user profile" });
   }
 });
 
 // Update user profile
-router.put('/profile', authenticateToken, async (req, res) => {
+router.put("/profile", authenticateToken, async (req, res) => {
   try {
-    const {
-      firstName,
-      lastName,
-      username,
-      avatar,
-      email
-    } = req.body;
+    const { firstName, lastName, username, avatar, email } = req.body;
 
     // Check if username is taken (if being changed)
     if (username && username !== req.user.username) {
       const existingUser = await req.prisma.user.findUnique({
-        where: { username }
+        where: { username },
       });
 
       if (existingUser) {
-        return res.status(400).json({ error: 'Username already taken' });
+        return res.status(400).json({ error: "Username already taken" });
       }
     }
 
     // Check if email is taken (if being changed)
     if (email && email !== req.user.email) {
       const existingUser = await req.prisma.user.findUnique({
-        where: { email }
+        where: { email },
       });
 
       if (existingUser) {
-        return res.status(400).json({ error: 'Email already registered' });
+        return res.status(400).json({ error: "Email already registered" });
       }
     }
 
@@ -116,7 +118,7 @@ router.put('/profile', authenticateToken, async (req, res) => {
         ...(lastName && { lastName }),
         ...(username && { username }),
         ...(avatar && { avatar }),
-        ...(email && { email })
+        ...(email && { email }),
       },
       select: {
         id: true,
@@ -127,48 +129,51 @@ router.put('/profile', authenticateToken, async (req, res) => {
         avatar: true,
         level: true,
         experience: true,
-        coins: true
-      }
+        coins: true,
+      },
     });
 
     res.json(updatedUser);
   } catch (error) {
-    console.error('Update profile error:', error);
-    res.status(500).json({ error: 'Failed to update profile' });
+    console.error("Update profile error:", error);
+    res.status(500).json({ error: "Failed to update profile" });
   }
 });
 
 // Change password
-router.put('/password', authenticateToken, async (req, res) => {
+router.put("/password", authenticateToken, async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
 
     if (!currentPassword || !newPassword) {
-      return res.status(400).json({ 
-        error: 'Current password and new password are required' 
+      return res.status(400).json({
+        error: "Current password and new password are required",
       });
     }
 
     if (newPassword.length < 6) {
-      return res.status(400).json({ 
-        error: 'New password must be at least 6 characters long' 
+      return res.status(400).json({
+        error: "New password must be at least 6 characters long",
       });
     }
 
     const user = await req.prisma.user.findUnique({
-      where: { id: req.user.id }
+      where: { id: req.user.id },
     });
 
     if (!user.password) {
-      return res.status(400).json({ 
-        error: 'Account was created with social login. Cannot change password.' 
+      return res.status(400).json({
+        error: "Account was created with social login. Cannot change password.",
       });
     }
 
     // Verify current password
-    const isValidPassword = await bcrypt.compare(currentPassword, user.password);
+    const isValidPassword = await bcrypt.compare(
+      currentPassword,
+      user.password,
+    );
     if (!isValidPassword) {
-      return res.status(400).json({ error: 'Current password is incorrect' });
+      return res.status(400).json({ error: "Current password is incorrect" });
     }
 
     // Hash new password
@@ -176,55 +181,55 @@ router.put('/password', authenticateToken, async (req, res) => {
 
     await req.prisma.user.update({
       where: { id: req.user.id },
-      data: { password: hashedPassword }
+      data: { password: hashedPassword },
     });
 
-    res.json({ message: 'Password updated successfully' });
+    res.json({ message: "Password updated successfully" });
   } catch (error) {
-    console.error('Change password error:', error);
-    res.status(500).json({ error: 'Failed to change password' });
+    console.error("Change password error:", error);
+    res.status(500).json({ error: "Failed to change password" });
   }
 });
 
 // Get user achievements
-router.get('/achievements', authenticateToken, async (req, res) => {
+router.get("/achievements", authenticateToken, async (req, res) => {
   try {
     const userAchievements = await req.prisma.userAchievement.findMany({
       where: { userId: req.user.id },
       include: {
-        achievement: true
+        achievement: true,
       },
-      orderBy: { unlockedAt: 'desc' }
+      orderBy: { unlockedAt: "desc" },
     });
 
     // Get all available achievements
     const allAchievements = await req.prisma.achievement.findMany({
-      orderBy: { id: 'asc' }
+      orderBy: { id: "asc" },
     });
 
     // Combine with user progress
-    const achievementsWithProgress = allAchievements.map(achievement => {
+    const achievementsWithProgress = allAchievements.map((achievement) => {
       const userProgress = userAchievements.find(
-        ua => ua.achievementId === achievement.id
+        (ua) => ua.achievementId === achievement.id,
       );
 
       return {
         ...achievement,
         isUnlocked: !!userProgress?.isCompleted,
         progress: userProgress?.progress || 0,
-        unlockedAt: userProgress?.unlockedAt || null
+        unlockedAt: userProgress?.unlockedAt || null,
       };
     });
 
     res.json(achievementsWithProgress);
   } catch (error) {
-    console.error('Get achievements error:', error);
-    res.status(500).json({ error: 'Failed to fetch achievements' });
+    console.error("Get achievements error:", error);
+    res.status(500).json({ error: "Failed to fetch achievements" });
   }
 });
 
 // Get user statistics
-router.get('/stats', authenticateToken, async (req, res) => {
+router.get("/stats", authenticateToken, async (req, res) => {
   try {
     const user = await req.prisma.user.findUnique({
       where: { id: req.user.id },
@@ -233,90 +238,107 @@ router.get('/stats', authenticateToken, async (req, res) => {
           include: {
             plants: {
               include: {
-                species: true
-              }
-            }
-          }
+                species: true,
+              },
+            },
+          },
         },
         purchases: {
           include: {
-            item: true
-          }
+            item: true,
+          },
         },
         achievements: {
-          where: { isCompleted: true }
-        }
-      }
+          where: { isCompleted: true },
+        },
+      },
     });
 
     const stats = {
       // Garden Stats
       totalGardens: user.gardens.length,
-      totalPlants: user.gardens.reduce((sum, garden) => sum + garden.plantsCount, 0),
-      
+      totalPlants: user.gardens.reduce(
+        (sum, garden) => sum + garden.plantsCount,
+        0,
+      ),
+
       // Plant Health Stats
       healthyPlants: 0,
       maturePlants: 0,
       wateringNeeded: 0,
-      
+
       // Economic Stats
-      totalCoinsSpent: user.purchases.reduce((sum, purchase) => sum + purchase.totalPrice, 0),
+      totalCoinsSpent: user.purchases.reduce(
+        (sum, purchase) => sum + purchase.totalPrice,
+        0,
+      ),
       totalPurchases: user.purchases.length,
-      
+
       // Achievement Stats
       achievementsUnlocked: user.achievements.length,
-      
+
       // Activity Stats
-      averageGardenLevel: user.gardens.length > 0 
-        ? user.gardens.reduce((sum, garden) => sum + garden.level, 0) / user.gardens.length 
-        : 0,
-      
+      averageGardenLevel:
+        user.gardens.length > 0
+          ? user.gardens.reduce((sum, garden) => sum + garden.level, 0) /
+            user.gardens.length
+          : 0,
+
       // Time-based stats
-      accountAge: Math.floor((new Date() - new Date(user.createdAt)) / (1000 * 60 * 60 * 24)),
-      
+      accountAge: Math.floor(
+        (new Date() - new Date(user.createdAt)) / (1000 * 60 * 60 * 24),
+      ),
+
       // Level progress
       currentLevel: Math.floor(user.experience / 1000) + 1,
       nextLevelProgress: user.experience % 1000,
-      nextLevelTarget: 1000
+      nextLevelTarget: 1000,
     };
 
     // Calculate plant health stats
-    const allPlants = user.gardens.flatMap(garden => garden.plants);
-    stats.healthyPlants = allPlants.filter(plant => plant.health >= 80).length;
-    stats.maturePlants = allPlants.filter(plant => plant.growthStage >= 80).length;
-    stats.wateringNeeded = allPlants.filter(plant => plant.waterLevel < 30).length;
-    
+    const allPlants = user.gardens.flatMap((garden) => garden.plants);
+    stats.healthyPlants = allPlants.filter(
+      (plant) => plant.health >= 80,
+    ).length;
+    stats.maturePlants = allPlants.filter(
+      (plant) => plant.growthStage >= 80,
+    ).length;
+    stats.wateringNeeded = allPlants.filter(
+      (plant) => plant.waterLevel < 30,
+    ).length;
+
     // Success rate
-    stats.successRate = stats.totalPlants > 0 
-      ? Math.round((stats.healthyPlants / stats.totalPlants) * 100) 
-      : 100;
+    stats.successRate =
+      stats.totalPlants > 0
+        ? Math.round((stats.healthyPlants / stats.totalPlants) * 100)
+        : 100;
 
     res.json(stats);
   } catch (error) {
-    console.error('Get user stats error:', error);
-    res.status(500).json({ error: 'Failed to fetch user statistics' });
+    console.error("Get user stats error:", error);
+    res.status(500).json({ error: "Failed to fetch user statistics" });
   }
 });
 
 // Get leaderboard
-router.get('/leaderboard', async (req, res) => {
+router.get("/leaderboard", async (req, res) => {
   try {
-    const { type = 'experience', limit = 10 } = req.query;
+    const { type = "experience", limit = 10 } = req.query;
 
     let orderBy = {};
     switch (type) {
-      case 'coins':
-        orderBy = { coins: 'desc' };
+      case "coins":
+        orderBy = { coins: "desc" };
         break;
-      case 'gardens':
+      case "gardens":
         // This would need a computed field or subquery
-        orderBy = { experience: 'desc' }; // Fallback
+        orderBy = { experience: "desc" }; // Fallback
         break;
-      case 'level':
-        orderBy = { experience: 'desc' };
+      case "level":
+        orderBy = { experience: "desc" };
         break;
       default:
-        orderBy = { experience: 'desc' };
+        orderBy = { experience: "desc" };
     }
 
     const users = await req.prisma.user.findMany({
@@ -332,12 +354,12 @@ router.get('/leaderboard', async (req, res) => {
         gardens: {
           select: {
             id: true,
-            plantsCount: true
-          }
-        }
+            plantsCount: true,
+          },
+        },
       },
       orderBy,
-      take: parseInt(limit)
+      take: parseInt(limit),
     });
 
     const leaderboard = users.map((user, index) => ({
@@ -351,30 +373,33 @@ router.get('/leaderboard', async (req, res) => {
       experience: user.experience,
       coins: user.coins,
       totalGardens: user.gardens.length,
-      totalPlants: user.gardens.reduce((sum, garden) => sum + garden.plantsCount, 0)
+      totalPlants: user.gardens.reduce(
+        (sum, garden) => sum + garden.plantsCount,
+        0,
+      ),
     }));
 
     res.json(leaderboard);
   } catch (error) {
-    console.error('Get leaderboard error:', error);
-    res.status(500).json({ error: 'Failed to fetch leaderboard' });
+    console.error("Get leaderboard error:", error);
+    res.status(500).json({ error: "Failed to fetch leaderboard" });
   }
 });
 
 // Award coins/experience (for achievements, daily rewards, etc.)
-router.post('/reward', authenticateToken, async (req, res) => {
+router.post("/reward", authenticateToken, async (req, res) => {
   try {
     const { type, amount, reason } = req.body;
 
     if (!type || !amount || amount <= 0) {
-      return res.status(400).json({ 
-        error: 'Type and positive amount are required' 
+      return res.status(400).json({
+        error: "Type and positive amount are required",
       });
     }
 
-    if (!['coins', 'experience'].includes(type)) {
-      return res.status(400).json({ 
-        error: 'Type must be coins or experience' 
+    if (!["coins", "experience"].includes(type)) {
+      return res.status(400).json({
+        error: "Type must be coins or experience",
       });
     }
 
@@ -387,8 +412,8 @@ router.post('/reward', authenticateToken, async (req, res) => {
       select: {
         level: true,
         experience: true,
-        coins: true
-      }
+        coins: true,
+      },
     });
 
     // Check for level up
@@ -400,8 +425,8 @@ router.post('/reward', authenticateToken, async (req, res) => {
       await req.prisma.user.update({
         where: { id: req.user.id },
         data: {
-          coins: { increment: newLevel * 50 }
-        }
+          coins: { increment: newLevel * 50 },
+        },
       });
     }
 
@@ -411,16 +436,16 @@ router.post('/reward', authenticateToken, async (req, res) => {
       leveledUp,
       newLevel: leveledUp ? newLevel : undefined,
       levelUpBonus: leveledUp ? newLevel * 50 : undefined,
-      reason
+      reason,
     });
   } catch (error) {
-    console.error('Award reward error:', error);
-    res.status(500).json({ error: 'Failed to award reward' });
+    console.error("Award reward error:", error);
+    res.status(500).json({ error: "Failed to award reward" });
   }
 });
 
 // Friends system
-router.get('/friends', authenticateToken, async (req, res) => {
+router.get("/friends", authenticateToken, async (req, res) => {
   try {
     const user = await req.prisma.user.findUnique({
       where: { id: req.user.id },
@@ -433,34 +458,34 @@ router.get('/friends', authenticateToken, async (req, res) => {
             lastName: true,
             avatar: true,
             level: true,
-            experience: true
-          }
-        }
-      }
+            experience: true,
+          },
+        },
+      },
     });
 
     res.json(user.friends);
   } catch (error) {
-    console.error('Get friends error:', error);
-    res.status(500).json({ error: 'Failed to fetch friends' });
+    console.error("Get friends error:", error);
+    res.status(500).json({ error: "Failed to fetch friends" });
   }
 });
 
-router.post('/friends/:userId', authenticateToken, async (req, res) => {
+router.post("/friends/:userId", authenticateToken, async (req, res) => {
   try {
     const { userId } = req.params;
 
     if (userId === req.user.id) {
-      return res.status(400).json({ error: 'Cannot add yourself as friend' });
+      return res.status(400).json({ error: "Cannot add yourself as friend" });
     }
 
     // Check if user exists
     const targetUser = await req.prisma.user.findUnique({
-      where: { id: userId }
+      where: { id: userId },
     });
 
     if (!targetUser) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ error: "User not found" });
     }
 
     // Add friendship (bidirectional)
@@ -468,15 +493,15 @@ router.post('/friends/:userId', authenticateToken, async (req, res) => {
       where: { id: req.user.id },
       data: {
         friends: {
-          connect: { id: userId }
-        }
-      }
+          connect: { id: userId },
+        },
+      },
     });
 
-    res.json({ message: 'Friend added successfully' });
+    res.json({ message: "Friend added successfully" });
   } catch (error) {
-    console.error('Add friend error:', error);
-    res.status(500).json({ error: 'Failed to add friend' });
+    console.error("Add friend error:", error);
+    res.status(500).json({ error: "Failed to add friend" });
   }
 });
 
