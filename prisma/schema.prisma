@@ -49,7 +49,7 @@ model Garden {
   isPublic    Boolean  @default(false)
   
   // Garden Layout Data
-  layoutData  Json?    // Stores the AI-generated garden layout
+  layoutData  String?    // Stores the AI-generated garden layout (JSON string)
   imageUrl    String?  // Original uploaded image
   width       Float?   // Garden dimensions
   height      Float?
@@ -129,7 +129,7 @@ model PlantInstance {
   lastHarvested DateTime?
   
   // AI Detection Data
-  detectionData Json? // Bounding box, confidence, etc.
+  detectionData String? // Bounding box, confidence, etc. (JSON string)
   isAIDetected Boolean @default(false)
   
   // Timestamps
@@ -167,7 +167,7 @@ model StoreItem {
   itemType    String  // seed, decoration, boost, tool
   
   // Item Properties
-  properties  Json?   // Special properties, effects, etc.
+  properties  String?   // Special properties, effects, etc. (JSON string)
   isAvailable Boolean @default(true)
   isLimited   Boolean @default(false)
   stock       Int?    // null = unlimited
@@ -217,7 +217,7 @@ model Achievement {
   // Requirements
   type        String // plant_count, garden_level, harvest_count, etc.
   target      Int    // Target value to unlock
-  reward      Json   // Coins, experience, items, etc.
+  reward      String   // Coins, experience, items, etc. (JSON string)
   
   // Relations
   userAchievements UserAchievement[]
@@ -246,15 +246,15 @@ model AIAnalysis {
   
   // Input
   imageUrl      String
-  imageMetadata Json?    // Width, height, format, etc.
-  
+  imageMetadata String?    // Width, height, format, etc. (JSON string)
+
   // AI Processing
-  plantNetData  Json?    // PlantNet API response
-  yoloData      Json?    // YOLOv8 detection results
-  samData       Json?    // Segment Anything results
-  
+  plantNetData  String?    // PlantNet API response (JSON string)
+  yoloData      String?    // YOLOv8 detection results (JSON string)
+  samData       String?    // Segment Anything results (JSON string)
+
   // Output
-  gardenLayout  Json     // Final processed garden layout
+  gardenLayout  String     // Final processed garden layout (JSON string)
   confidence    Float    // Overall confidence score
   processingTime Int     // Processing time in milliseconds
   
