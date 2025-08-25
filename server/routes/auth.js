@@ -1,5 +1,6 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 import { generateTokens } from '../middleware/auth.js';
 
 const router = express.Router();
